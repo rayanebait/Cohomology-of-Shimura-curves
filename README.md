@@ -1,9 +1,8 @@
 The packages fdompres.gp and
 fdomprestests.gp both depend on 
 
-J. Rickards Fundamental-domains-for-Shimura-Curves's
-
-PARI/GP package. 
+J. Rickards's Fundamental-domains-for-Shimura-Curves PARI/GP package which can be found at :
+    https://github.com/JamesRickards-Canada/Fundamental-domains-for-Shimura-curves
 
 # HOW TO RUN THE PACKAGES : 
 (Can be done once for all)
