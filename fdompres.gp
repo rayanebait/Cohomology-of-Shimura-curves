@@ -23,32 +23,34 @@ rgraph_from_afuch(X,{with_h=1})={
 		);
 }
 
-elliptic_order(A, x)={
-	my(F, d, dA, splitpr, ord, maxord);
-	F=algcenter(A);
-	d=F.disc;
-	maxord=2*poldegree(F.pol);
-	dA=algdisc(A);
 
-	forprime(p=3,,
-		splitpr=idealprimedec(F,p)[1];
-		normpr = idealnorm(F,splitpr);
-		if(gcd(normpr, d)!=1 || gcd(normpr, dA)!=1, next);
-		break
+elliptic_order(A, x, {modpr=0})={
+	my(ord, maxord);
+	maxord=2*poldegree(algcenter(A).pol);
+
+	if(!modpr,
+		my(F, dA);
+		F=algcenter(A);
+		dA=algdisc(A);
+
+		forprime(p=5,,
+			splitpr=idealprimedec(F,p)[1];
+			if(splitpr[3]!=1, next);
+			normpr = idealnorm(F,splitpr);
+			if(gcd(normpr, dA)!=1, next);
+			break
+		);
+		modpr = algmodprinit(A, splitpr);
 	);
-	my(modpr);
-	modpr = algmodprinit(A, splitpr);
+	
 	xmodpr=algmodpr(A,x,modpr);
-
 	my(ord=1, xpowmodpr=xmodpr, Id=matid(2));
 	while(xpowmodpr!=Id || ord<=maxord,
 			xpowmodpr=xpowmodpr*xmodpr;
 			ord++;
 	);
-
-	return(ord);
-};
-
+	return([ord,modpr]);
+}
 rgraph_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
 		my(sc, elts, n);
 		sc=permcycles(Gdual[2]);
@@ -67,12 +69,12 @@ rgraph_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
 			of the elliptics in the only cycle of s2 starting
 			at 1.
 		*/
-		my(elts,A);
+		my(elts,A, modpr);
 		elts=afuchelts(X);
 		A=afuchalg(X);
 		for(i=1, n, 
 			if(is_ell[i],
-				is_ell[i]=elliptic_order(A, elts[h[i]]);
+				[is_ell[i],modpr]=elliptic_order(A, elts[h[i]],modpr);
 				k++;
 			);
 		);

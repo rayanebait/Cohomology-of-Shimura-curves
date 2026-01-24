@@ -1155,7 +1155,7 @@ rgraph_to_word(G, {edgetoletter=0})={
 	[s1,s2]=G;
 	n=#s2;
 
-	if(n>50, error("the graph is too big to be printed"); return(0));
+	if(n>50, return([[],[]]));
 	if(n<=1, return(""));
 
 	my(alphabet, alphabetinv);
@@ -1234,6 +1234,15 @@ rgraph_info0(G, {w=0},{c=1}, {edgetoletter=0})={
 	);
 	if(w, print("Word presentation : ",rgraph_to_word(G,edgetoletter)[1]));
 	return();
+}
+
+fvec(v)={return((i)->(v[i]))}
+find_w(s2_,etol)={
+	my(w);
+	etol=fvec(etol);
+	w=Vec(select((c)->(1<#c), permcycles(s2_))[1]);
+	w=concat(apply(etol,w));
+	return(w);
 }
 rgraph_info(G,{edgetoletter=0})={
 		my(n=#G[1]); 

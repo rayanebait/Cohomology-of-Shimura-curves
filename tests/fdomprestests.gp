@@ -84,7 +84,7 @@ afuchtest_relation(Xs,{prnt=0},{mul=0}, {type="oneword"})={
 		);*/
 		ev=evells[i];
 		if(!algincenter(A,ev),
-			print(i, ev); error("");
+			\\print(i, ev); error("");
 			if(prnt,
 				print("Evaluation of elliptic relations failed :", ev);
 			);
@@ -140,8 +140,16 @@ afuchtestdata(X, {type="oneword"})={
 	my(v,e,f,g);
 	[v,e,f,g]=rgraph_numbers(Gdual);
 
-	datadfs=vector(6);
-	rgraph_dfs(Gdual, [1,1,1], ~datadfs);
+	my(s2_, etol, w, datadfs, Gone);
+	[s2_,etol,Gone]=rgraph_one_face_reduction(Gdual);
+	etol=rgraph_to_word(G)[2];
+	if(#etol[1],
+		w=find_w(s2_,etol);
+		wis=rgraph_to_word(Gdual,etol)[1];
+	,/*else*/
+		w=s2_;
+		wis=permcycles(Gdual[2]);
+	);
 
 	my(A, elts);
 	A=afuchalg(X);
@@ -150,8 +158,10 @@ afuchtestdata(X, {type="oneword"})={
 	my(ret,toeval);
 	ret=[G,h,Gdual,n,datadfs,A,elts];
 
-	toeval="[G,h,Gdual,n, datadfs, A,elts, fullslp, pointers, rels]=ret;";
+	toeval="[G,h,Gdual,n, datadfs, A,elts, fullslp, pointers, rels,wis,w,etol]=ret;";
 	ret=concat(ret, afuch_presentation(X,type));
+	ret=concat(ret, [wis,w,etol]);
+
 	
 	return([ret,toeval]);
 }
@@ -245,15 +255,15 @@ my(X,sig);
 \\sig=[1,[3],0];
 \\sig=[1, [2, 2, 2, 2, 2, 2, 3, 3], 0];
 \\sig=[2,[],0];
-\\sig=[2,[2],0];
+sig=[2,[2],0];
 \\sig=[2, [3, 3], 0];
 \\sig=[3, [], 0];
 \\sig=[4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3], 0];
-sig=[12, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3], 0]
+\\sig=[12, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3], 0]
 \\sig=[67,[],0];
 
 X=afuchfromfile(sig);
-\\X=Xs[1];
+Xs=[X];
 
 /*
 	The following code computes fundamental domains for 
@@ -268,11 +278,14 @@ X=afuchfromfile(sig);
 	domains without storing them.
 */
 
+/*Computes 50 fundamental domains*/
 \\Xs=afuchsamples(50,1,1);
-\\Xs=afuchsamples(50,0,1);
-afuchtest_relation([X],0,1, "oneword");
-afuchtest_relation([X],0,1, "onehandle");
 
-[ret,toeval]=afuchtestdata(X, "onehandle");
+/*Retrieves at most 50 fundamental domains from storage*/
+\\Xs=afuchsamples(50,0,1);
+\\afuchtest_relation(Xs,0,1, "oneword");
+\\afuchtest_relation(Xs,0,1, "onehandle");
+
+[ret,toeval]=afuchtestdata(X, "oneword");
 eval(toeval);
 \\afuchfdom_latex(X,"genus67",0);

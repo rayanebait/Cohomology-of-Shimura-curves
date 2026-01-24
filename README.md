@@ -11,6 +11,9 @@ In the following denote the folder in which it is
 downloaded by fdom. Also denote the current package
 by fdompres.
 
+# The timings folder
+It contains the code ran for the timings in the article.
+
 # HOW TO RUN THE PACKAGES : 
 (Can be done once for all)
 In fdompres folder :
