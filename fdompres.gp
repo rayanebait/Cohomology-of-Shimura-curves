@@ -23,7 +23,7 @@ rgraph_from_afuch(X,{with_h=1})={
 		);
 }
 
-rgraph_get_ellipticrels(G,ellsorder,m)={
+rgraph_get_ellipticrels(G,ellsorder,m, fG)={
 		my(Gdual, sc,s1,s2);
 		[s1,s2]=G;
 		Gdual=rgraph_dual(G);
@@ -54,7 +54,7 @@ rgraph_get_ellipticrels(G,ellsorder,m)={
 		for(i=1, #sc, 
 			c=sc[i];
 			if(#c!=1, next);
-			listput(~ellrels, [2*g+i, is_ell[c[1]]]);
+			listput(~ellrels, [2*g+fG[i], is_ell[c[1]]]);
 		);
 		return(Vec(ellrels));
 }
@@ -90,10 +90,10 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		[G,h]=rgraph_from_afuch(X);
 
 		my(ret);
-		ret=rgraph_get_presentation(G,type);
+		[ret, dfsfGdual]=rgraph_get_presentation(G,type,0,1);
 		/*Add elliptic relations and renormalize the slp*/
 		ret[1]=slp_normalize(ret[1],h,#afuchspair(X));
-		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(G,afuchsignature(X)[2],#ret[2]));
+		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(G,afuchsignature(X)[2],#ret[2],dfsfGdual));
 		if(!eval, return(ret));
 
 		my(slp, pointers, rels);

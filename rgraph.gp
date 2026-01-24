@@ -1009,7 +1009,7 @@ type.
 The output is a tuple [slp, pointers, rels] with format as describe
 in rgraph_buildpres.
  */
-rgraph_get_presentation(G, {type="oneword"}, {testing=0})={
+rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
 	if(type=="geometric", /*TODO*/ error("Not implemented yet."); return());
 	my(Gdual);
 	Gdual=rgraph_dual(G);
@@ -1144,6 +1144,7 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0})={
 		ret=rgraph_genus0pres(f, s2dual, s1dual, slpsgammai, slpgis, pointersgi, testing);
 	);
 
+	if(withdfsfG, return([ret, dfsfGdual]));
 	return(ret);
 }
 
