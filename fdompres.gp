@@ -23,25 +23,39 @@ rgraph_from_afuch(X,{with_h=1})={
 		);
 }
 
-find_order(A, x)={
-	my(pr, ord, invs, ramifplaces);
-	invs=alghassef(A);
-	ramifplaces=vector(#invs, i, invs[i][1]);
-	forprime(p=3,,
-			foreach(invs, pl,
-				
-			);
-	);
-	idealprimedec
+elliptic_order(A, x)={
+	my(F, d, dA, splitpr, ord, maxord);
+	F=algcenter(A);
+	d=F.disc;
+	maxord=2*poldegree(F.pol);
+	dA=algdisc(A);
 
+	forprime(p=3,,
+		splitpr=idealprimedec(F,p)[1];
+		normpr = idealnorm(F,splitpr);
+		if(gcd(normpr, d)!=1 || gcd(normpr, dA)!=1, next);
+		break
+	);
+	my(modpr);
+	modpr = algmodprinit(A, splitpr);
+	xmodpr=algmodpr(A,x,modpr);
+
+	my(ord=1, xpowmodpr=xmodpr, Id=matid(2));
+	while(xpowmodpr!=Id || ord<=maxord,
+			xpowmodpr=xpowmodpr*xmodpr;
+			ord++;
+	);
+
+	return(ord);
 };
-rgraph_get_ellipticrels(X, G, h, m, fG)={
-		my(Gdual, sc, elts);
-		Gdual=rgraph_dual(G);
+
+rgraph_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
+		my(sc, elts, n);
 		sc=permcycles(Gdual[2]);
+		n=#Gdual[2];
 
 		my(is_ell, ellrels, k=1);
-		is_ell=vector(#s2);
+		is_ell=vector(n);
 		ellrels=List();
 		/*Mark elliptics which corresponds to cycles*/
 		/*of length 1 of s0 with probability 1.*/
@@ -56,9 +70,9 @@ rgraph_get_ellipticrels(X, G, h, m, fG)={
 		my(elts,A);
 		elts=afuchelts(X);
 		A=afuchalg(X);
-		for(i=1, G[2], 
+		for(i=1, n, 
 			if(is_ell[i],
-				is_ell[i]=find_order(A, elts[h[i]]);
+				is_ell[i]=elliptic_order(A, elts[h[i]]);
 				k++;
 			);
 		);
@@ -68,7 +82,7 @@ rgraph_get_ellipticrels(X, G, h, m, fG)={
 		for(i=1, #sc, 
 			c=sc[i];
 			if(#c!=1, next);
-			listput(~ellrels, [2*g+fG[i], is_ell[c[1]]]);
+			listput(~ellrels, [2*g+dfsfGdual[i], is_ell[c[1]]]);
 		);
 		return(Vec(ellrels));
 }
@@ -107,7 +121,7 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		[ret, dfsfGdual]=rgraph_get_presentation(G,type,0,1);
 		/*Add elliptic relations and renormalize the slp*/
 		ret[1]=slp_normalize(ret[1],h,#afuchspair(X));
-		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(X,G,h,afuchsignature(X)[2],#ret[2],dfsfGdual));
+		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(X,rgraph_dual(G), h, #ret[2],dfsfGdual));
 		if(!eval, return(ret));
 
 		my(slp, pointers, rels);
