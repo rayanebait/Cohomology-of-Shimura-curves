@@ -45,6 +45,7 @@ afuchtest_relation(Xs,{prnt=0},{mul=0}, {type="oneword"})={
 				print("Testing one face relation of fuchsian group with signature :", afuchsignature(X));
 			);
 			fail=afuchtest_relation(X,prnt,0,type);
+			if(fail, print(sig));
 			nbfailures+=fail;
 		);
 		print("Testing ", type, " presentation : ", nbfailures, " failures for ",cardxs," samples.");
@@ -56,11 +57,12 @@ afuchtest_relation(Xs,{prnt=0},{mul=0}, {type="oneword"})={
 	A=afuchalg(X);
 	elts=afuchelts(X);
 
-	my(S,R, evrel);
+	my(S,R, evrel, evells);
 	[S,R]=afuch_presentation(X,type,1);
 	evrel=algmulvec(A, S, R[1]);
+	evells=vector(#R-1, i, algpow(A, S[R[i+1][1]], R[i+1][2]));
 
-	my(fail);
+	my(fail,ev);
 	if(!algincenter(A,evrel),
 			if(prnt,
 				print("Evaluation of relation failed :", evrel);
@@ -69,6 +71,25 @@ afuchtest_relation(Xs,{prnt=0},{mul=0}, {type="oneword"})={
 	,/*else*/
 		if(prnt, print(" Ok."););
 		fail=0;
+	);
+	for(i=1, #evells,
+		if(algincenter(A, S[R[i][1]]),
+			if(prnt,
+				print("Relation pointing to trivial generator :", S[R[1]]);
+			);
+			fail=1;
+		,/*else*/
+			fail=0;
+		);
+		ev=evells[i];
+		if(!algincenter(A,ev),
+			if(prnt,
+				print("Evaluation of elliptic relations failed :", ev);
+			);
+			fail=1;
+		,/*else*/
+			fail=0;
+		);
 	);
 	return(fail);
 }
@@ -109,7 +130,7 @@ afuchsamples({nsamples=10},{comp=0},{store=1})={
 		aswell as the covering tree for the one
 		face reduction.
 */
-afuchtestdata(X, {type="oneword"},{full=0})={
+afuchtestdata(X, {type="oneword"})={
 	my(G,h, Gdual, datadfs,n);
 	[G,h]=rgraph_from_afuch(X);
 	Gdual=rgraph_dual(G);
@@ -120,7 +141,6 @@ afuchtestdata(X, {type="oneword"},{full=0})={
 	datadfs=vector(6);
 	rgraph_dfs(Gdual, [1,1,1], ~datadfs);
 
-
 	my(A, elts);
 	A=afuchalg(X);
 	elts=afuchelts(X);
@@ -128,21 +148,9 @@ afuchtestdata(X, {type="oneword"},{full=0})={
 	my(ret,toeval);
 	ret=[G,h,Gdual,n,datadfs,A,elts];
 
-	if(full,
-		if(g,
-			if(type=="oneword",
-				toeval="[G,h,Gdual,n, datadfs, A,elts, slpsgammai, slpgis, pointersgi, fullslp, pointers, rels, a, b, eindex, s1, s2_, w, seen]=ret";
-		,/*else*/
-				toeval="[G,h,Gdual,n, datadfs, A,elts, slpsgammai, slpgis, pointersgi, fullslp, pointers, rels, a, b, eindex, s1, s2_, w, updated_w, seen, vecalpha, vecbeta, vecgamma, vecdelta, slpalpha, slpbeta, slpgamma, slpdelta, slpc, slpd]=ret";
-			);
-		,/*else*/
-			toeval="[G,h,Gdual,n,datadfs, A,elts, s1,s2,slpsgammai, slpgammais,slpgis, pointersgi, fullslp, pointers,rels]=ret";
-		);
-		ret=concat(ret, rgraph_get_presentation(G,type,1));
-	,/*else*/
-		toeval="[G,h,Gdual,n, datadfs, A,elts, fullslp, pointers, rels]=ret;";
-		ret=concat(ret,rgraph_get_presentation(G,type));
-	);
+	toeval="[G,h,Gdual,n, datadfs, A,elts, fullslp, pointers, rels]=ret;";
+	ret=concat(ret, afuch_presentation(X,type));
+	
 	return([ret,toeval]);
 }
 
@@ -244,17 +252,25 @@ sig=[2,[2],0];
 X=afuchfromfile(sig);
 \\X=Xs[1];
 
-[ret,toeval]=afuchtestdata(X, "onehandle",1);
-eval(toeval);
 
 /*
-	The following code computes fundamental domains for 50 algebras
-  stored in STORAGEPATH/fieldsandalgebras before testing the
-  presentations output by afuch_presentation.
-*/
-\\my(Xs);
-\\Xs=afuchsamples(50);
-\\afuchtest_relation(Xs,0,1, "oneword");
-\\afuchtest_relation(Xs,0,1, "onehandle");
+	The following code computes fundamental domains for 
+	50 algebras stored in STORAGEPATH/fieldsandalgebras before
+   	testing the presentations output by afuch_presentation.
 
+	Running Xs=afuchsamples(50,1,1) first computes the 
+	fundamental domains before storing them. 
+	Running Xs=afuchsamples(50,0,1) uses samples stored in
+	STORAGEPATH/fdom. 
+	Running Xs=afuchsamples(50,1,0) computes the fundamental
+	domains without storing them.
+*/
+
+\\Xs=afuchsamples(50,1,1);
+Xs=afuchsamples(50,0,1);
+afuchtest_relation(Xs,0,1, "oneword");
+afuchtest_relation(Xs,0,1, "onehandle");
+
+[ret,toeval]=afuchtestdata(X, "onehandle");
+eval(toeval);
 \\afuchfdom_latex(X,"genus67",0);

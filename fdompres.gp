@@ -23,7 +23,41 @@ rgraph_from_afuch(X,{with_h=1})={
 		);
 }
 
+rgraph_get_ellipticrels(G,ellsorder,m)={
+		my(Gdual, sc,s1,s2);
+		[s1,s2]=G;
+		Gdual=rgraph_dual(G);
+		sc=permcycles(Gdual[2]);
 
+		my(is_ell, ellrels, k=1);
+		is_ell=vector(#s2);
+		ellrels=List();
+		/*Mark elliptics which corresponds to cycles*/
+		/*of length 1 of s0 with probability 1.*/
+		foreach(sc, c, if(#c==1, is_ell[c[1]]=1));
+
+		/*
+		   The ordering of the exponents in ellsorder
+			corresponds to the ordering of appearance 
+			of the elliptics in the only cycle of s2 starting
+			at 1.
+		*/
+		for(i=1, #s2, 
+			if(is_ell[i],
+				is_ell[i]=ellsorder[k];
+				k++;
+			);
+		);
+
+		my(g);
+		g=(m-#sc)/2;
+		for(i=1, #sc, 
+			c=sc[i];
+			if(#c!=1, next);
+			listput(~ellrels, [2*g+i, is_ell[c[1]]]);
+		);
+		return(Vec(ellrels));
+}
 /*Takes as input a fuchsian group X. The type is */
 /*either "oneword" or "onehandle". First computes*/
 /*a presentation of the fundamental group associated*/
@@ -57,6 +91,9 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 
 		my(ret);
 		ret=rgraph_get_presentation(G,type);
+		/*Add elliptic relations and renormalize the slp*/
+		ret[1]=slp_normalize(ret[1],h,#afuchspair(X));
+		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(G,afuchsignature(X)[2],#ret[2]));
 		if(!eval, return(ret));
 
 		my(slp, pointers, rels);
@@ -67,7 +104,7 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		elts=afuchelts(X);
 
 		my(gens);
-		gens=evalslp([A,algmul,algpow,elts], [slp,pointers], h);
+		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
 		/*TODO : rajouter les relations des elliptiques*/
 		return([gens,rels]);
 }

@@ -848,7 +848,7 @@ rgraph_genus0pres(f, s2, s1, slpsgammai,slpgis, pointersgi, {testing=0})={
 	]);
 	\\ Remove pointers of gis and gammais and add those of
 	\\ loopfaces.
-	pointers=vector(f,u, lenslp_gis_gammais+3*u);  
+	pointers=concat([1],vector(f,u, lenslp_gis_gammais+3*u));  
 	
 	if(testing,
 		return([s1, s2, slpsgammai, slpgammais, slpgis, pointersgi,\
@@ -1149,7 +1149,7 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0})={
 
 /*If G has less than 26 edges, returns a word representing
  its associated surface.*/
-rgraph_to_word(G)={
+rgraph_to_word(G, {edgetoletter=0})={
 	my(s1,s2,n);
 	[s1,s2]=G;
 	n=#s2;
@@ -1162,17 +1162,19 @@ rgraph_to_word(G)={
 	alphabet=["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r", "s", "t", "u", "w", "x", "y","z"];
 	alphabetinv=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R", "S", "T", "U", "W", "X", "Y","Z"];
 	
-	my(k, edgetoletter);
-	edgetoletter=vector(n);
-	k=1;
-
-	/*Associate a letter or and its inverse to each
-	edge in {1,...,n}*/
-	for(i=1, n, 
-		if(edgetoletter[i]!=0, next);
-		edgetoletter[i]=alphabet[k];
-		edgetoletter[s1[i]]=alphabetinv[k];
-		k=k+1;
+	my(k);
+	if(!edgetoletter,
+		edgetoletter=vector(n);
+		k=1;
+	
+		/*Associate a letter or and its inverse to each
+		edge in {1,...,n}*/
+		for(i=1, n, 
+			if(edgetoletter[i]!=0, next);
+			edgetoletter[i]=alphabet[k];
+			edgetoletter[s1[i]]=alphabetinv[k];
+			k=k+1;
+		);
 	);
 
 	my(s2c, f);
@@ -1194,7 +1196,7 @@ rgraph_to_word(G)={
 	return([apply(strjoin, words), edgetoletter]);
 }
 
-rgraph_info0(G, {w=0},{c=1})={
+rgraph_info0(G, {w=0},{c=1}, {edgetoletter=0})={
 	if(#G[2]<=1, print("\nEmpty ribbon graph\n"); return());
 	my(s1, s2, red, conn);
 	red=rgraph_is_reduced(G);
@@ -1229,13 +1231,13 @@ rgraph_info0(G, {w=0},{c=1})={
 			print("It has ", v , vs[(v==1)+1], e, es[(e==1)+1], f,fs[(f==1)+1],".\n");
 		);
 	);
-	if(w, print("Word presentation : ",rgraph_to_word(G)[1]));
+	if(w, print("Word presentation : ",rgraph_to_word(G,edgetoletter)[1]));
 	return();
 }
-rgraph_info(G)={
+rgraph_info(G,{edgetoletter=0})={
 		my(n=#G[1]); 
 		if(n<=50,
-				rgraph_info0(G,1);
+				rgraph_info0(G,1,edgetoletter);
 		,\\else
 				rgraph_info0(G);
 		);
