@@ -1,9 +1,10 @@
 /* 
    This package implements ribbon graphs which are equivalent
-   to graph embeddings 
+   to combinatorial embeddings of graphs in surfaces. 
 
- 
- 
+   Given a combinatorial graph embedding G -> S, the function
+   rgraph_get_presentation computes a topological
+   presentation of the fundamental group of the  of the 
 */
 
 

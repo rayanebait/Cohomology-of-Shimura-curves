@@ -189,32 +189,23 @@ afuchtest_comparerelation(X)={
 
 /**/
 /*TODO: Signature [4,[2,2,2,2,2,2,3],0]-> [4,[(2, 6), (3,1)],0]*/
-my(X, sig);
-\\sig=[1,[2,2],0];
-\\sig=[2,[],0];
-\\sig=[1,[2],0];
-\\sig=[0,[2,2,2,3],0];
-\\sig=[0,[2,3,7],0];
-sig=[1,[3],0];
-\\sig=[1, [2, 2, 2, 2, 2, 2, 3, 3], 0];
-\\sig=[4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3], 0];
-\\sig=[2, [3, 3], 0];
-\\sig=[3, [], 0];
-\\sig=[67,[],0];
-\\pol=y^5+y^4-4*y^3-3*y^2+3*y+1;
-\\F=nfinit(pol);
+my(Xs, pol, F, A, pr, J, Or);
+Xs=List();
 
-\\A=alginit(F,[2, [[],[]],[0, 1/2,1/2,1/2,1/2]]);
-\\pr=idealprimedec(F,2)[1];
-\\J=idealpow(F, pr, 5);
-\\Or=algeichlerbasis(A, pr);
-\\print(type(Or));
-\\X=afuchinit(A);
+\\ An example with F=Q(z11)^+, D=(1) and level 32.
+pol=y^5+y^4-4*y^3-3*y^2+3*y+1;
+F=nfinit(pol);
+A=alginit(F,[2, [[],[]],[0, 1/2,1/2,1/2,1/2]]);
+pr=idealprimedec(F,2)[1];
+J=idealpow(F, pr, 2);
+Or=algeichlerbasis(A, pr);
+listput(~Xs, afuchinit(A, Or));
 
-/* The following code initializes the congruence arithmetic
-Fuchsian group Gamma0^D(1) F=Q(sqrt(8)) with N_F/Q(D)=9 
-with signature (1;3). It then stores the fundamental domain
-before testing the oneword and onehandle presentations.
+/* 
+An example with F=Q(sqrt(8)), N_F/Q(D)=9 and level (1). Yields 
+a congruence arithmetic Fuchsian group Gamma0^D(1) with signature
+(1;3). The code then stores the fundamental domain before
+testing the oneword and onehandle presentations.
 
 It then computes various testing utilities.
  */
@@ -223,13 +214,35 @@ pol=y^2-8;
 F=nfinit(pol);
 pr=idealprimedec(F,3)[1];
 A=alginit(F, [[pr], [0,1]]);
-X=afuchinit(X);
-afuchstore(X);
+listput(~Xs,afuchinit(A));
+
+
+/*Storing and testing*/
+foreach(Xs, X, afuchstore(X));
+afuchtest_relation(Xs,0,1,"oneword");
+afuchtest_relation(Xs,0,1,"onehandle");
+
+
+/*
+   Various signatures corresponding to Fuchsian groups that
+   can be computed and stored using afuchsamples(nsamples, 1,1).
+*/
+my(X,sig);
+\\sig=[0,[2,2,2,3],0];
+\\sig=[0,[2,3,7],0];
+\\sig=[1,[2],0];
+\\sig=[1,[2,2],0];
+\\sig=[1,[3],0];
+\\sig=[1, [2, 2, 2, 2, 2, 2, 3, 3], 0];
+\\sig=[2,[],0];
+sig=[2,[2],0];
+\\sig=[2, [3, 3], 0];
+\\sig=[3, [], 0];
+\\sig=[4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3], 0];
+\\sig=[67,[],0];
 
 X=afuchfromfile(sig);
-afuchtest_relation([X],0,1,"oneword");
-afuchtest_relation([X],0,1,"onehandle");
-afuchtest_comparerelation(X);
+\\X=Xs[1];
 
 [ret,toeval]=afuchtestdata(X, "onehandle",1);
 eval(toeval);
