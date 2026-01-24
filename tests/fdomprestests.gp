@@ -73,16 +73,18 @@ afuchtest_relation(Xs,{prnt=0},{mul=0}, {type="oneword"})={
 		fail=0;
 	);
 	for(i=1, #evells,
+		/*
 		if(algincenter(A, S[R[i][1]]),
 			if(prnt,
 				print("Relation pointing to trivial generator :", S[R[1]]);
 			);
 			fail=1;
-		,/*else*/
+		,\\else
 			fail=0;
-		);
+		);*/
 		ev=evells[i];
 		if(!algincenter(A,ev),
+			print(i, ev); error("");
 			if(prnt,
 				print("Evaluation of elliptic relations failed :", ev);
 			);
@@ -243,15 +245,15 @@ my(X,sig);
 \\sig=[1,[3],0];
 \\sig=[1, [2, 2, 2, 2, 2, 2, 3, 3], 0];
 \\sig=[2,[],0];
-sig=[2,[2],0];
+\\sig=[2,[2],0];
 \\sig=[2, [3, 3], 0];
 \\sig=[3, [], 0];
 \\sig=[4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3], 0];
+sig=[12, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3], 0]
 \\sig=[67,[],0];
 
 X=afuchfromfile(sig);
 \\X=Xs[1];
-
 
 /*
 	The following code computes fundamental domains for 
@@ -267,9 +269,9 @@ X=afuchfromfile(sig);
 */
 
 \\Xs=afuchsamples(50,1,1);
-Xs=afuchsamples(50,0,1);
-afuchtest_relation(Xs,0,1, "oneword");
-afuchtest_relation(Xs,0,1, "onehandle");
+\\Xs=afuchsamples(50,0,1);
+afuchtest_relation([X],0,1, "oneword");
+afuchtest_relation([X],0,1, "onehandle");
 
 [ret,toeval]=afuchtestdata(X, "onehandle");
 eval(toeval);

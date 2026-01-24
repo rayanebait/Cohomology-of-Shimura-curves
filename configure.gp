@@ -1,3 +1,6 @@
+/*Create fdom storage directory*/
+externstr("mkdir storage/fdom");
+
 /*Find fdom package location*/
 fdompath = externstr("find /home -wholename */Fundamental-domains-for-Shimura-curves")[1];
 print("fdom package found at location : ",fdompath, "\n");

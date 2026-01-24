@@ -23,9 +23,20 @@ rgraph_from_afuch(X,{with_h=1})={
 		);
 }
 
-rgraph_get_ellipticrels(G,ellsorder,m, fG)={
-		my(Gdual, sc,s1,s2);
-		[s1,s2]=G;
+find_order(A, x)={
+	my(pr, ord, invs, ramifplaces);
+	invs=alghassef(A);
+	ramifplaces=vector(#invs, i, invs[i][1]);
+	forprime(p=3,,
+			foreach(invs, pl,
+				
+			);
+	);
+	idealprimedec
+
+};
+rgraph_get_ellipticrels(X, G, h, m, fG)={
+		my(Gdual, sc, elts);
 		Gdual=rgraph_dual(G);
 		sc=permcycles(Gdual[2]);
 
@@ -42,9 +53,12 @@ rgraph_get_ellipticrels(G,ellsorder,m, fG)={
 			of the elliptics in the only cycle of s2 starting
 			at 1.
 		*/
-		for(i=1, #s2, 
+		my(elts,A);
+		elts=afuchelts(X);
+		A=afuchalg(X);
+		for(i=1, G[2], 
 			if(is_ell[i],
-				is_ell[i]=ellsorder[k];
+				is_ell[i]=find_order(A, elts[h[i]]);
 				k++;
 			);
 		);
@@ -93,7 +107,7 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		[ret, dfsfGdual]=rgraph_get_presentation(G,type,0,1);
 		/*Add elliptic relations and renormalize the slp*/
 		ret[1]=slp_normalize(ret[1],h,#afuchspair(X));
-		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(G,afuchsignature(X)[2],#ret[2],dfsfGdual));
+		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(X,G,h,afuchsignature(X)[2],#ret[2],dfsfGdual));
 		if(!eval, return(ret));
 
 		my(slp, pointers, rels);
