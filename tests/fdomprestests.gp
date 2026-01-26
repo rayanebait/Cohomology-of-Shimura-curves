@@ -38,6 +38,7 @@ afuchtest_relation(Xs,{prnt=0},{mul=0}, {type="oneword"})={
 	if(mul,
 		my(nbfailures,sig, cardxs);
 		cardxs=#Xs;
+		print("Testing ", #Xs," samples.");
 		foreach(Xs, X,
 			sig=afuchsignature(X);
 			\\if(sig[1]<=2, cardxs--; next);
@@ -107,17 +108,21 @@ fuchsian groups uniquely. The name shall be changed
 in upcoming updates.
  */
 afuchsamples({nsamples=10},{comp=0},{store=1})={
-	my(Xs);
+	my(Xs,storagepath);
 	Xs=List();
+	storagepath=externstr("find /home -wholename */*Cohomology-of-Shimura-curves/storage/fdom")[1];
 	if(comp,
+		print("Computing ",nsamples," samples.");
 		Xs=afuchget_samples(nsamples);
+		print("Storing ",nsamples," samples.");
 		if(store,
-		   foreach(Xs, X, afuchstore(X));
+		   foreach(Xs, X, afuchstore(X,storagepath));
 		);
 	,/*else*/
 		sigstrs=externstr(concat(["ls ",storagepath," | grep ',' "]));
+		print("Loading ", min(nsamples,#sigstrs)," samples.");
 		for(i=1, min(nsamples,#sigstrs),
-			listput(~Xs,afuchfromfile(eval(sigstrs[i])));
+			listput(~Xs,afuchfromfile(eval(sigstrs[i]),storagepath));
 		);
 	);
 	return(Xs);
@@ -141,9 +146,9 @@ afuchtestdata(X, {type="oneword"})={
 	[v,e,f,g]=rgraph_numbers(Gdual);
 
 	my(s2_, etol, w, datadfs, Gone);
-	[s2_,etol,Gone]=rgraph_one_face_reduction(Gdual);
+	[s2_,etol,Gone]=rgraph_one_face_reduction(Gdual,1);
 	etol=rgraph_to_word(G)[2];
-	if(#etol[1],
+	if(#etol,
 		w=find_w(s2_,etol);
 		wis=rgraph_to_word(Gdual,etol)[1];
 	,/*else*/
@@ -282,8 +287,8 @@ Xs=[X];
 \\Xs=afuchsamples(50,1,1);
 
 /*Retrieves at most 50 fundamental domains from storage*/
-\\Xs=afuchsamples(50,0,1);
-\\afuchtest_relation(Xs,0,1, "oneword");
+Xs=afuchsamples(50,0,1);
+afuchtest_relation(Xs,0,1, "oneword");
 \\afuchtest_relation(Xs,0,1, "onehandle");
 
 [ret,toeval]=afuchtestdata(X, "oneword");
