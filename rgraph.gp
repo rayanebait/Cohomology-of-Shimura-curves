@@ -511,6 +511,119 @@ in G and compute a covering tree.
 
 [type, covtree, slp]=options, [explored,seed,covtree,slp,dfsvG,vdfsindex]=data*/
 
+abc()={}
+rgraph_dfs(~Phi, {options=vector(3)}, ~data)={
+	my(s1, s, sc, vG, type, covtree, slpdata, seed);
+	[type,covtree,slpdata]=options;
+	/*rec_prof++;*/
+	/*if(rec_prof > 5, breakpoint());*/
+	if(#Phi==2,
+		/*Initialize*/
+		my(G);
+		G=Phi;
+		/*Decide if dfs is on Gdual or G respectively.*/
+		if(type, s=G[2];
+			vG=rgraph_face_index(G);
+		,/*else*/
+			s=G[2]^-1*G[1];
+			vG=rgraph_vertex_index(G);
+		);
+		/*Go through the faces in reversed orientation. Needed for the slps.*/
+		s=s^-1;
+		s1=G[1];
+		sc=permcycles(s);
+
+		my(explored, vdfsindex, dfsvG);
+		explored=vector(#sc);
+		vdfsindex=1;
+		dfsvG=vector(#sc);
+		seed=1;
+
+		my(tempcovtree,tempslpdata);
+		if(covtree, tempcovtree=List());
+		if(slpdata,
+			tempslpdata=List();
+		);
+		Phi=[s1, s, sc, vG];
+		my(bufdata);
+		bufdata=[explored, tempcovtree, tempslpdata, dfsvG, vdfsindex, seed];
+		for(i=1, #data, data[i]=bufdata[i]);
+	,/*else*/
+		/*Recover ribbon graph info*/
+		[s1, s, sc, vG]=Phi;
+		/*"[explored, covtree, slp, dfsvG, vdfsindex, seed]=data"*/
+
+		/*data[5] is the index of the current recursion*/
+		data[5]++;
+	);
+
+	/*Data related to current vertex.*/
+	my(v, vindex);
+	/*seed is the first edge to be visited in this*/
+	/*vertex*/
+	seed=data[6];
+	vindex=vG[seed];
+	v=sc[vindex];
+
+	/*Map from the permcycles ordering to*/
+	/*the dfs ordering of the vertices. Used*/
+	/*mainly with the straight line program (slp)*/
+	data[4][vindex]=data[5];
+	/*data[4] associates to a vertex index its */
+	/*index for the dfs ordering.*/
+
+	/*Mark current vertex*/
+	data[1][vindex]=1;
+	if(data[5]==1 && #v==1, 
+		/*Can happen only at first iteration */
+			if(covtree, listput(~data[2],seed));
+			if(slpdata,
+				listput(~data[3], [seed,seed]);
+		    );
+			/*Update seed*/
+			data[6]=s1[seed];
+			rgraph_dfs(~Phi,options,~data);
+			return();
+		);
+	
+	my(j, jinv, vjinvindex);
+	j=seed;
+	until(j==seed,
+
+		jinv=s1[j];
+		vjinvindex=vG[jinv];
+
+		/*Already explored*/
+		if(data[1][vjinvindex],
+			j=s[j];
+			next;
+		);
+		/*Unexplored*/
+		if(slpdata, 
+				/*One can recover a full path from j to 1 using the fact that if */
+                /*[estart, eend, lastvindex]=data[3][dfsvG[vindex]] and*/
+				/*[lastestart, lasteend, lastlastvindex]=data[3][dfsvG[lastvindex]]
+				 */
+				/*then s1[lasteend]=estart and (estart, s1[estart]) is an edge in*/
+				/*covtree between vindex and lastvindex and the fact that*/
+				/*dfsvG[vG[1]]=1<=dfsvG[lastvindex]<dfsvG[vindex].*/
+			if(vindex==1,
+				listput(~data[3], [seed, j]);
+			,/*else*/
+				listput(~data[3], [seed, j, vG[seed]]);
+			);
+		);
+		if(covtree, listput(~data[2],j));
+		/*Update seed*/
+		data[6]=jinv;
+		rgraph_dfs(~Phi, options, ~data);
+
+		/*Increment*/
+		j=s[j];
+	);
+	/*rec_prof--;*/
+	return();
+}
 
 rgraph_is_connected(G)={
 	if(#permcycles(G[2])<=1, return(1));
