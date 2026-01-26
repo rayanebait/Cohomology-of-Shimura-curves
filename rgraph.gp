@@ -511,8 +511,8 @@ in G and compute a covering tree.
 
 [type, covtree, slp]=options, [explored,seed,covtree,slp,dfsvG,vdfsindex]=data*/
 
-abc()={}
 rgraph_dfs(~Phi, {options=vector(3)}, ~data)={
+	/*Data of G*/
 	my(s1, s, sc, vG, type, covtree, slpdata, seed);
 	[type,covtree,slpdata]=options;
 	/*rec_prof++;*/
