@@ -12,15 +12,15 @@
 maketij(n,i,j)={
 	my(tij);
 
-	tij=vector(n,u,u);
+	tij=vectorsmall(n,u,u);
 	tij[j]=i;
 	tij[i]=j;
-	return(Vecsmall(tij));
+	return(tij);
 }
 /*Builds (a b c) in Sn */
 make3c(n,a,b,c)={
 	my(c3);
-	c3=Vecsmall(vector(n,u,u));
+	c3=vectorsmall(n,u,u);
 	c3[a]=b;
 	c3[b]=c;
 	c3[c]=a;
@@ -35,7 +35,7 @@ rand_invol(n,k)={
 	my(s,m, inv);
 	s=vector(n, u, u);
 	m=n;
-	inv = numtoperm(n, 0);
+	inv = vectorsmall(n,i,i);
 
 	my(o, j, invj, tij);
 	for(i=1, k,
@@ -60,9 +60,9 @@ rand_kcycle(n,k)={
 	if(k>n, print("invalid cycle size\n"); return(0););
 	my(s, m, veccyc);
 
-	s=vector(n,u,u);
+	s=vectorsmall(n,u,u);
 	m=n;
-	veccyc = vector(k);
+	veccyc = vectorsmall(k);
 
 	my(o,j);
 	for(i=1,k,
@@ -75,68 +75,48 @@ rand_kcycle(n,k)={
 		);
 
 	my(cyc);
-	cyc = vector(n, u, u);
+	cyc = vectorsmall(n, u, u);
 	for(i=1, k-1,
 		cyc[veccyc[i]]=veccyc[i+1];
 	);
 
 	cyc[veccyc[k]]=veccyc[1];
-	return(Vecsmall(cyc));
+	return(cyc);
 }
 
 /*Random permutation in Sn*/
-rand_perm(n)={
-	my(m, g, s);
-	m=n;
-	s=vector(n,u,u);
-	g=s;
-
-	my(o, j);
-	for(i=1,n,
-		o = random(m)+1;
-		j=s[o];
-		s=s[^(o)];
-		m=m-1;
-
-		g[i]=j;
-		);
-	return(Vecsmall(g));
+rand_perm(n) =
+{
+  my(g=vectorsmall(n,i,i),j,tmp);
+  for(i=1,n-1,
+    j = random([i,n]);
+    tmp = g[i];
+    g[i] = g[j];
+    g[j] = tmp;
+  );
+  return(g);
 }
 
-
-cycle_to_perm(n,c,{s=[]})={
-	my(fc);
-	fc=#c;
-	if(fc>n, error("Invalid cycle size in cycle to perm"));
-
-	if(#s==0,s=numtoperm(n,0));
-	my(ci);
-	for(i=1, fc-1,
-		ci=c[i];
-		if(ci>n || ci<1,
-			error("Invalid cycle.")
-		);
-		s[c[i]]=c[i+1];
-	);
-	s[c[fc]]=c[1];
-	return(s);
-}
 
 cycles_to_perm(n,cs)={
 	/*Assumes the cycles are disjoint, so that
 	we can iterate the single cycle procedure.*/
-	my(f, s);
+	my(f, s, card);
 	f=#cs;
-	s=Vecsmall(vector(n,u,u));
+	s=vectorsmall(n,i,i);
 	for(i=1,f,
-		s=cycle_to_perm(n,cs[i],s);
+		cardc=#cs[i];
+		for(j=1, cardc-1,
+			s[cs[i][j]]=cs[i][j+1];
+		);
+		s[cs[i][cardc]]=cs[i][1];
 	);
 	return(s);
 }
 
 permconj(s, g)={
 	my(n=#s);
-	my(sconj=numtoperm(n,0));
+	my(sconj=vectorsmall(n,i,i));
 	for(i=1, n, sconj[g[i]]=g[s[i]]);
 	return(sconj);
 }
@@ -155,7 +135,7 @@ perm_normalizer(s, {V=vector(#s,u,1)},{wrt="fixed points"})={
 	for(i=1,n, if(s[i]==i && V[i], m=m+1););
 
 	my(g, k);
-	g=numtoperm(n,0);
+	g=vectorsmall(n,i,i);
 	k=0;
 	for(i=1, n,
 		if(s[i]==i && V[i], 
@@ -191,7 +171,7 @@ perm_normalize_wrt(S, p, {V=vector(#S[p],u,1)}, {with_g=0}, {wrt="fixed points"}
 
 /*i -> i+k mod n*/
 perm_iplusk(n,k)={
-	return(Vecsmall(vector(n,u, (u-1+k)%n+1)));
+	return(vectorsmall(n,u, (u-1+k)%n+1));
 }
 
 /*WARNING: For big n, f==4 will almost never work as 
@@ -209,8 +189,8 @@ rand_rgraph(n, {f=0})={
 		-f=5 : reduced, not connected ribbon 
 		graph.
 		*/
-	if(f==0, return([rand_invol(2*n,n),rand_perm(2*n)]),
-		f==1, return([rand_invol(2*n,n),Vecsmall(vector(2*n,u,(u%(2*n))+1))]),
+	if(f==0, return([cycles_to_perm(2*n, vector(n, i, [2*i-1,2*i])),rand_perm(2*n)]),
+		f==1, return([rand_invol(2*n,n),vectorsmall(2*n,u,(u%(2*n))+1)]),
 		f==2, G=rand_rgraph(n,0);
 		return(rgraph_reduce(G)),
 		f==3, G=rand_rgraph(n,1);
@@ -255,7 +235,7 @@ rgraph_from_invol(invol)={
 	/*associés */
 	
 	my(s1,s2);
-	s1=numtoperm(n+k,0);
+	s1=vectorsmall(n+k,i,i);
 	s2=perm_iplusk(n+k,1);
 
 	my(inew,iinvnew, g);
@@ -311,7 +291,7 @@ rgraph_normalize(G)={
 	
 	my(s2c,g, f, k, fi, cardfi);
 	s2c=permcycles(s2);
-	g=Vecsmall(vector(n,u,u));
+	g=vectorsmall(n,u,u);
 
 	f=#s2c;
 	k=1;
@@ -345,8 +325,8 @@ rgraph_reduce(G)={
 	s2inv=s2^-1;
 
 	my(r,t,t_);
-	r=numtoperm(n,0);
-	t=numtoperm(n,0);
+	r=vectorsmall(n,i,i);
+	t=vectorsmall(n,i,i);
 
 	/*Patterns of the form ... aa^-1... are
 	edges satistying s2(a)=s1(a). First makes
@@ -428,7 +408,7 @@ rgraph_vertex_index(G)={
 	[s1,s2]=G;
 	s0=s2^-1*s1;
 	n=#s2;
-	vG=Vecsmall(vector(n));
+	vG=vectorsmall(n);
 
 	vertices=permcycles(s0);
 	for(v=1,#vertices, 
@@ -505,29 +485,24 @@ rgraph_dfsgen(G)={
 /*Performs a depth first search in the graph associated to
 a graph embedding G starting at edge seed=1.
 
-Initialize data=vector(6) and pass it as
-reference with rgraph_dfs(G, [1,1,0], ~data) to perform a dfs
-in G and compute a covering tree.
+Initialize my(data) as a reference with rgraph_dfs(G, ~data)
+to perform a dfs in Gdual and compute a covering tree T.
 
-[type, covtree, slp]=options, [explored,seed,covtree,slp,dfsvG,vdfsindex]=data*/
+At the end data has the form : [explored,T,dfsvG,fdfsindex,seed, vG]=data*/
 
-abc()={}
-rgraph_dfs(~Phi, {options=vector(3)}, ~data)={
-	my(s1, s, sc, vG, type, covtree, slpdata, seed);
-	[type,covtree,slpdata]=options;
+rgraph_dfs(~Phi, ~data)={
+	/*Data of G*/
+	my(s1, s, sc, vG, T, seed);
 	/*rec_prof++;*/
 	/*if(rec_prof > 5, breakpoint());*/
 	if(#Phi==2,
 		/*Initialize*/
 		my(G);
 		G=Phi;
-		/*Decide if dfs is on Gdual or G respectively.*/
-		if(type, s=G[2];
-			vG=rgraph_face_index(G);
-		,/*else*/
-			s=G[2]^-1*G[1];
-			vG=rgraph_vertex_index(G);
-		);
+		/*Dfs is on Gdual.*/
+		s=G[2];
+		vG=rgraph_face_index(G);
+
 		/*Go through the faces in reversed orientation. Needed for the slps.*/
 		s=s^-1;
 		s1=G[1];
@@ -539,57 +514,52 @@ rgraph_dfs(~Phi, {options=vector(3)}, ~data)={
 		dfsvG=vector(#sc);
 		seed=1;
 
-		my(tempcovtree,tempslpdata);
-		if(covtree, tempcovtree=List());
-		if(slpdata,
-			tempslpdata=List();
-		);
+		my(tempT);
+		tempT=List();
+
 		Phi=[s1, s, sc, vG];
 		my(bufdata);
-		bufdata=[explored, tempcovtree, tempslpdata, dfsvG, vdfsindex, seed];
+		bufdata=[explored, tempT, dfsvG, vdfsindex, seed, vG];
 		for(i=1, #data, data[i]=bufdata[i]);
 	,/*else*/
 		/*Recover ribbon graph info*/
 		[s1, s, sc, vG]=Phi;
-		/*"[explored, covtree, slp, dfsvG, vdfsindex, seed]=data"*/
+		/*"[explored, T, slp, dfsvG, vdfsindex, seed]=data"*/
 
 		/*data[5] is the index of the current recursion*/
-		data[5]++;
+		data[4]++;
 	);
 
 	/*Data related to current vertex.*/
 	my(v, vindex);
 	/*seed is the first edge to be visited in this*/
 	/*vertex*/
-	seed=data[6];
+	seed=data[5];
 	vindex=vG[seed];
 	v=sc[vindex];
 
 	/*Map from the permcycles ordering to*/
 	/*the dfs ordering of the vertices. Used*/
 	/*mainly with the straight line program (slp)*/
-	data[4][vindex]=data[5];
-	/*data[4] associates to a vertex index its */
+	data[3][vindex]=data[4];
+	/*data[3] associates to a vertex index its */
 	/*index for the dfs ordering.*/
 
 	/*Mark current vertex*/
 	data[1][vindex]=1;
-	if(data[5]==1 && #v==1, 
+	if(data[4]==1 && #v==1, 
 		/*Can happen only at first iteration */
-			if(covtree, listput(~data[2],seed));
-			if(slpdata,
-				listput(~data[3], [seed,seed]);
-		    );
-			/*Update seed*/
-			data[6]=s1[seed];
-			rgraph_dfs(~Phi,options,~data);
-			return();
-		);
+		listput(~data[2],[seed,s1[seed]]);
+		/*Update seed*/
+		data[5]=s1[seed];
+
+		rgraph_dfs(~Phi,~data);
+		return();
+	);
 	
 	my(j, jinv, vjinvindex);
 	j=seed;
 	until(j==seed,
-
 		jinv=s1[j];
 		vjinvindex=vG[jinv];
 
@@ -599,24 +569,11 @@ rgraph_dfs(~Phi, {options=vector(3)}, ~data)={
 			next;
 		);
 		/*Unexplored*/
-		if(slpdata, 
-				/*One can recover a full path from j to 1 using the fact that if */
-                /*[estart, eend, lastvindex]=data[3][dfsvG[vindex]] and*/
-				/*[lastestart, lasteend, lastlastvindex]=data[3][dfsvG[lastvindex]]
-				 */
-				/*then s1[lasteend]=estart and (estart, s1[estart]) is an edge in*/
-				/*covtree between vindex and lastvindex and the fact that*/
-				/*dfsvG[vG[1]]=1<=dfsvG[lastvindex]<dfsvG[vindex].*/
-			if(vindex==1,
-				listput(~data[3], [seed, j]);
-			,/*else*/
-				listput(~data[3], [seed, j, vG[seed]]);
-			);
-		);
-		if(covtree, listput(~data[2],j));
+
+		listput(~data[2],[j,s1[j]]);
 		/*Update seed*/
-		data[6]=jinv;
-		rgraph_dfs(~Phi, options, ~data);
+		data[5]=jinv;
+		rgraph_dfs(~Phi, ~data);
 
 		/*Increment*/
 		j=s[j];
@@ -627,8 +584,8 @@ rgraph_dfs(~Phi, {options=vector(3)}, ~data)={
 
 rgraph_is_connected(G)={
 	if(#permcycles(G[2])<=1, return(1));
-	my(data=vector(6),explored);
-	rgraph_dfs(G,[1,0,0],~data);
+	my(data=vector(6), explored);
+	rgraph_dfs(G,~data);
 	explored=data[1];
 	foreach(explored,i, if(!i, return(0)));
 	return(1);
@@ -640,7 +597,7 @@ rgraph_connected_components(G, {CC=List()})={
 	my(n, s1, s2, s2c, explored, e);
 	if(#G[1]==0 || #G[2]==0, return(CC));
 	my(data=vector(6));
-	rgraph_dfs(G,[1,0,0],~data);
+	rgraph_dfs(G,~data);
 	explored = data[1];
 	e=0;
 	foreach(explored, i, e=e+i);
@@ -660,8 +617,8 @@ rgraph_connected_components(G, {CC=List()})={
 	my(s2CCc, s2leftc, s1CC, s1left);
 	s2CCc=List();
 	s2leftc=List();
-	s1CC=numtoperm(n,0);
-	s1left=numtoperm(n,0);
+	s1CC=vectorsmall(n,i,i);
+	s1left=vectorsmall(n,i,i);
 
 	my(c);
 	for(i=1, #explored,
@@ -700,40 +657,43 @@ rgraph_connected_components(G, {CC=List()})={
 }
 
 
-rgraph_one_face_reduction(G)={
+rgraph_one_face_reduction(G, {withGone=0})={
 		my(n,s1,s2);
 		[s1,s2]=G;
 		n=#s1;
 		/*Return if it already has one face.*/
 		if(#permcycles(s2)==1, return(G));
-		my(data, covtree);
-		data=vector(6);
-		rgraph_dfs(G,[1,1,1],~data);
-		covtree=data[2];
+		my(data=vector(6), T);
+		rgraph_dfs(G,~data);
+		T=data[2];
 		
-		my(in_covtree, e);
-		in_covtree=vector(n);
+		my(in_T, e);
+		in_T=vector(n);
 		
-		foreach(covtree, e,
-			in_covtree[e]=1;
-			in_covtree[s1[e]]=1;
+		foreach(T, e,
+			in_T[e[1]]=1;
+			in_T[e[2]]=1;
 		); 
 		
 		/*Build s1_ and s2_*/
 		my(s1_, s2_, k);
-		s1_=numtoperm(n,0);
-		s2_=numtoperm(n,0);
-	/* The resulting rgraph depends only on covtree. */
+		s1_=vectorsmall(n,i,i);
+		s2_=vectorsmall(n,i,i);
+	/* The resulting rgraph depends only on T. */
 		for(i=1, n, 
-			if(in_covtree[i], next);
+			if(in_T[i], next);
 			s1_[i]=s1[i];
 			k=s2[i];
-			while(in_covtree[k],
+			while(in_T[k],
 				k=s2[s1[k]];
 			);
 			s2_[i]=k;
 		);
-		return([s2_, data, perm_normalize_wrt([s1_,s2_], 1, in_covtree)]);
+		if(withGone, 
+			return([s2_, data, perm_normalize_wrt([s1_,s2_], 1, in_T)]);
+		,/*else*/
+			return([s2_, data]);
+		);
 }
 
 makeindex(s2_, seed)={
@@ -803,7 +763,7 @@ cut_and_paste_one(s2_, s1, seedslp, eindex)={
 	\\ a and b are used because they are not in the vecs.
 	my(updated_w, updated_s2_, updated_eindex);
 	updated_w=concat([vecgamma, vecbeta, [a], [b], [s1[a]], [s1[b]], vecalpha, vecdelta]);
-	updated_s2_=cycle_to_perm(n, updated_w);
+	updated_s2_=cycles_to_perm(n, [updated_w]);
 	updated_eindex=makeindex(updated_s2_, updated_w[1]);
 		
 	return([a,b, vecalpha, vecbeta, vecgamma, vecdelta, slpc, slpd, w, updated_w, updated_s2_, updated_eindex]);
@@ -1018,18 +978,11 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
 	s2dualinv=s2dual^-1;
 	n=#s2dual;
 
-	my(s2dual_, slpdataloopfaces, dfsfGdual, data, covtree);
-	[s2dual_,data]=rgraph_one_face_reduction(Gdual)[1..2];
+	my(s2dual_, dfsfGdual, data, T);
+	[s2dual_,data]=rgraph_one_face_reduction(Gdual);
 	/*#w=O(g)=n-2(f-1)*/
-	[covtree, slpdataloopfaces, dfsfGdual]=data[2..4];
-
-
-	/*elts[i]= generateur associé à l'arête i*/
-
-	/*Faire cas où invol[i] est sans point fixe*/
-	/*TODO: Pour l'instant prends que les rgraphs avec involution*/
-	/*sans point fixe? Ou alors faire la traduction après coup pour*/
-	/*slp.*/
+	[T, dfsfGdual]=data[2..3];
+	fGdual=data[6];
 
 	my(s2dualc, f);
 	s2dualc=permcycles(s2dual);
@@ -1039,12 +992,12 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
 	/*Encodes a face of Gdual starting at seed and*/
 	/*went through in reversed orientation.*/
 	makeslpgammai=(u-> 
-		/*Red : Normalement j'ai rajouté autant d'elts dans slpdata etcovtree.*/
+		/*Red : Normalement j'ai rajouté autant d'elts dans slpdata etT.*/
 		my(seed, e, k=1, slpgammai=vector(n));
 		if(u==1,
-			seed=slpdataloopfaces[1][1];
+			seed=1;
 		,/*else*/
-			seed=s1dual[slpdataloopfaces[u-1][2]];
+			seed=T[u-1][2];
 		);
 
 		e=seed;
@@ -1083,17 +1036,26 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
 	slpgis[1]=[-1,0];
 	pointersgi[1]=1;
 
-	my(last, k=2);
+	my(last, estart, eend, flastindex, flastdfsindex, k);
+	k=2;
 	for(i=2, f,
-		/*The path associated to gi is used to join the first face to the face */
-		/*of index i in the dfs.*/
-		my(estart, eend, flastindex, flastdfsindex);
-		if(#slpdataloopfaces[i-1]==2,
-			[estart, eend]=slpdataloopfaces[i-1];
+		/*
+			The path associated to gi is used to join
+			the first face to the face 
+			of index i in the dfs.
+		*/
+		if(i==2,
+			[estart, eend]=[1, T[1][1]];
 			last=1;
 		,/*else*/
-			[estart, eend, flastindex]=slpdataloopfaces[i-1];
+			flastindex=fGdual[T[i-1][1]];
 			flastdfsindex=dfsfGdual[flastindex];
+			if(flastdfsindex==1,
+				[estart, eend]=[1, T[i-1][1]];
+			,/*else*/
+				[estart, eend]=[T[flastdfsindex-1][2], T[i-1][1]];
+			);
+			/*Recover index of last instruction in slp*/
 			last=pointersgi[flastdfsindex];
 		);
 
@@ -1121,12 +1083,12 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
 
 	slpgis=slpgis[1..(k-1)];
 
-	my(in_covtree);
-	seed=slpdataloopfaces[1][1];
-	in_covtree=vector(n);
-	foreach(covtree, u,
-		in_covtree[u]=1;
-		in_covtree[s1dual[u]]=1;
+	my(in_T);
+	seed=1;
+	in_T=vector(n);
+	foreach(T, e,
+		in_T[e[1]]=1;
+		in_T[e[2]]=1;
 	);
 	/*As G has one face (in particular s2 has no fixed points)*/
 	/*Gdual is reduced, that it, for any e s2dual[e]!=e^-1*/
@@ -1136,7 +1098,7 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
 	genus=(#permcycles(Gdual[1]*Gdual[2])-#Gdual[1]/2+f-2)\(-2);
 	if(genus,
 		/*Fails in genus 0*/
-		while(in_covtree[seedslp],
+		while(in_T[seedslp],
 			seedslp=s2dualinv[s1dual[seedslp]];
 		);
 		ret=rgraph_buildpres(s2dual_,s1dual, seedslp, slpsgammai, slpgis, pointersgi, type, testing);

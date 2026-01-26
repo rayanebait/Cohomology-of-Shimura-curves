@@ -151,12 +151,12 @@ fromsig(sig)={
 	return(Str(v));
 }
 
-/**/
-afuchstore(X)={
-	my(n, pathtostorage);
-	storagepath=externstr("find /home -wholename */*Cohomology-of-Shimura-curves/storage/fdom")[1];
+afuchstore(X, {storagepath})={
+	if(!storagepath,
+		storagepath=externstr("find /home -wholename */*Cohomology-of-Shimura-curves/storage/fdom")[1];
+	);
 
-	my(sig);
+	my(n,sig);
 	sig=afuchsignature(X);
 	n=fileopen(concat([storagepath,"/", fromsig(sig)]),"a");
 
@@ -165,9 +165,10 @@ afuchstore(X)={
 	return();
 }
 
-afuchfromfile(sig)={
-	my(n);
-	storagepath=externstr("find /home -wholename */*Cohomology-of-Shimura-curves/storage/fdom")[1];
+afuchfromfile(sig,{storagepath})={
+	if(!storagepath,
+		storagepath=externstr("find /home -wholename */*Cohomology-of-Shimura-curves/storage/fdom")[1];
+	);
 	n=fileopen(concat([storagepath, "/", tosig(sig)]));
 	eval(concat("X= ",fileread(n)));
 	return(X);

@@ -91,7 +91,7 @@ test_covtree(n, {iter=100})={
 
 				my(data);
 				data=vector(6);
-				rgraph_dfs(G,[1,1,0],~data);
+				rgraph_dfs(G,~data);
 
 				my(covtree,fG); 
 				covtree=data[2];
@@ -102,8 +102,9 @@ test_covtree(n, {iter=100})={
 				fG=rgraph_face_index(G);
 
 				my(seen, findex, findexinv);
-				seen=vector(f, u, u==data[4][1]);
-				foreach(covtree, u,
+				seen=vector(f, u, u==data[3][1]);
+				for(i=1, #covtree, 
+						u=covtree[i][1];
 						findex=fG[u];
 						findexinv=fG[s1[u]];
 						if(findex==findexinv,
@@ -124,48 +125,18 @@ test_covtree(n, {iter=100})={
 test_one_face_reduction()={
 		my(G11tested, G11redtested, covtree11tested,slpdata11tested, G11red,w11, data11);
 		G11tested = [Vecsmall([10, 5, 7, 8, 2, 9, 3, 4, 6, 1]), Vecsmall([2, 3, 4, 5, 6, 7, 8, 9, 10, 1])];
-		covtree11tested=[1,2,3];
-		slpdata11tested=Vec([[1,1],[10,2,2],[5,3,3]]);
+		covtree11tested=[[1,10],[2,5],[3,7]];
 		G11redtested=[Vecsmall([3, 4, 1, 2]), Vecsmall([2, 3, 4, 1])];
 
-		[w11, data11, G11red]=rgraph_one_face_reduction(rgraph_dual(G11tested));
+		[w11, data11, G11red]=rgraph_one_face_reduction(rgraph_dual(G11tested),1);
 
 		covtree11=Vec(data11[2]);
 		if(covtree11!=covtree11tested, error("rgraph_one_face_reduction failed : Invalid tree."));
 
-		slpdata11=Vec(data11[3]);
-		if(slpdata11!=slpdata11tested, error("rgraph_one_face_reduction failed : Invalid slpdata."));
-
-
 		if(G11red!=G11redtested, error("rgraph_one_face_reduction failed : Invalid resulting graph."));
-		
-		
 		return();
 }
 
-visual_test_one_face_reduction(n)={
-		my(G, s1, s2, f);
-		G=rand_rgraph(n);
-		[s1,s2]=G;
-		f=#permcycles(s2);
-
-		if(f==1, visual_test_one_face_reduction(n); return(););
-
-		info(G);
-
-		my(w,data,Gone);
-		[w,data,Gone]=rgraph_one_face_reduction(G);
-
-		my(s1one,s2one, f_);
-		[s1one,s2one]=Gone;
-		f_=permcycles(s2one);
-
-		if(f_==1, error("rgraph_one_face_reduction failed : several faces left"));
-		info(Gone);
-
-		return();
-
-}
 test_get_presentation()={
 	my(G, Gdual, data, w, updated_w, a,b, ainv,binv,vecalpha, vecbeta, vecgamma, vecdelta);
 	Gdual=[Vecsmall([6, 3, 2, 5, 4, 1, 100, 62, 21, 33, 12, 11, 32, 29, 26, 82, 65, 87, 43, 34, 9, 61, 68, 77, 83, 15, 28, 27, 14, 31, 30, 13, 10, 20, 42, 74, 71, 48, 45, 85, 75, 35, 19, 86, 39, 47, 46, 38, 70, 59, 52, 51, 58, 55, 54, 57, 56, 53, 50, 69, 22, 8, 99, 88, 17, 81, 78, 23, 60, 49, 37, 73, 72, 36, 41, 84, 24, 67, 80, 79, 66, 16, 25, 76, 40, 44, 18, 64, 98, 95, 92, 91, 94, 93, 90, 97, 96, 89, 63, 7, 102, 101]), Vecsmall([101, 6, 3, 2, 5, 4, 1, 100, 62, 21, 33, 12, 11, 32, 29, 26, 82, 65, 87, 43, 34, 9, 61, 68, 77, 83, 15, 28, 27, 14, 31, 30, 13, 10, 20, 42, 74, 71, 48, 45, 85, 75, 35, 19, 86, 39, 47, 46, 38, 70, 59, 52, 51, 58, 55, 54, 57, 56, 53, 50, 69, 22, 8, 99, 88, 17, 81, 78, 23, 60, 49, 37, 73, 72, 36, 41, 84, 24, 67, 80, 79, 66, 16, 25, 76, 40, 44, 18, 64, 98, 95, 92, 91, 94, 93, 90, 97, 96, 89, 63, 7, 102])];
