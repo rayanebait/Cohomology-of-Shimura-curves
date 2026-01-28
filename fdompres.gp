@@ -24,32 +24,54 @@ rgraph_from_afuch(X,{with_h=1})={
 }
 
 
-elliptic_order(A, x, {modpr=0})={
-	my(ord, maxord);
-	maxord=2*poldegree(algcenter(A).pol);
+modpr_incenter(xmodpr)={
+	return(matdet(xmodpr)==xmodpr[1,1]^2);
+}
 
-	if(!modpr,
-		my(F, dA);
+elliptic_order(A, x, {data=0})={
+	my(modsprs, facs, deg)
+	if(!data,
+		my(p, F, dA, dF, splitprs);
+		data=vector(2);
 		F=algcenter(A);
+		deg=poldegree(F.pol);
+		facs=factor(deg);
+		dF=F.disc;
 		dA=algdisc(A);
 
-		forprime(p=5,,
-			splitpr=idealprimedec(F,p)[1];
-			if(splitpr[3]!=1, next);
-			normpr = idealnorm(F,splitpr);
-			if(gcd(normpr, dA)!=1, next);
+		forprime(tempp=3,,
+			if(gcd(dF, tempp)!=1 || gcd(dA, tempp)!=1, next);
+			p=tempp;
 			break
 		);
-		modpr = algmodprinit(A, splitpr);
+		splitprs=idealprimedec(F,p);
+		modprs = \
+			vector(#splitprs, i, algmodprinit(A, splitprs[i]));
+		data[1]=modprs;
+		data[2]=facs;
+		data[3]=deg;
 	);
+	[modprs, facs, deg]=data;
 	
-	xmodpr=algmodpr(A,x,modpr);
-	my(ord=1, xpowmodpr=xmodpr, Id=matid(2));
-	while(xpowmodpr!=Id || ord<=maxord,
+	my(maxord, xmodprs);
+	maxord=2*poldegree(algcenter(A).pol);
+	xmodprs=vector(#modprs, i, algmodpr(A,x,modprs[i]));
+
+	my(ords, xpowmodpr, xmodpr);
+	ords=vector(#modprs,i,1);
+
+	for(i=1, #modprs,
+		xmodpr=xmodprs[i];
+		xpowmodpr=xmodpr;
+		tempord=1;
+		while(!modpr_incenter(xpowmodpr) || ords[i]<=maxord,
 			xpowmodpr=xpowmodpr*xmodpr;
-			ord++;
+			ords[i]++;
+		);
+		if(ords[i]==maxord+1,);
+		if();
 	);
-	return([ord,modpr]);
+	return([ord,modprs]);
 }
 rgraph_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
 		my(sc, elts, n);
@@ -69,12 +91,12 @@ rgraph_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
 			of the elliptics in the only cycle of s2 starting
 			at 1.
 		*/
-		my(elts,A, modpr);
+		my(elts,A, modprs);
 		elts=afuchelts(X);
 		A=afuchalg(X);
 		for(i=1, n, 
 			if(is_ell[i],
-				[is_ell[i],modpr]=elliptic_order(A, elts[h[i]],modpr);
+				[is_ell[i],modprs]=elliptic_order(A, elts[h[i]],modprs);
 				k++;
 			);
 		);
