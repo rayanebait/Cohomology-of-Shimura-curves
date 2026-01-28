@@ -29,13 +29,12 @@ modpr_incenter(xmodpr)={
 }
 
 elliptic_order(A, x, {data=0})={
-	my(modsprs, facs, deg)
+	my(modprs, maxord);
 	if(!data,
-		my(p, F, dA, dF, splitprs);
+		my(p, F, dA, dF, deg, splitprs);
 		data=vector(2);
 		F=algcenter(A);
 		deg=poldegree(F.pol);
-		facs=factor(deg);
 		dF=F.disc;
 		dA=algdisc(A);
 
@@ -48,30 +47,24 @@ elliptic_order(A, x, {data=0})={
 		modprs = \
 			vector(#splitprs, i, algmodprinit(A, splitprs[i]));
 		data[1]=modprs;
-		data[2]=facs;
-		data[3]=deg;
+		data[2]=vecprod(apply((l)->(l/(l-1)), primes(ceil(log(deg)))))*2*deg;
 	);
-	[modprs, facs, deg]=data;
-	
-	my(maxord, xmodprs);
-	maxord=2*poldegree(algcenter(A).pol);
-	xmodprs=vector(#modprs, i, algmodpr(A,x,modprs[i]));
+	[modprs, maxord]=data;
 
 	my(ords, xpowmodpr, xmodpr);
 	ords=vector(#modprs,i,1);
 
 	for(i=1, #modprs,
-		xmodpr=xmodprs[i];
+		xmodpr=algmodpr(A,x,modprs[i]);
 		xpowmodpr=xmodpr;
-		tempord=1;
-		while(!modpr_incenter(xpowmodpr) || ords[i]<=maxord,
+		while(!modpr_incenter(xpowmodpr) && ords[i]<=maxord,
 			xpowmodpr=xpowmodpr*xmodpr;
 			ords[i]++;
 		);
-		if(ords[i]==maxord+1,);
-		if();
+		if(ords[i]==maxord+1, ords[i]=1);
 	);
-	return([ord,modprs]);
+	ord=lcm(ords);
+	return([ord,data]);
 }
 rgraph_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
 		my(sc, elts, n);
@@ -91,12 +84,12 @@ rgraph_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
 			of the elliptics in the only cycle of s2 starting
 			at 1.
 		*/
-		my(elts,A, modprs);
+		my(elts,A, data);
 		elts=afuchelts(X);
 		A=afuchalg(X);
 		for(i=1, n, 
 			if(is_ell[i],
-				[is_ell[i],modprs]=elliptic_order(A, elts[h[i]],modprs);
+				[is_ell[i],data]=elliptic_order(A, elts[h[i]],data);
 				k++;
 			);
 		);
