@@ -120,7 +120,7 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		[G,h]=rgraph_from_afuch(X);
 
 		my(ret);
-		[ret, dfsfGdual]=rgraph_get_presentation(G,type,0,1);
+		[ret, dfsfGdual]=rgraph_get_presentation(G,type,1,0);
 		/*Add elliptic relations and renormalize the slp*/
 		ret[1]=slp_normalize(ret[1],h,#afuchspair(X));
 		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(X,rgraph_dual(G), h, #ret[2],dfsfGdual));

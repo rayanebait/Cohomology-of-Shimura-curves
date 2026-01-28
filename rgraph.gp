@@ -239,7 +239,7 @@ rgraph_from_invol(invol)={
 	s2=perm_iplusk(n+k,1);
 
 	my(inew,iinvnew, g);
-	g=vector(n+k);
+	g=vectorsmall(n+k);
 	for(i=1,n,
 		inew =i+ki[i];
 		g[inew]=i;
@@ -489,7 +489,6 @@ Initialize my(data) as a reference with rgraph_dfs(G, ~data)
 to perform a dfs in Gdual and compute a covering tree T.
 
 At the end data has the form : [explored,T,dfsvG,fdfsindex,seed, vG]=data*/
-
 rgraph_dfs(~Phi, ~data)={
 	/*Data of G*/
 	my(s1, s, sc, vG, T, seed);
@@ -638,7 +637,6 @@ rgraph_connected_components(G, {CC=List()})={
 			foreach(c, j,
 				s1left[j]=s1[j];
 			);
-
 		);
 	);
 	my(s2CC, s2left);
@@ -676,19 +674,22 @@ rgraph_one_face_reduction(G, {withGone=0})={
 		); 
 		
 		/*Build s1_ and s2_*/
-		my(s1_, s2_, k);
+		my(s1_, s2_, k, s2inv);
 		s1_=vectorsmall(n,i,i);
 		s2_=vectorsmall(n,i,i);
-	/* The resulting rgraph depends only on T. */
+		s2inv=s2^-1;
 		for(i=1, n, 
 			if(in_T[i], next);
 			s1_[i]=s1[i];
-			k=s2[i];
+			k=s2inv[i];
+			\\k=s2[i];
 			while(in_T[k],
-				k=s2[s1[k]];
+				\\k=s2[s1[k]];
+				k=s2inv[s1[k]];
 			);
 			s2_[i]=k;
 		);
+		s2_=s2_^-1;
 		if(withGone, 
 			return([s2_, data, perm_normalize_wrt([s1_,s2_], 1, in_T)]);
 		,/*else*/
@@ -698,7 +699,7 @@ rgraph_one_face_reduction(G, {withGone=0})={
 
 makeindex(s2_, seed)={
 	my(eindex, e, k);
-	eindex=vector(#s2_);
+	eindex=vectorsmall(#s2_);
 	e=seed;
 	k=1;
 	until(e==seed,
@@ -839,8 +840,8 @@ rgraph_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing
 	   	   	slpc,slpd);
 	my(a,b, w, updated_w, updated_s2_, updated_eindex);
 	if(type=="oneword",
-		pointers=vector(n_, i, i);
-		w=vector(n_);
+		pointers=vectorsmall(n_, i, i);
+		w=vectorsmall(n_);
 		fullslp=vector(n_, u,\
 			   	e=s2_[e];\
 				if(!seen[s1[e]], seen[e]=1);\
@@ -969,7 +970,7 @@ type.
 The output is a tuple [slp, pointers, rels] with format as describe
 in rgraph_buildpres.
  */
-rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
+rgraph_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
 	if(type=="geometric", /*TODO*/ error("Not implemented yet."); return());
 	my(Gdual);
 	Gdual=rgraph_dual(G);
@@ -988,11 +989,10 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
 	s2dualc=permcycles(s2dual);
 	f=#s2dualc;
 	
-	my(makeslpgammai);
+	my(makeslpgammai, maxfacesize = 1);
 	/*Encodes a face of Gdual starting at seed and*/
 	/*went through in reversed orientation.*/
 	makeslpgammai=(u-> 
-		/*Red : Normalement j'ai rajouté autant d'elts dans slpdata etT.*/
 		my(seed, e, k=1, slpgammai=vector(n));
 		if(u==1,
 			seed=1;
@@ -1017,6 +1017,7 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
 			e=s2dualinv[e];
 			k++;
 		);
+		maxfacesize=max(maxfacesize, k-1);
 		return(slpgammai[1..(k-1)]);
 	);
 	my(slpsgammai);
@@ -1026,7 +1027,7 @@ rgraph_get_presentation(G, {type="oneword"}, {testing=0},{withdfsfG=0})={
    	my(slpsgens, seedlp, n_);
 	n_=n-2*(f-1);
 	
-	my(slpgis, pointersgi, approxtotlength=2*(n-f+1));
+	my(slpgis, pointersgi, approxtotlength=maxfacesize*n);
 	/*straight line program to compute loopfaces paths.*/
 	slpgis=vector(approxtotlength);
 	/*Used to read the slp : pointersgi[fdfsindex]*/

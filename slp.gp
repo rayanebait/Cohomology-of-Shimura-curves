@@ -90,12 +90,6 @@ connects the trees of the slps by draw an edge from slps[i+1][1]
 to slps[i][#slps[i]] */
 slpconcat(slps, n, {oldpointers=0}, {connect=0})={
 	if(#slps==0, return(slps));
-	if(#slps[1]==0, 
-		if(oldpointers, 
-			return(slpconcat(slps[^1], n, oldpointers[^1],connect));
-		);
-		return(slpconcat(slps[^1], n,,connect));
-	);
 	if(oldpointers && #slps!=#oldpointers, error("Not as much pointers as slps in slpconcat."));
 
 	my(slp, cardslp);

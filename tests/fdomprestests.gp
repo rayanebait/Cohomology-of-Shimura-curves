@@ -145,10 +145,10 @@ afuchtestdata(X, {type="oneword"})={
 	my(v,e,f,g);
 	[v,e,f,g]=rgraph_numbers(Gdual);
 
-	my(s2_, etol, w, datadfs, Gone);
-	[s2_,etol,Gone]=rgraph_one_face_reduction(Gdual,1);
+	my(s2_, data, etol, w, datadfs, Gone);
+	[s2_,data,Gone]=rgraph_one_face_reduction(Gdual,1);
 	etol=rgraph_to_word(G)[2];
-	if(#etol,
+	if(g && #etol,
 		w=find_w(s2_,etol);
 		wis=rgraph_to_word(Gdual,etol)[1];
 	,/*else*/
@@ -218,13 +218,13 @@ my(Xs, pol, F, A, pr, J, Or);
 Xs=List();
 
 \\ An example with F=Q(z11)^+, D=(1) and level 32.
-pol=y^5+y^4-4*y^3-3*y^2+3*y+1;
-F=nfinit(pol);
-A=alginit(F,[2, [[],[]],[0, 1/2,1/2,1/2,1/2]]);
-pr=idealprimedec(F,2)[1];
-J=idealpow(F, pr, 2);
-Or=algeichlerbasis(A, pr);
-listput(~Xs, afuchinit(A, Or));
+\\pol=y^5+y^4-4*y^3-3*y^2+3*y+1;
+\\F=nfinit(pol);
+\\A=alginit(F,[2, [[],[]],[0, 1/2,1/2,1/2,1/2]]);
+\\pr=idealprimedec(F,2)[1];
+\\J=idealpow(F, pr, 2);
+\\Or=algeichlerbasis(A, pr);
+\\listput(~Xs, afuchinit(A, Or));
 
 /* 
 An example with F=Q(sqrt(8)), N_F/Q(D)=9 and level (1). Yields 
@@ -235,62 +235,62 @@ testing the oneword and onehandle presentations.
 It then computes various testing utilities.
  */
 
-pol=y^2-8;
-F=nfinit(pol);
-pr=idealprimedec(F,3)[1];
-A=alginit(F, [[pr], [0,1]]);
-listput(~Xs,afuchinit(A));
+\\pol=y^2-8;
+\\F=nfinit(pol);
+\\pr=idealprimedec(F,3)[1];
+\\A=alginit(F, [[pr], [0,1]]);
+\\listput(~Xs,afuchinit(A));
 
 
 /*Storing and testing*/
-foreach(Xs, X, afuchstore(X));
-afuchtest_relation(Xs,0,1,"oneword");
-afuchtest_relation(Xs,0,1,"onehandle");
-
-
-/*
-   Various signatures corresponding to Fuchsian groups that
-   can be computed and stored using afuchsamples(nsamples, 1,1).
-*/
+\\foreach(Xs, X, afuchstore(X));
+\\afuchtest_relation(Xs,0,1,"oneword");
+\\afuchtest_relation(Xs,0,1,"onehandle");
+\\
+\\
+\\/*
+\\   Various signatures corresponding to Fuchsian groups that
+\\   can be computed and stored using afuchsamples(nsamples, 1,1).
+\\*/
 my(X,sig);
-\\sig=[0,[2,2,2,3],0];
-\\sig=[0,[2,3,7],0];
-\\sig=[1,[2],0];
-\\sig=[1,[2,2],0];
-\\sig=[1,[3],0];
-\\sig=[1, [2, 2, 2, 2, 2, 2, 3, 3], 0];
-\\sig=[2,[],0];
-sig=[2,[2],0];
-\\sig=[2, [3, 3], 0];
-\\sig=[3, [], 0];
+\\\\sig=[0,[2,2,2,3],0];
+\\\\sig=[0,[2,3,7],0];
+\\\\sig=[1,[2],0];
+\\\\sig=[1,[2,2],0];
+\\\\sig=[1,[3],0];
+\\\\sig=[1, [2, 2, 2, 2, 2, 2, 3, 3], 0];
+\\\\sig=[2,[],0];
+\\\\sig=[2,[2],0];
+sig=[2, [3, 3], 0];
+\\\\sig=[3, [], 0];
 \\sig=[4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3], 0];
-\\sig=[12, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3], 0]
-\\sig=[67,[],0];
-
+\\\\sig=[12, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3], 0]
+\\\\sig=[67,[],0];
+\\
 X=afuchfromfile(sig);
 Xs=[X];
-
-/*
-	The following code computes fundamental domains for 
-	50 algebras stored in STORAGEPATH/fieldsandalgebras before
-   	testing the presentations output by afuch_presentation.
-
-	Running Xs=afuchsamples(50,1,1) first computes the 
-	fundamental domains before storing them. 
-	Running Xs=afuchsamples(50,0,1) uses samples stored in
-	STORAGEPATH/fdom. 
-	Running Xs=afuchsamples(50,1,0) computes the fundamental
-	domains without storing them.
-*/
-
-/*Computes 50 fundamental domains*/
-\\Xs=afuchsamples(50,1,1);
-
-/*Retrieves at most 50 fundamental domains from storage*/
-Xs=afuchsamples(50,0,1);
+\\
+\\/*
+\\    The following code computes fundamental domains for 
+\\    50 algebras stored in STORAGEPATH/fieldsandalgebras before
+\\   	testing the presentations output by afuch_presentation.
+\\
+\\    Running Xs=afuchsamples(50,1,1) first computes the 
+\\    fundamental domains before storing them. 
+\\    Running Xs=afuchsamples(50,0,1) uses samples stored in
+\\    STORAGEPATH/fdom. 
+\\    Running Xs=afuchsamples(50,1,0) computes the fundamental
+\\    domains without storing them.
+\\*/
+\\
+\\/*Computes 50 fundamental domains*/
+\\\\Xs=afuchsamples(50,1,1);
+\\
+\\/*Retrieves at most 50 fundamental domains from storage*/
+\\\\Xs=afuchsamples(50,0,1);
 afuchtest_relation(Xs,0,1, "oneword");
-\\afuchtest_relation(Xs,0,1, "onehandle");
-
-[ret,toeval]=afuchtestdata(X, "oneword");
-eval(toeval);
-\\afuchfdom_latex(X,"genus67",0);
+\\\\afuchtest_relation(Xs,0,1, "onehandle");
+\\
+\\[ret,toeval]=afuchtestdata(X, "oneword");
+\\eval(toeval);
+\\\\afuchfdom_latex(X,"genus67",0);
