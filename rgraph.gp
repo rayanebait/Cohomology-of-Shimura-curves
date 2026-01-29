@@ -584,7 +584,7 @@ rgraph_dfs(~Phi, ~data)={
 rgraph_is_connected(G)={
 	if(#permcycles(G[2])<=1, return(1));
 	my(data=vector(6), explored);
-	rgraph_dfs(G,~data);
+	rgraph_dfs(~G,~data);
 	explored=data[1];
 	foreach(explored,i, if(!i, return(0)));
 	return(1);
@@ -596,7 +596,7 @@ rgraph_connected_components(G, {CC=List()})={
 	my(n, s1, s2, s2c, explored, e);
 	if(#G[1]==0 || #G[2]==0, return(CC));
 	my(data=vector(6));
-	rgraph_dfs(G,~data);
+	rgraph_dfs(~G,~data);
 	explored = data[1];
 	e=0;
 	foreach(explored, i, e=e+i);
@@ -662,7 +662,7 @@ rgraph_one_face_reduction(G, {withGone=0})={
 		/*Return if it already has one face.*/
 		if(#permcycles(s2)==1, return(G));
 		my(data=vector(6), T);
-		rgraph_dfs(G,~data);
+		rgraph_dfs(~G,~data);
 		T=data[2];
 		
 		my(in_T, e);
@@ -831,7 +831,7 @@ rgraph_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing
 	e=seedslp;
 		
 	my(fullslp, pointers, seen, eindex);
-	seen=vector(n);
+	seen=vectorsmall(n);
 	\\Each edge e points to e(1).
 	eindex=makeindex(s2_,s2_[seedslp]);
 
@@ -993,13 +993,14 @@ rgraph_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
 	/*Encodes a face of Gdual starting at seed and*/
 	/*went through in reversed orientation.*/
 	makeslpgammai=(u-> 
-		my(seed, e, k=1, slpgammai=vector(n));
+		my(seed, e, k=1);
 		if(u==1,
 			seed=1;
 		,/*else*/
 			seed=T[u-1][2];
 		);
-
+		my(slpgammai);
+		slpgammai=vector(#s2dualc[fGdual[seed]]);
 		e=seed;
 		/*On commence à s2dual^-1[seed suivant s2dual^-1*/
 		/*et termine juste avant. Puis gi+1 va*/
@@ -1018,7 +1019,7 @@ rgraph_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
 			k++;
 		);
 		maxfacesize=max(maxfacesize, k-1);
-		return(slpgammai[1..(k-1)]);
+		return(slpgammai);
 	);
 	my(slpsgammai);
 	slpsgammai=vector(f,u, makeslpgammai(u));

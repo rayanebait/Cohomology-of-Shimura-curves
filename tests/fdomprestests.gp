@@ -253,7 +253,7 @@ It then computes various testing utilities.
 my(X,sig);
 \\sig=[0,[2,2,2,3],0];
 \\sig=[0,[2,3,7],0];
-sig=[1,[2],0];
+\\sig=[1,[2],0];
 \\sig=[1,[2,2],0];
 \\sig=[1,[3],0];
 \\\\sig=[1, [2, 2, 2, 2, 2, 2, 3, 3], 0];
@@ -261,7 +261,7 @@ sig=[1,[2],0];
 \\\\sig=[2,[2],0];
 \\sig=[2, [3, 3], 0];
 \\sig=[3, [], 0];
-\\sig=[4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3], 0];
+sig=[4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3], 0];
 \\sig=[12, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3], 0]
 \\sig=[67,[],0];
 
@@ -290,7 +290,7 @@ listput(~Xs, X);
 \\Xs=afuchsamples(50,1,1);
 
 \\/*Retrieves at most 50 fundamental domains from storage*/
-\\Xs=afuchsamples(50,0,1);
+Xs=afuchsamples(50,0,1);
 afuchtest_relation(Xs,0,1, "oneword");
 \\afuchtest_relation(Xs,0,1, "onehandle");
 
