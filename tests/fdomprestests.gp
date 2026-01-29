@@ -216,13 +216,13 @@ my(Xs, pol, F, A, pr, J, Or);
 Xs=List();
 
 \\ An example with F=Q(z11)^+, D=(1) and level 32.
-\\pol=y^5+y^4-4*y^3-3*y^2+3*y+1;
-\\F=nfinit(pol);
-\\A=alginit(F,[2, [[],[]],[0, 1/2,1/2,1/2,1/2]]);
-\\pr=idealprimedec(F,2)[1];
+pol=y^5+y^4-4*y^3-3*y^2+3*y+1;
+F=nfinit(pol);
+A=alginit(F,[2, [[],[]],[0, 1/2,1/2,1/2,1/2]]);
+pr=idealprimedec(F,2)[1];
 \\J=idealpow(F, pr, 2);
-\\Or=algeichlerbasis(A, pr);
-\\listput(~Xs, afuchinit(A, Or));
+Or=algeichlerbasis(A, pr);
+listput(~Xs, afuchinit(A, Or));
 
 /* 
 An example with F=Q(sqrt(8)), N_F/Q(D)=9 and level (1). Yields 
@@ -251,9 +251,9 @@ It then computes various testing utilities.
 \\   can be computed and stored using afuchsamples(nsamples, 1,1).
 \\*/
 my(X,sig);
-sig=[0,[2,2,2,3],0];
+\\sig=[0,[2,2,2,3],0];
 \\sig=[0,[2,3,7],0];
-\\sig=[1,[2],0];
+sig=[1,[2],0];
 \\sig=[1,[2,2],0];
 \\sig=[1,[3],0];
 \\\\sig=[1, [2, 2, 2, 2, 2, 2, 3, 3], 0];
@@ -264,10 +264,15 @@ sig=[0,[2,2,2,3],0];
 \\sig=[4, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3], 0];
 \\sig=[12, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3], 0]
 \\sig=[67,[],0];
-\\
+
+\\ After running afuchsamples(nsamples, 1,1), run the following
+\\ line to retrieve a Fuchsian group from storage with given
+\\ signature.
+
 X=afuchfromfile(sig);
-Xs=[X];
-\\
+listput(~Xs, X);
+
+
 \\/*
 \\    The following code computes fundamental domains for 
 \\    50 algebras stored in STORAGEPATH/fieldsandalgebras before
@@ -280,15 +285,16 @@ Xs=[X];
 \\    Running Xs=afuchsamples(50,1,0) computes the fundamental
 \\    domains without storing them.
 \\*/
-\\
+
 \\/*Computes 50 fundamental domains*/
-\\\\Xs=afuchsamples(50,1,1);
-\\
+\\Xs=afuchsamples(50,1,1);
+
 \\/*Retrieves at most 50 fundamental domains from storage*/
-\\\\Xs=afuchsamples(50,0,1);
+\\Xs=afuchsamples(50,0,1);
 afuchtest_relation(Xs,0,1, "oneword");
-\\\\afuchtest_relation(Xs,0,1, "onehandle");
-\\
+\\afuchtest_relation(Xs,0,1, "onehandle");
+
+
 [ret,toeval]=afuchtestdata(X, "oneword");
 eval(toeval);
-\\\\afuchfdom_latex(X,"genus67",0);
+\\afuchfdom_latex(X,"genus67",0);
