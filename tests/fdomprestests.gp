@@ -1,5 +1,3 @@
-default("parisize", "16G")
-
 /*File with fields and algebras stored as successive :
 	pol 
    [a,b]	
