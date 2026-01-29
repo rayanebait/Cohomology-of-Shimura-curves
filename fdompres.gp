@@ -47,7 +47,8 @@ elliptic_order(A, x, {data=0})={
 		modprs = \
 			vector(#splitprs, i, algmodprinit(A, splitprs[i]));
 		data[1]=modprs;
-		data[2]=vecprod(apply((l)->(l/(l-1)), primes(ceil(log(deg)))))*2*deg;
+		/*Worst case bound*/
+		data[2]=vecprod(apply((l)->(l/(l-1)), primes(2*deg+1)))*2*deg;
 	);
 	[modprs, maxord]=data;
 
