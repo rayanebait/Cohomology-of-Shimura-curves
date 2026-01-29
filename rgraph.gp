@@ -487,6 +487,11 @@ a graph embedding G starting at edge seed=1.
 
 Initialize my(data) as a reference with rgraph_dfs(G, ~data)
 to perform a dfs in Gdual and compute a covering tree T.
+Phi has the form
+		[s1, s, sc, vG]=Phi;
+data has the form
+		[explored, T, slp, dfsvG, vdfsindex, seed]=data
+
 
 At the end data has the form : [explored,T,dfsvG,fdfsindex,seed, vG]=data*/
 rgraph_dfs(~Phi, ~data)={
@@ -521,11 +526,7 @@ rgraph_dfs(~Phi, ~data)={
 		bufdata=[explored, tempT, dfsvG, vdfsindex, seed, vG];
 		for(i=1, #data, data[i]=bufdata[i]);
 	,/*else*/
-		/*Recover ribbon graph info*/
-		[s1, s, sc, vG]=Phi;
-		/*"[explored, T, slp, dfsvG, vdfsindex, seed]=data"*/
-
-		/*data[5] is the index of the current recursion*/
+		/*data[4] is the index of the current recursion*/
 		data[4]++;
 	);
 
@@ -534,8 +535,9 @@ rgraph_dfs(~Phi, ~data)={
 	/*seed is the first edge to be visited in this*/
 	/*vertex*/
 	seed=data[5];
-	vindex=vG[seed];
-	v=sc[vindex];
+	vindex=Phi[4][seed];
+	v=Phi[3][vindex];
+
 
 	/*Map from the permcycles ordering to*/
 	/*the dfs ordering of the vertices. Used*/
@@ -544,13 +546,14 @@ rgraph_dfs(~Phi, ~data)={
 	/*data[3] associates to a vertex index its */
 	/*index for the dfs ordering.*/
 
+
 	/*Mark current vertex*/
 	data[1][vindex]=1;
 	if(data[4]==1 && #v==1, 
 		/*Can happen only at first iteration */
-		listput(~data[2],[seed,s1[seed]]);
+		listput(~data[2],[seed,Phi[1][seed]]);
 		/*Update seed*/
-		data[5]=s1[seed];
+		data[5]=Phi[1][seed];
 
 		rgraph_dfs(~Phi,~data);
 		return();
@@ -559,23 +562,24 @@ rgraph_dfs(~Phi, ~data)={
 	my(j, jinv, vjinvindex);
 	j=seed;
 	until(j==seed,
-		jinv=s1[j];
-		vjinvindex=vG[jinv];
+		jinv=Phi[1][j];
+		vjinvindex=Phi[4][jinv];
+
 
 		/*Already explored*/
 		if(data[1][vjinvindex],
-			j=s[j];
+			j=Phi[2][j];
 			next;
 		);
 		/*Unexplored*/
 
-		listput(~data[2],[j,s1[j]]);
+		listput(~data[2],[j,Phi[1][j]]);
 		/*Update seed*/
 		data[5]=jinv;
 		rgraph_dfs(~Phi, ~data);
 
 		/*Increment*/
-		j=s[j];
+		j=Phi[2][j];
 	);
 	/*rec_prof--;*/
 	return();
