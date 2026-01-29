@@ -25,7 +25,7 @@ rgraph_from_afuch(X,{with_h=1})={
 
 
 modpr_incenter(xmodpr)={
-	return(matdet(xmodpr)==xmodpr[1,1]^2);
+	return(!xmodpr[1,2] && !xmodpr[2,1] && xmodpr[1,1]==xmodpr[2,2]);
 }
 
 elliptic_order(A, x, {data=0})={
@@ -61,7 +61,7 @@ elliptic_order(A, x, {data=0})={
 			xpowmodpr=xpowmodpr*xmodpr;
 			ords[i]++;
 		);
-		if(ords[i]==maxord+1, ords[i]=1);
+		if(ords[i]==maxord+1, ords[i]=0);
 	);
 	ord=lcm(ords);
 	return([ord,data]);
