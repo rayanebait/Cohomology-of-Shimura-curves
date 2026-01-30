@@ -27,10 +27,10 @@ in your gprc which can be created at $HOME/.gprc
 The packages are organized as follows :
 
     slp.gp ->slptests.gp
-        '-> rgraph.gp -> rgraphtests.gp
-             '-> fdompres.gp -> fdomprestests.gp
+        |-> rgraph.gp -> rgraphtests.gp
+        |          |            
+    rgraphutils.gp -> fdompres.gp -> fdomprestests.gp
 
-Where '-> indicates a dependency on the above package.
 # The timings folder
 It contains the code ran for the timings in the article.
 
