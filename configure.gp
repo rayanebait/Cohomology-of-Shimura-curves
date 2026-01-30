@@ -38,9 +38,9 @@ fileclose(n);
 
 /*Rewrite loadpackages.gp with correct file locations*/
 prefix=concat(["'fdomprespath=\"",fdomprespath,"\""]);
-suffix="\nread(concat(fdomprespath,\"/slp.gp\"))\nread(concat(fdomprespath,\"/rgraph.gp\"))\nread(concat(fdomprespath,\"/fdompres.gp\"))'";
+suffix="\nread(concat(fdomprespath,\"/slp.gp\"))\nread(concat(fdomprespath,\"/rgraphutils.gp\"))\nread(concat(fdomprespath,\"/rgraph.gp\"))\nread(concat(fdomprespath,\"/fdompres.gp\"))'";
 
-suffixtests="\nread(concat(fdomprespath,\"/slp.gp\"))\nread(concat(fdomprespath,\"/rgraph.gp\"))\nread(concat(fdomprespath,\"/fdompres.gp\"))\nread(concat(fdomprespath,\"/tests/slptests.gp\"))\nread(concat(fdomprespath,\"/tests/rgraphtests.gp\"))\nread(concat(fdomprespath,\"/tests/fdomprestests.gp\"))'";
+suffixtests="\nread(concat(fdomprespath,\"/slp.gp\"))\nread(concat(fdomprespath,\"/rgraphutils.gp\"))\nread(concat(fdomprespath,\"/rgraph.gp\"))\nread(concat(fdomprespath,\"/fdompres.gp\"))\nread(concat(fdomprespath,\"/tests/slptests.gp\"))\nread(concat(fdomprespath,\"/tests/rgraphtests.gp\"))\nread(concat(fdomprespath,\"/tests/fdomprestests.gp\"))'";
 
 rewrite_loadpackages_str=concat(prefix, suffix);
 rewrite_loadtests_str=concat([prefix, suffixtests]);
