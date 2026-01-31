@@ -378,52 +378,47 @@ perm_as_prodoftwocycs(s)={
 	return([ci1,ci2]);
 }
 
+\\TODO : sort 1... n à chaque étape en mettant les sii à la fin,
+\\ pour choisir un j pas dans le support, remplacer i+2.
 perm_as_prodoftwocycs1(s)={
 	my(si, n);
 	n=#s;
 	si=s;
-	my(siis, cyc3, tmp, tij);
+	my(siis, cyc3, sii);
 	siis=vectorsmall(n-3);
-	tij=maketij(n, 1, s[1]);
 	for(i=1, n-3,
-		siis[i]=si[i];
-		if(si[i]==i, next);
-		cyc3=Vecsmall([i+2, si[i], i]);
+		sii=si[i];
+		siis[i]=sii;
+		if(sii==i, next);
+		cyc3=Vecsmall([i+2, sii, i]);
 		\\ gsg(i)
-		mulcycperm(~cyc3,~si);
-		\\Now si= (i+2 i+1 i). gi-1 si-1 gi-1^-1 
-		\\ so that si(i)=i
-		\\ At this point si is in Stab(1,2, ...,i)\simeq S_{n-i}
-		gis[i]=gi;
+		mulpermcyc(~si, ~cyc3);
+		\\Now si=si-1.(i+2 si-1(i) i)
+		\\ so that si(si-1(i))=si-1(i)
+		\\ At this point si is \cap_{j=1}^i Stab(sj-1(j))\simeq S_{n-i}
 	);
-	\\ At this point si is an even permutation
-	\\	in Stab(1,2, ...,n-3)\simeq S_3. I.e. 
-	\\ in <(1 2 3)>. 
+	print(permcycles(si));
 	my(ci1, ci2);
 	\\ ci1*ci2=si;
-	ci1=cycles_to_perm(n, [[n-2, si[si[n-2]], si[n-2]]]);
+	ci1=si^2;
 	ci2=ci1;
+	cyc3=ci1;
 
-	my(i,t);
+	my(t);
+	ci2=ci2^3;
+	for(i=1, n-3,
+		t=Vecsmall([i+2, siis[i]]);
+		mulpermcyc(~ci2, ~t);
+		t=Vecsmall([i, siis[i]]);
+		mulpermcyc(~ci1, ~t);
+	);
+
+	mulpermcyc(~ci2, ~cyc3);
+	my(i);
 	for(j=1, n-3,
 		i=n-2-j;
-		\\gi-1=gis[i]
-		gi=gis[i];
-
-		\\ci-1,1= gi-1.((i+2 i)((i+1 i).ci1).(i+2 i))gi-1
-		t=Vecsmall([i+1,i]);
-		mulcycperm(~t, ~ci1);
-		t=Vecsmall([i+2, i]);
-		mulcycperm(~t, ~ci1);
-		mulpermcyc(~ci1, ~t);
-		mulpermcyc(~ci1, ~gi);
-		mulcycperm(~gi, ~ci1);
-
-		\\ci-1,2=gi-1.((i+2 i)ci,2)gi-1
-		t=Vecsmall([i+2, i]);
-		mulcycperm(~t, ~ci2);
-		mulpermcyc(~ci2, ~gi);
-		mulcycperm(~gi, ~ci2);
+		cyc3=Vecsmall([siis[i], i+2, i]);
+		mulpermcyc(~ci2, cyc3);
 	);
 	
 	return([ci1,ci2]);
