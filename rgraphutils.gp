@@ -17,63 +17,6 @@ make3c(n,a,b,c)={
 	return(c3);
 }
 
-/*Random involution with k disjoint transpositions 
-in Sn*/
-rand_invol(n,k)={
-	if(k>n\2, print("invalid transposition number\n"); return(0));
-
-	my(s,m, inv);
-	s=vector(n, u, u);
-	m=n;
-	inv = vectorsmall(n,i,i);
-
-	my(o, j, invj, tij);
-	for(i=1, k,
-		o = random(m)+1;
-		j=s[o];
-		s=s[^(o)];
-		m=m-1;
-
-		o = random(m)+1;
-		invj=s[o];
-		s=s[^(o)];
-		m=m-1;
-
-		tij = maketij(n,j,invj);
-		inv=inv*tij;
-	);
-	return(inv);
-}
-
-/*random k-cycle in Sn*/
-rand_kcycle(n,k)={
-	if(k>n, print("invalid cycle size\n"); return(0););
-	my(s, m, veccyc);
-
-	s=vectorsmall(n,u,u);
-	m=n;
-	veccyc = vectorsmall(k);
-
-	my(o,j);
-	for(i=1,k,
-		o = random(m)+1;
-		j=s[o];
-		s=s[^(o)];
-		m=m-1;
-
-		veccyc[i]=j;
-		);
-
-	my(cyc);
-	cyc = vectorsmall(n, u, u);
-	for(i=1, k-1,
-		cyc[veccyc[i]]=veccyc[i+1];
-	);
-
-	cyc[veccyc[k]]=veccyc[1];
-	return(cyc);
-}
-
 /*Random permutation in Sn*/
 rand_perm(n) =
 {
@@ -88,14 +31,16 @@ rand_perm(n) =
 }
 
 
+
 cycles_to_perm(n,cs)={
 	/*Assumes the cycles are disjoint, so that
 	we can iterate the single cycle procedure.*/
-	my(f, s, card);
+	my(f, s, cardc);
 	f=#cs;
 	s=vectorsmall(n,i,i);
-	for(i=1,f,
+	for(i=1, f,
 		cardc=#cs[i];
+		if(!cardc, next);
 		for(j=1, cardc-1,
 			s[cs[i][j]]=cs[i][j+1];
 		);
@@ -104,11 +49,68 @@ cycles_to_perm(n,cs)={
 	return(s);
 }
 
+/*random k-cycle in Sn*/
+rand_kcycle(n,k)={
+	if(k>n, print("invalid cycle size\n"); return([]););
+	if(k==n, return(cycles_to_perm(n,[rand_perm(n)])));
+	my(g, kcycnorm);
+	g=rand_perm(n);
+	kcycnorm=cycles_to_perm(n, [rand_perm(k)]);
+	return(permconj(kcycnorm, g));
+}
+
+/*Random involution with k disjoint transpositions 
+in Sn*/
+rand_invol(n,k)={
+	if(k>n\2, print("invalid transposition number\n"); return(0));
+
+	my(invol, g, involcycs);
+	g=rand_perm(n);
+
+	involcycs = vector(k, i, Vecsmall([2*i-1, 2*i]));
+	invol=cycles_to_perm(n, involcycs);
+	invol=permconj(invol, g);
+
+	return(invol);
+}
+
+
+
+
+/*g.s.g^-1*/
 permconj(s, g)={
 	my(n=#s);
 	my(sconj=vectorsmall(n,i,i));
 	for(i=1, n, sconj[g[i]]=g[s[i]]);
 	return(sconj);
+}
+
+
+\\ Conjugates c by s : s c s^-1
+conjcycperm(~c, ~s)={
+	for(i=1, #c,
+		c[i]=s[c[i]];
+	);
+	return();
+}
+
+
+mulcycperm(~c, ~s)={
+	tmp=cycles_to_perm(#s, [c])*s;
+	for(i=1, #s, s[i]=tmp[i]);
+	return();
+}
+
+mulpermcyc(~s, ~c)={
+	my(sc, tmp);
+	sc=#c;
+	if(sc==0, return());
+	tmp=s[c[1]];
+	for(i=1, sc-1, 
+		s[c[i]]=s[c[i+1]];
+	);
+	s[c[sc]]=tmp;
+	return();
 }
 
 /*
@@ -281,29 +283,209 @@ rgraph_genword(g)={
 	return([s1g,s2g]);
 }
 
-\\ Assumes G has one vertex
-\\ O(nd)
-rand_permrepr(G,d)={
-	my(s1,s2,s2c,n, seen);
-	[s1,s2]=G;
-	s2c=permcycles(G[2]);
-	c=s2c[1];
-	n=#s1;
-	seen=vectorsmall(n);
-	my(permrepr);
-	foreach(c, e,
-		if(seen[e], permrepr[e]=permrepr[s1[e]]^-1);
-		permrepr[e]=rand_perm(d);
-		
+
+
+
+makeindex(s2, seed)={
+	my(eindex, e, k);
+	eindex=vectorsmall(#s2);
+	e=seed;
+	k=1;
+	until(e==seed,
+			eindex[e]=k;
+			e=s2_[e];
+			k++;
 	);
+	return(eindex);
+}
+
+
+is_kcycle(s, k)={
+	return(#permcycles(s)==#s-k+1);
+}
+
+perm_as_prodoftwocycs_small(s)={
+	if(permsign(s)==-1, return([]));
+	my(c, n);
+	n=#s;
+	c=rand_kcycle(n,n);
+	while(!is_kcycle(s*c,n),
+		c=rand_kcycle(n,n);
+	);
+	return([s*c,c^-1]);
+}
+
+\\currently slower than perm_as_profodtwocycs_small 
+\\because of mulcycperm which is currently very slow.
+perm_as_prodoftwocycs(s)={
+	my(si, n);
+	n=#s;
+	si=s;
+	my(gi, gis, cyc3, tmp);
+	gis=vector(n-3);
+	for(i=1, n-3,
+	\\We want gi si gi(1)=2 
+	\\gi=(i+1 si(i))
+		if(si[i]==i,
+			gi=Vecsmall([]);
+			gis[i]=gi;
+			next;
+		,si[i]==i+1,/*else if*/
+			gi=Vecsmall([]);
+		,/*else*/
+			gi=Vecsmall([i+1, si[i]]);
+			mulcycperm(~gi,~si);
+			mulpermcyc(~si,~gi);
+		);
+		cyc3=Vecsmall([i+2, i+1, i]);
+		\\ gsg(i)
+		mulcycperm(~cyc3,~si);
+		\\Now si= (i+2 i+1 i). gi-1 si-1 gi-1^-1 
+		\\ so that si(i)=i
+		\\ At this point si is in Stab(1,2, ...,i)\simeq S_{n-i}
+		gis[i]=gi;
+	);
+	\\ At this point si is an even permutation
+	\\	in Stab(1,2, ...,n-3)\simeq S_3. I.e. 
+	\\ in <(1 2 3)>. 
+	my(ci1, ci2);
+	\\ ci1*ci2=si;
+	ci1=cycles_to_perm(n, [[n-2, si[si[n-2]], si[n-2]]]);
+	ci2=ci1;
+
+	my(i,t);
+	for(j=1, n-3,
+		i=n-2-j;
+		\\gi-1=gis[i]
+		gi=gis[i];
+
+		\\ci-1,1= gi-1.((i+2 i)((i+1 i).ci1).(i+2 i))gi-1
+		t=Vecsmall([i+1,i]);
+		mulcycperm(~t, ~ci1);
+		t=Vecsmall([i+2, i]);
+		mulcycperm(~t, ~ci1);
+		mulpermcyc(~ci1, ~t);
+		mulpermcyc(~ci1, ~gi);
+		mulcycperm(~gi, ~ci1);
+
+		\\ci-1,2=gi-1.((i+2 i)ci,2)gi-1
+		t=Vecsmall([i+2, i]);
+		mulcycperm(~t, ~ci2);
+		mulpermcyc(~ci2, ~gi);
+		mulcycperm(~gi, ~ci2);
+	);
+	
+	return([ci1,ci2]);
+}
+
+perm_as_prodoftwocycs1(s)={
+	my(si, n);
+	n=#s;
+	si=s;
+	my(siis, cyc3, tmp, tij);
+	siis=vectorsmall(n-3);
+	tij=maketij(n, 1, s[1]);
+	for(i=1, n-3,
+		siis[i]=si[i];
+		if(si[i]==i, next);
+		cyc3=Vecsmall([i+2, si[i], i]);
+		\\ gsg(i)
+		mulcycperm(~cyc3,~si);
+		\\Now si= (i+2 i+1 i). gi-1 si-1 gi-1^-1 
+		\\ so that si(i)=i
+		\\ At this point si is in Stab(1,2, ...,i)\simeq S_{n-i}
+		gis[i]=gi;
+	);
+	\\ At this point si is an even permutation
+	\\	in Stab(1,2, ...,n-3)\simeq S_3. I.e. 
+	\\ in <(1 2 3)>. 
+	my(ci1, ci2);
+	\\ ci1*ci2=si;
+	ci1=cycles_to_perm(n, [[n-2, si[si[n-2]], si[n-2]]]);
+	ci2=ci1;
+
+	my(i,t);
+	for(j=1, n-3,
+		i=n-2-j;
+		\\gi-1=gis[i]
+		gi=gis[i];
+
+		\\ci-1,1= gi-1.((i+2 i)((i+1 i).ci1).(i+2 i))gi-1
+		t=Vecsmall([i+1,i]);
+		mulcycperm(~t, ~ci1);
+		t=Vecsmall([i+2, i]);
+		mulcycperm(~t, ~ci1);
+		mulpermcyc(~ci1, ~t);
+		mulpermcyc(~ci1, ~gi);
+		mulcycperm(~gi, ~ci1);
+
+		\\ci-1,2=gi-1.((i+2 i)ci,2)gi-1
+		t=Vecsmall([i+2, i]);
+		mulcycperm(~t, ~ci2);
+		mulpermcyc(~ci2, ~gi);
+		mulcycperm(~gi, ~ci2);
+	);
+	
+	return([ci1,ci2]);
+}
+
+
+
+perm_as_commutator(s)={
+	my(c1,c2);
+	[c1,c2]=perm_as_prodoftwocycs(s);
+
+	return();
+}
+
+\\ Assumes G is a one handle word
+\\ O(nd)
+rand_rgraphpermrepr(c,n,d)={
+	my(n, seed, eindex);
+	seed=c[1];
+	eindex=makeeindex(cycles_to_perm(n, [c]), seed);
+
+	my(eend, eendinv, seen);
+	eend=c[#c];
+	eendinv=s1[eeinv];
+	seen=vectorsmall(n);
+
+	my(permrepr, e);
+	permrepr=vector(#c);
+	for(i=1, eindex[eendinv],
+		e=c[i];
+		if(seen[e], next);
+		permrepr[e]=rand_perm(d);
+		permrepr[s1[e]]=permrepr[e]^-1;
+		seen[e]=1;
+		seen[s1[e]]=1;
+	);
+	w1=vecprod(permrepr[seed..eindex[eendinv]-1]);
+	w2=permconj(w1, permrepr[eend]);
+
+	for(i=eindex[eendinv]+1, #c-2,
+		e=c[i];
+		if(seen[e], next);
+		permrepr[e]=rand_perm(d);
+		permrepr[s1[e]]=permrepr[e]^-1;
+		seen[e]=1;
+		seen[s1[e]]=1;
+	);
+
+
+
 	permrepr[n]=vecprod(permrepr[1..n-1])^-1;
 	return(permrepr);
 }
+
 \\ faire representation
 is_permrepr(G, d, perms)={
 	my(permrepr);
 
-	return()
+	return();
 }
 
-rand_afuchpermrepr(sig)={return();}
+rand_afuchpermrepr_fromR(R,s1)={
+
+	return();
+}

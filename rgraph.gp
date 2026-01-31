@@ -534,18 +534,6 @@ rgraph_one_face_reduction(G, {withGone=0})={
 		);
 }
 
-makeindex(s2_, seed)={
-	my(eindex, e, k);
-	eindex=vectorsmall(#s2_);
-	e=seed;
-	k=1;
-	until(e==seed,
-			eindex[e]=k;
-			e=s2_[e];
-			k++;
-	);
-	return(eindex);
-}
 
 /*Assumes G is of genus > 0*/
 findab(s2_,s1, seed, eindex)={
