@@ -1,9 +1,9 @@
 The packages fdompres.gp and
 fdomprestests.gp both depend on J. Rickards's
 
-    Fundamental-domains-for-Shimura-Curves PARI/GP 
+    Fundamental-domains-for-Shimura-Curves
 
-package which can be found at :
+PARI/GP package which can be found at :
 
     https://github.com/JamesRickards-Canada/Fundamental-domains-for-Shimura-curves
 
@@ -40,13 +40,15 @@ In fdompres folder :
 
     gp < configure.gp
 
-## Running rgraph and slp packages
-In fdompres folder :
+the command
 
-    gp rgraph.gp slp.gp
+    gp loadpackages.gp
+
+then loads every fdompres package.
 
 ## Running fdompres 
-In fdom folder :
+As fdompres is dependant on fdom it has to be run
+as follows. In fdom folder :
 
     gp fdom
     \r runfdompres.gp
@@ -56,11 +58,9 @@ In fdom folder :
 After gp < configure.gp, tests are located
 in the fdompres subfolder "tests/". Running
 
-    gp rgraphtests.gp slptests.gp
-(Sometimes need to be run twice for obscure reasons.)
+    \r rgraphtests.gp slptests.gp
 
-will run a 
-series of tests. The packages rgraph.gp and
+will run a series of tests. The packages rgraph.gp and
 slp.gp need to be loaded for those to work.
 
 To run fdomprestests.gp, in fdom folder :
