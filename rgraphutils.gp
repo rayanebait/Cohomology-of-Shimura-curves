@@ -31,6 +31,14 @@ rand_perm(n) =
 }
 
 
+cyctoperm0(n, cs)={
+	my(s);
+	s=cycles_to_perm(n,[cs[1]]);
+	for(i=2, #cs,
+		mulpermcyc(~s, ~cs[i]);
+	);
+	return(s);
+}
 
 cycles_to_perm(n,cs)={
 	/*Assumes the cycles are disjoint, so that
@@ -50,12 +58,14 @@ cycles_to_perm(n,cs)={
 }
 
 /*random k-cycle in Sn*/
-rand_kcycle(n,k)={
+rand_kcycle(n,k,{conj=1})={
 	if(k>n, print("invalid cycle size\n"); return([]););
 	if(k==n, return(cycles_to_perm(n,[rand_perm(n)])));
-	my(g, kcycnorm);
-	g=rand_perm(n);
+	my(kcycnorm);
 	kcycnorm=cycles_to_perm(n, [rand_perm(k)]);
+	if(!conj, return(kcycnorm));
+	my(g);
+	g=rand_perm(n);
 	return(permconj(kcycnorm, g));
 }
 
@@ -304,14 +314,23 @@ is_kcycle(s, k)={
 	return(#permcycles(s)==#s-k+1);
 }
 
-perm_as_prodoftwocycs_small(s)={
+perm_as_prodoftwocycs_small(s,{k})={
 	if(permsign(s)==-1, return([]));
-	my(c, n);
+	my(n, g, fixedpts);
 	n=#s;
-	c=rand_kcycle(n,n);
-	while(!is_kcycle(s*c,n),
-		c=rand_kcycle(n,n);
+	\\bug pour id
+	[g,fixedpts]=perm_normalizer(s);
+	s=permconj(s, g);
+	if(!k, k=n-fixedpts);
+	\\s is now of the form (1 2 ... k1)(k1+1 k1+2...k1+k2)(...)
+	c=rand_kcycle(n,k,0);
+	n=#s;
+	error("");
+	while(!is_kcycle(s*c,k),
+		c=rand_kcycle(n,k,0);
 	);
+	s=permconj(s, g);
+	c=permconj(c, g);
 	return([s*c,c^-1]);
 }
 
@@ -378,50 +397,101 @@ perm_as_prodoftwocycs(s)={
 	return([ci1,ci2]);
 }
 
+cyc_lmtokk()={
+	return();
+}
+
 \\TODO : sort 1... n à chaque étape en mettant les sii à la fin,
 \\ pour choisir un j pas dans le support, remplacer i+2.
 perm_as_prodoftwocycs1(s)={
-	my(si, n);
+	my(n, sc, f, g, fixedpts, findex);
 	n=#s;
-	si=s;
-	my(siis, cyc3, sii);
-	siis=vectorsmall(n-3);
-	for(i=1, n-3,
-		sii=si[i];
-		siis[i]=sii;
-		if(sii==i, next);
-		cyc3=Vecsmall([i+2, sii, i]);
-		\\ gsg(i)
-		mulpermcyc(~si, ~cyc3);
-		\\Now si=si-1.(i+2 si-1(i) i)
-		\\ so that si(si-1(i))=si-1(i)
-		\\ At this point si is \cap_{j=1}^i Stab(sj-1(j))\simeq S_{n-i}
-	);
-	print(permcycles(si));
-	my(ci1, ci2);
-	\\ ci1*ci2=si;
-	ci1=si^2;
-	ci2=ci1;
-	cyc3=ci1;
+	sc=permcycles(s);
+	f=#sc;
+	g=vectorsmall(n,i,i);
+	findex=vectorsmall(n);
+	fixedpts=0;
 
-	my(t);
-	ci2=ci2^3;
-	for(i=1, n-3,
-		t=Vecsmall([i+2, siis[i]]);
-		mulpermcyc(~ci2, ~t);
-		t=Vecsmall([i, siis[i]]);
-		mulpermcyc(~ci1, ~t);
+	my(k);
+	k=0;
+	for(i=1, #sc,
+		c=sc[i];
+		if(#c==1, fixedpts++);
+		for(j=1, #c,
+			g[c[j]]=j+k;
+			findex[j+k]=i;
+		);
+		k+=#c;
+	);
+	\\s is now of the form (1 2 ... k1)(k1+1 k1+2...k1+k2)(...)
+	s=permconj(s, g);
+	sc=permcycles(s);
+
+
+	\\If n-3 is even, then #cs=1 or 3 otherwise 
+	\\ 2 and we should go one more step.
+	my(f0, b, c, cs, j);
+	f0=f-(findex[n]==findex[n-1] && findex[n-1] ==findex[n-2])\
+	   	-2*(findex[n]==findex[n-1]&& findex[n-1] !=findex[n-2])\
+	   	-2*(findex[n-1]!=findex[n-2]&& findex[n-1] ==findex[n-2]);
+	b=(n-f)%2+1;
+	cs=List();
+	c=List();
+	for(i=0, b,
+		listput(~c, n-b+i);
+		j=s[n-b+i];
+		if(j!=n-b+(i+1),
+			listput(~cs, Vecsmall(c));
+			c=List();
+		);
+	);
+	print(cs, b);
+	c=cycles_to_perm(n, cs);
+	my(c01,c02);
+	if(b-1,
+		c01==
+		[c01,c02]=perm_as_prodoftwocycs_small(c);
 	);
 
-	mulpermcyc(~ci2, ~cyc3);
-	my(i);
-	for(j=1, n-3,
-		i=n-2-j;
-		cyc3=Vecsmall([siis[i], i+2, i]);
-		mulpermcyc(~ci2, cyc3);
+	my(i, j, l, lis, ris);
+	i=0; j=1; l=1;
+	lis=vector(n-f0);
+	ris=vector(f0);
+	\\ i goes through the last index of each cycle
+	\\ j goes through every index that is not the last index
+	\\ of a cycle -> n-f in total
+	\\ l is the index of the cycle we are in in sc
+	\\ i+#c+1 is the first index in the l+1'th cycle if
+	\\ c is the l'th cycle
+	for(m=1,#sc - #cs,
+		c=sc[m];
+		for(k=1, #c-1,
+			lis[j]=Vecsmall([i+k, i+k+1]);
+			j++;
+		);
+		i+=#c;
+		ris[l]=Vecsmall([i, i+#c+1]);
+		l++;
 	);
+
+	my(c1);
+	c1=vectorsmall(n,i,i);
+	for(j=1, #lis,
+		mulpermcyc(~c1, ~lis[j]);
+	);
+	mulpermcyc(~c1, ~c01);
+
+	my(c2);
+	c2=vectorsmall(n,i,i);
+	for(l=1, #ris,
+		j=#ris-l+1;
+		mulpermcyc(~c1, ~ris[l]);
+		mulpermcyc(~c2, ~ris[j]);
+	);
+	mulpermcyc(~c2, ~c02);
 	
-	return([ci1,ci2]);
+	\\return(cyc_lmtokk(n,c1,c2));
+	return([c1,c2]);
 }
 
 
