@@ -431,76 +431,67 @@ perm_as_prodoftwocycs1(s)={
 	\\If n-f_n-2 is even, then #cs=1 or 3 otherwise 
 	\\ 2 and we should go one more step.
 	my(fn_2, sigsn_3, c, cs, j);
-	fn_2=f-(findex[n]==findex[n-1] && findex[n-1] ==findex[n-2]) \
-	   	-2*(findex[n]==findex[n-1]&& findex[n-1] !=findex[n-2]) \
-	   	-2*(findex[n-1]!=findex[n-2]&& findex[n-1] ==findex[n-2]) \
-		+(findex[n-2]==findex[n-3]);
-	sigsn_3=((n-fn_2)%2)*permsign(s);
+	fn_2=f-2*((findex[n-2]==findex[n-1]) && (findex[n-1]!=findex[n])) \
+	   	-2*((findex[n-2]!=findex[n-1]) && (findex[n-1]==findex[n])) \
+	   	-3*((findex[n-2]!=findex[n-1]) && (findex[n-1]!=findex[n])) \
+	   	-((findex[n-2]==findex[n-1]) && (findex[n-1]==findex[n]));
+	\\si=(i si-1(i))si-1 when i isnt a fixed point of si-1, si=si-1 otherwise
+	sigsn_3=(-1)^((n-(3+fn_2))%2)*(permsign(s));
+	print(sigsn_3, fn_2);
 	cs=List();
 	c=List();
-	for(i=0, 2-sigsn_3,
-		listput(~c, n-(2-sigsn_3)+i);
-		j=s[n-(2-sigsn_3)+i];
-		if(j!=n-(2-sigsn_3)+(i+1),
+	my(b);
+	b=2-(sigsn_3==-1);
+	for(i=0, b, 
+		listput(~c, n-b+i);
+		j=s[n-b+i];
+		if(j!=n-b+(i+1),
 			listput(~cs, Vecsmall(c));
 			c=List();
 		);
 	);
-	print(cs, sigsn_3);
+	print(cs);
 	c=cycles_to_perm(n, cs);
 	my(c01,c02);
 	if(sigsn_3,
 		c01=maketij(n,n-1,n);
-		c02=c01;
+	,/*else*/
+		c01=c^2;
 	);
+	c02=c01;
 
-	my(i, j, l, lis, ris);
-	i=0; j=1; l=1;
-	lis=vector(n-(fn_2+sigsn_3));
-	ris=vector(fn_2+sigsn_3);
-	\\ i goes through the last index of each cycle
+	my(i,m, j, lis, ris, f0, f1);
+	m=0; j=1; f0=0; f1=f0;
+	lis=vector(n-(3+fn_2));
+	ris=vector(fn_2);
+	\\ m goes through the last index of each cycle
 	\\ j goes through every index that is not the last index
-	\\ of a cycle -> n-f in total
-	\\ l is the index of the cycle we are in in sc
-	\\ i+#c+1 is the first index in the l+1'th cycle if
-	\\ c is the l'th cycle
-	\\ faire avec findex et un seul for
-	f0=findex[1];
-	f1=f0;
-	for(m=1, n-3,
-		f1=findex[m];
+	\\ of a cycle -> n-fn-3 in total
+	\\ f0 is the index of the cycle we are in in sc
+	\\ m+#sc[f0+1]+1 is the first index in the f0+1'th cycle if
+	\\ c is the f0'th cycle
+	for(l=1, n-3,
+		i=n-3-l+1;
+		f1=findex[i];
 		if(f0!=f1,
 			f0=f1;
 			c=sc[f0];
 		);
-		if(m=c[#c],
-			i+=#c;
-			ris[l]=Vecsmall([i, i+#sc[m+1]+1]);
-			l++;
-		);
-	);
-
-		for(k=1, #c-1,
-			if(n-2<=j+l, break);
-			lis[j]=Vecsmall([i+k, i+k+1]);
+		if(i==c[#c] && f0<=fn_2,
+			m+=#c;
+			if(f0==fn_2,
+				ris[f0]=Vecsmall([m, m+1]);
+			,/*else*/
+				ris[f0]=Vecsmall([m, sc[f0+1][#sc[f0+1]]]);
+			);
+		,i!=c[#c],/*else if*/
+			lis[j]=Vecsmall([i, i+1]);
 			j++;
 		);
-		i+=#c;
-		ris[l]=Vecsmall([i, i+#sc[m+1]+1]);
-		l++;
-		
 	);
-	for(m=1,#sc,
-		c=sc[m];
-		for(k=1, #c-1,
-			if(n-2<=j+l, break);
-			lis[j]=Vecsmall([i+k, i+k+1]);
-			j++;
-		);
-		i+=#c;
-		ris[l]=Vecsmall([i, i+#sc[m+1]+1]);
-		l++;
-	);
+	print("s : ", permcycles(s),"\n");
+	print("lis : ", lis,"\n");
+	print("ris : ", ris,"\n");
 
 	my(c1);
 	c1=vectorsmall(n,i,i);
@@ -509,7 +500,7 @@ perm_as_prodoftwocycs1(s)={
 	);
 	mulpermcyc(~c1, ~c01);
 
-	my(c2);
+	my(c2,j);
 	c2=vectorsmall(n,i,i);
 	for(l=1, #ris,
 		j=#ris-l+1;
@@ -517,7 +508,9 @@ perm_as_prodoftwocycs1(s)={
 		mulpermcyc(~c2, ~ris[j]);
 	);
 	mulpermcyc(~c2, ~c02);
-	
+	g=g^-1;
+	permconj(c1,g);
+	permconj(c2,g);
 	\\return(cyc_lmtokk(n,c1,c2));
 	return([c1,c2]);
 }
