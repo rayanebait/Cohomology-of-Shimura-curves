@@ -450,15 +450,6 @@ perm_as_prodoftwocycs1(s)={
 			c=List();
 		);
 	);
-	print(cs);
-	c=cycles_to_perm(n, cs);
-	my(c01,c02);
-	if(sigsn_3,
-		c01=maketij(n,n-1,n);
-	,/*else*/
-		c01=c^2;
-	);
-	c02=c01;
 
 	my(i,m, j, lis, ris, f0, f1);
 	m=0; j=1; f0=0; f1=f0;
@@ -470,8 +461,7 @@ perm_as_prodoftwocycs1(s)={
 	\\ f0 is the index of the cycle we are in in sc
 	\\ m+#sc[f0+1]+1 is the first index in the f0+1'th cycle if
 	\\ c is the f0'th cycle
-	for(l=1, n-3,
-		i=n-3-l+1;
+	for(i=1, n-3,
 		f1=findex[i];
 		if(f0!=f1,
 			f0=f1;
@@ -479,17 +469,31 @@ perm_as_prodoftwocycs1(s)={
 		);
 		if(i==c[#c] && f0<=fn_2,
 			m+=#c;
-			if(f0==fn_2,
-				ris[f0]=Vecsmall([m, m+1]);
-			,/*else*/
-				ris[f0]=Vecsmall([m, sc[f0+1][#sc[f0+1]]]);
-			);
+			ris[f0]=Vecsmall([m, sc[f0+1][#sc[f0+1]]]);
 		,i!=c[#c],/*else if*/
 			lis[j]=Vecsmall([i, i+1]);
 			j++;
 		);
 	);
+
+	print(cs);
+	c=cycles_to_perm(n, cs);
+	my(c01,c02);
+	if(sigsn_3==-1,
+		c01=maketij(n,n-1,n);
+	,/*else*/
+		if(permorder(c)==1,
+			c01=cycles_to_perm(n, [[n-2,n-1,n]]);
+		,/*else*/
+			c01=c^2;
+		);
+	);
+	c02=c01;
+
+
+
 	print("s : ", permcycles(s),"\n");
+
 	print("lis : ", lis,"\n");
 	print("ris : ", ris,"\n");
 
@@ -508,6 +512,7 @@ perm_as_prodoftwocycs1(s)={
 		mulpermcyc(~c2, ~ris[j]);
 	);
 	mulpermcyc(~c2, ~c02);
+	print(permcycles(c02));
 	g=g^-1;
 	permconj(c1,g);
 	permconj(c2,g);
