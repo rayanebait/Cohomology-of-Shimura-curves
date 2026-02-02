@@ -397,6 +397,9 @@ perm_as_prodoftwocycs(s)={
 	return([ci1,ci2]);
 }
 
+permcycles0(s)={
+	return(select((c)->(1<#c), permcycles(s)));
+}
 cyc_lmtokk()={
 	return();
 }
@@ -427,21 +430,35 @@ perm_as_prodoftwocycs1(s)={
 	s=permconj(s, g);
 	sc=permcycles(s);
 
-
 	\\If n-f_n-2 is even, then #cs=1 or 3 otherwise 
 	\\ 2 and we should go one more step.
-	my(fn_2, sigsn_3, c, cs, j);
+	my(fn_2, fn_1, fn);
 	fn_2=f-2*((findex[n-2]==findex[n-1]) && (findex[n-1]!=findex[n])) \
 	   	-2*((findex[n-2]!=findex[n-1]) && (findex[n-1]==findex[n])) \
 	   	-3*((findex[n-2]!=findex[n-1]) && (findex[n-1]!=findex[n])) \
 	   	-((findex[n-2]==findex[n-1]) && (findex[n-1]==findex[n]));
+	fn_1=fn_2+(findex[n-2]!=findex[n-1]);
+	fn=fn_1+(findex[n-1]!=findex[n]);
+		
 	\\si=(i si-1(i))si-1 when i isnt a fixed point of si-1, si=si-1 otherwise
+	my(sigsn_3,sigsn_2,sigsn_1);
 	sigsn_3=(-1)^((n-(3+fn_2))%2)*(permsign(s));
-	print(sigsn_3, fn_2);
+	sigsn_2=(-1)^((n-(2+fn_1))%2)*(permsign(s));
+	sigsn_1=(-1)^((n-(1+fn))%2)*(permsign(s));
+
+	\\print("sigsn_3 : ", sigsn_3);
+	\\print("sigsn_2 : ", sigsn_2);
+	\\print("sigsn_1 : ", sigsn_1);
+	\\print("fn_2 : ", fn_2);
+	\\print("fn_1 : ", fn_1);
+	\\print("fn : ", fn);
+
+	my(c, cs, j, b);
 	cs=List();
 	c=List();
-	my(b);
-	b=2-(sigsn_3==-1);
+	b=2*(sigsn_3==1) \
+	  +1*(sigsn_3==-1 && sigsn_2==1);
+	  
 	for(i=0, b, 
 		listput(~c, n-b+i);
 		j=s[n-b+i];
@@ -453,21 +470,25 @@ perm_as_prodoftwocycs1(s)={
 
 	my(i,m, j, lis, ris, f0, f1);
 	m=0; j=1; f0=0; f1=f0;
-	lis=vector(n-(3+fn_2));
-	ris=vector(fn_2);
+	lis=vector(n-(1+b+fn_2*(sigsn_3==1)\
+					+fn_1*(sigsn_3==-1 && sigsn_2==1)\
+					+fn*(sigsn_3==-1 && sigsn_2==-1 && sigsn_1==1)));
+	ris=vector((fn_2*(sigsn_3==1)\
+					+fn_1*(sigsn_3==-1 && sigsn_2==1)\
+					+fn*(sigsn_3==-1 && sigsn_2==-1 && sigsn_1==1)));
 	\\ m goes through the last index of each cycle
 	\\ j goes through every index that is not the last index
 	\\ of a cycle -> n-fn-3 in total
 	\\ f0 is the index of the cycle we are in in sc
 	\\ m+#sc[f0+1]+1 is the first index in the f0+1'th cycle if
 	\\ c is the f0'th cycle
-	for(i=1, n-3,
+	for(i=1, n-b-1,
 		f1=findex[i];
 		if(f0!=f1,
 			f0=f1;
 			c=sc[f0];
 		);
-		if(i==c[#c] && f0<=fn_2,
+		if(i==c[#c] && f0<=fn_1,
 			m+=#c;
 			ris[f0]=Vecsmall([m, sc[f0+1][#sc[f0+1]]]);
 		,i!=c[#c],/*else if*/
@@ -476,33 +497,32 @@ perm_as_prodoftwocycs1(s)={
 		);
 	);
 
-	print(cs);
+	\\print(cs);
 	c=cycles_to_perm(n, cs);
 	my(c01,c02);
 	if(sigsn_3==-1,
 		c01=maketij(n,n-1,n);
+		c02=c01;
 	,/*else*/
-		if(permorder(c)==1,
+		if(c[n-2]==n-2,
 			c01=cycles_to_perm(n, [[n-2,n-1,n]]);
+			c02=c01^-1;
 		,/*else*/
 			c01=c^2;
+			c02=c01;
 		);
 	);
-	c02=c01;
 
-
-
-	print("s : ", permcycles(s),"\n");
-
-	print("lis : ", lis,"\n");
-	print("ris : ", ris,"\n");
+	\\print("s : ", permcycles(s),"\n");
+	\\print("lis : ", lis,"\n");
+	\\print("ris : ", ris,"\n");
 
 	my(c1);
 	c1=vectorsmall(n,i,i);
 	for(j=1, #lis,
 		mulpermcyc(~c1, ~lis[j]);
 	);
-	mulpermcyc(~c1, ~c01);
+	c1=c1*c01;
 
 	my(c2,j);
 	c2=vectorsmall(n,i,i);
@@ -511,13 +531,11 @@ perm_as_prodoftwocycs1(s)={
 		mulpermcyc(~c1, ~ris[l]);
 		mulpermcyc(~c2, ~ris[j]);
 	);
-	mulpermcyc(~c2, ~c02);
-	print(permcycles(c02));
+	c2=c2*c02;
+
 	g=g^-1;
-	permconj(c1,g);
-	permconj(c2,g);
 	\\return(cyc_lmtokk(n,c1,c2));
-	return([c1,c2]);
+	return(apply((c)->(permconj(c,g)), [c1,c2]));
 }
 
 
