@@ -428,49 +428,77 @@ perm_as_prodoftwocycs1(s)={
 	sc=permcycles(s);
 
 
-	\\If n-3 is even, then #cs=1 or 3 otherwise 
+	\\If n-f_n-2 is even, then #cs=1 or 3 otherwise 
 	\\ 2 and we should go one more step.
-	my(f0, b, c, cs, j);
-	f0=f-(findex[n]==findex[n-1] && findex[n-1] ==findex[n-2])\
-	   	-2*(findex[n]==findex[n-1]&& findex[n-1] !=findex[n-2])\
-	   	-2*(findex[n-1]!=findex[n-2]&& findex[n-1] ==findex[n-2]);
-	b=(n-f)%2+1;
+	my(fn_2, sigsn_3, c, cs, j);
+	fn_2=f-(findex[n]==findex[n-1] && findex[n-1] ==findex[n-2]) \
+	   	-2*(findex[n]==findex[n-1]&& findex[n-1] !=findex[n-2]) \
+	   	-2*(findex[n-1]!=findex[n-2]&& findex[n-1] ==findex[n-2]) \
+		+(findex[n-2]==findex[n-3]);
+	sigsn_3=((n-fn_2)%2)*permsign(s);
 	cs=List();
 	c=List();
-	for(i=0, b,
-		listput(~c, n-b+i);
-		j=s[n-b+i];
-		if(j!=n-b+(i+1),
+	for(i=0, 2-sigsn_3,
+		listput(~c, n-(2-sigsn_3)+i);
+		j=s[n-(2-sigsn_3)+i];
+		if(j!=n-(2-sigsn_3)+(i+1),
 			listput(~cs, Vecsmall(c));
 			c=List();
 		);
 	);
-	print(cs, b);
+	print(cs, sigsn_3);
 	c=cycles_to_perm(n, cs);
 	my(c01,c02);
-	if(b-1,
-		c01==
-		[c01,c02]=perm_as_prodoftwocycs_small(c);
+	if(sigsn_3,
+		c01=maketij(n,n-1,n);
+		c02=c01;
 	);
 
 	my(i, j, l, lis, ris);
 	i=0; j=1; l=1;
-	lis=vector(n-f0);
-	ris=vector(f0);
+	lis=vector(n-(fn_2+sigsn_3));
+	ris=vector(fn_2+sigsn_3);
 	\\ i goes through the last index of each cycle
 	\\ j goes through every index that is not the last index
 	\\ of a cycle -> n-f in total
 	\\ l is the index of the cycle we are in in sc
 	\\ i+#c+1 is the first index in the l+1'th cycle if
 	\\ c is the l'th cycle
-	for(m=1,#sc - #cs,
-		c=sc[m];
+	\\ faire avec findex et un seul for
+	f0=findex[1];
+	f1=f0;
+	for(m=1, n-3,
+		f1=findex[m];
+		if(f0!=f1,
+			f0=f1;
+			c=sc[f0];
+		);
+		if(m=c[#c],
+			i+=#c;
+			ris[l]=Vecsmall([i, i+#sc[m+1]+1]);
+			l++;
+		);
+	);
+
 		for(k=1, #c-1,
+			if(n-2<=j+l, break);
 			lis[j]=Vecsmall([i+k, i+k+1]);
 			j++;
 		);
 		i+=#c;
-		ris[l]=Vecsmall([i, i+#c+1]);
+		ris[l]=Vecsmall([i, i+#sc[m+1]+1]);
+		l++;
+		
+	);
+	for(m=1,#sc,
+		c=sc[m];
+		for(k=1, #c-1,
+			if(n-2<=j+l, break);
+			lis[j]=Vecsmall([i+k, i+k+1]);
+			j++;
+		);
+		i+=#c;
+		ris[l]=Vecsmall([i, i+#sc[m+1]+1]);
 		l++;
 	);
 
