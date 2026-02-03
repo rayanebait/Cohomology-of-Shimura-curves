@@ -400,8 +400,68 @@ perm_as_prodoftwocycs(s)={
 permcycles0(s)={
 	return(select((c)->(1<#c), permcycles(s)));
 }
-cyc_lmtokk()={
-	return();
+cyc_lmtokk(cs)={
+	my(ords);
+	ords=apply(permorder, cs);
+
+	my(m1, m2);
+	m1=ords[1];
+	m2=ords[2];
+	if(m1==m2, return(cs));
+	if(!(m1-m2)%2, return([]));
+
+	my(smallest, m=max(m1,m2));
+	if(m==m1, smallest=2, smallest=1);
+
+	my(smallc, bigc, diff=abs(m2-m1), S, n);
+	smallc=cs[smallest]; bigc=cs[-smallest%3];
+	n=#bigc;
+	S=vectorsmall(n);
+
+	\\compute intersection of supports of bigc and smallc
+	for(i=1, n,
+		if(bigc[i]!=i,
+			if(smallc[i]!=i,
+				S[i]=1;
+			);
+		);
+	);
+
+	my(cardS, ind);
+	cardS=vecsum(S);
+	if(cardS==0, 
+		\\ The cycles are disjoint
+		if(smallest==1,
+			smalle=permcycles0(smallc)[1][1];
+			bige=permcycles0(bigc)[1][1];
+			t=maketij(n, smalle, bige);
+		);
+	);
+	ind=1;
+	\\ if S is the intersection of supports of bigc and smallc
+	\\ and if i is in S but bigc(i) is not in S, then put
+	\\ smallc=smallc.(i bigc(i))
+	\\ bigc=(i bigc(i)).bigc
+	\\ then i is not in S anymore but bigc(i) is in S
+	for(i=1, n,
+		if(S[i] && !S[bigc[i]],
+			lts[ind]=[i, bigc[i]];
+		);
+	);
+
+	\\TODO: trouver un bon critère pour le faire sans se soucier.
+	my(t,tinv);
+	t=vectorsmall(n,i,i);
+	for(i=1, #ts,
+		mulpermcyc(~t,~ts[i]);
+	);
+	tinv=t^-1;
+	print(permcycles0(t));
+	if(smallest=2,
+		return([bigc*tinv,tinv*smallc]);
+	,/*else*/
+		return([smallc*t, t*bigc]);
+	);
 }
 
 \\TODO : sort 1... n à chaque étape en mettant les sii à la fin,
