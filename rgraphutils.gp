@@ -334,68 +334,6 @@ perm_as_prodoftwocycs_small(s,{k})={
 	return([s*c,c^-1]);
 }
 
-\\currently slower than perm_as_profodtwocycs_small 
-\\because of mulcycperm which is currently very slow.
-perm_as_prodoftwocycs(s)={
-	my(si, n);
-	n=#s;
-	si=s;
-	my(gi, gis, cyc3, tmp);
-	gis=vector(n-3);
-	for(i=1, n-3,
-	\\We want gi si gi(1)=2 
-	\\gi=(i+1 si(i))
-		if(si[i]==i,
-			gi=Vecsmall([]);
-			gis[i]=gi;
-			next;
-		,si[i]==i+1,/*else if*/
-			gi=Vecsmall([]);
-		,/*else*/
-			gi=Vecsmall([i+1, si[i]]);
-			mulcycperm(~gi,~si);
-			mulpermcyc(~si,~gi);
-		);
-		cyc3=Vecsmall([i+2, i+1, i]);
-		\\ gsg(i)
-		mulcycperm(~cyc3,~si);
-		\\Now si= (i+2 i+1 i). gi-1 si-1 gi-1^-1 
-		\\ so that si(i)=i
-		\\ At this point si is in Stab(1,2, ...,i)\simeq S_{n-i}
-		gis[i]=gi;
-	);
-	\\ At this point si is an even permutation
-	\\	in Stab(1,2, ...,n-3)\simeq S_3. I.e. 
-	\\ in <(1 2 3)>. 
-	my(ci1, ci2);
-	\\ ci1*ci2=si;
-	ci1=cycles_to_perm(n, [[n-2, si[si[n-2]], si[n-2]]]);
-	ci2=ci1;
-
-	my(i,t);
-	for(j=1, n-3,
-		i=n-2-j;
-		\\gi-1=gis[i]
-		gi=gis[i];
-
-		\\ci-1,1= gi-1.((i+2 i)((i+1 i).ci1).(i+2 i))gi-1
-		t=Vecsmall([i+1,i]);
-		mulcycperm(~t, ~ci1);
-		t=Vecsmall([i+2, i]);
-		mulcycperm(~t, ~ci1);
-		mulpermcyc(~ci1, ~t);
-		mulpermcyc(~ci1, ~gi);
-		mulcycperm(~gi, ~ci1);
-
-		\\ci-1,2=gi-1.((i+2 i)ci,2)gi-1
-		t=Vecsmall([i+2, i]);
-		mulcycperm(~t, ~ci2);
-		mulpermcyc(~ci2, ~gi);
-		mulcycperm(~gi, ~ci2);
-	);
-	
-	return([ci1,ci2]);
-}
 
 permcycles0(s)={
 	return(select((c)->(1<#c), permcycles(s)));
@@ -420,7 +358,7 @@ cyc_lmtokk(cs)={
 		bigc=permconj(bigc, smallc^-1);
 	);
 	\\ Now cs[1]cs[2]=smallc bigc
-	my(ininters, notdisjoint=0);
+	my(ininters, disjoint=1);
 	ininters=vectorsmall(n);
 
 	\\compute intersection of supports of bigc and smallc
@@ -428,18 +366,20 @@ cyc_lmtokk(cs)={
 		if(bigc[i]!=i,
 			if(smallc[i]!=i,
 				ininters[i]=1;
-				notdisjoint++;
+				disjoint=0;
 			);
 		);
 	);
-	if(!notdisjoint, 
+
+	my(t, smalle, bige);
+	if(disjoint, 
 		\\ The cycles are disjoint
 		smalle=permcycles0(smallc)[1][1];
 		bige=permcycles0(bigc)[1][1];
 		t=maketij(n, smalle, bige);
 
-		bigc=t*bigc;
 		smallc=smallc*t;
+		bigc=t*bigc;
 		ininters[smalle]=1;
 		listput(~inters, smalle);
 		ininters[bige]=1;
@@ -464,10 +404,10 @@ cyc_lmtokk(cs)={
 	\\ then i is not in inters anymore but bigc(i) is in inters
 	my(ts, ind=1, diff=abs(m2-m1)/2);
 	ts=vector(diff);
-	print(topop);
 	while(ind<=diff,
 		e=topop[#topop];
 		listpop(~topop);
+
 		ts[ind]=[e, bigc[e]];
 		ininters[e]=0;
 		ininters[bigc[e]]=1;
@@ -482,13 +422,10 @@ cyc_lmtokk(cs)={
 	for(i=1, #ts,
 		mulpermcyc(~t,~ts[i]);
 	);
-	print(permcycles0(t), " ",diff);
-	return([smallc*t, t*bigc]);
+	return([smallc*t, (t^-1)*bigc]);
 }
 
-\\TODO : sort 1... n à chaque étape en mettant les sii à la fin,
-\\ pour choisir un j pas dans le support, remplacer i+2.
-perm_as_prodoftwocycs1(s)={
+perm_as_prodoftwocycs(s)={
 	my(n, sc, f, g, fixedpts, findex);
 	n=#s;
 	sc=permcycles(s);
@@ -616,17 +553,38 @@ perm_as_prodoftwocycs1(s)={
 	c2=c2*c02;
 
 	g=g^-1;
-	\\return(cyc_lmtokk(n,c1,c2));
-	return(apply((c)->(permconj(c,g)), [c1,c2]));
+	return(cyc_lmtokk(apply((c)->(permconj(c,g)), [c1,c2])));
 }
 
 
+perm_is_conj(s1,s2)={
+	my(sc1,sc2,ords);
+	sc1=vecsort(permcycles(s1), (c)->(#c));
+	sc2=vecsort(permcycles(s2), (c)->(#c));
+	ords=apply((c)->(#c), [sc1,sc2]);
+	if(ords[1]!=ords[2],
+		return();
+	);
+	my(g, c1, c2);
+	g=vectorsmall(n);
+	for(i=1, #sc1,
+		c1=sc1[i];
+		c2=sc2[i];
+		for(j=1, #c1,
+			g[c1[j]]=c2[j];
+		);
+	);
+	return(g);
+}
 
 perm_as_commutator(s)={
 	my(c1,c2);
 	[c1,c2]=perm_as_prodoftwocycs(s);
 
-	return();
+	\\gc1^-1g^-1=c2 so that c1*c2=c1gc1^-1 g^-1
+	g=perm_is_conj(c1^-1, c2);
+
+	return([c1, g]);
 }
 
 \\ Assumes G is a one handle word
