@@ -413,55 +413,77 @@ cyc_lmtokk(cs)={
 	my(smallest, m=max(m1,m2));
 	if(m==m1, smallest=2, smallest=1);
 
-	my(smallc, bigc, diff=abs(m2-m1), S, n);
+	my(smallc, bigc, n);
 	smallc=cs[smallest]; bigc=cs[-smallest%3];
 	n=#bigc;
-	S=vectorsmall(n);
+	if(smallest==2,
+		bigc=permconj(bigc, smallc^-1);
+	);
+	\\ Now cs[1]cs[2]=smallc bigc
+	my(ininters, notdisjoint=0);
+	ininters=vectorsmall(n);
 
 	\\compute intersection of supports of bigc and smallc
 	for(i=1, n,
 		if(bigc[i]!=i,
 			if(smallc[i]!=i,
-				S[i]=1;
+				ininters[i]=1;
+				notdisjoint++;
 			);
 		);
 	);
-
-	my(cardS, ind);
-	cardS=vecsum(S);
-	if(cardS==0, 
+	if(!notdisjoint, 
 		\\ The cycles are disjoint
-		if(smallest==1,
-			smalle=permcycles0(smallc)[1][1];
-			bige=permcycles0(bigc)[1][1];
-			t=maketij(n, smalle, bige);
+		smalle=permcycles0(smallc)[1][1];
+		bige=permcycles0(bigc)[1][1];
+		t=maketij(n, smalle, bige);
+
+		bigc=t*bigc;
+		smallc=smallc*t;
+		ininters[smalle]=1;
+		listput(~inters, smalle);
+		ininters[bige]=1;
+		listput(~inters, bige);
+	);
+
+	my(topop);
+	topop=List();
+	\\ If intersection is nonempty and bigc is bigger than
+	\\ smallc then topop must be nonempty, otherwise bigc would
+	\\ act on the intersection which contradicts it being a cycle
+	for(i=1, n,
+		if(ininters[i] && !ininters[bigc[i]],
+			listput(~topop, i);
 		);
 	);
-	ind=1;
-	\\ if S is the intersection of supports of bigc and smallc
-	\\ and if i is in S but bigc(i) is not in S, then put
+
+	\\ if inters is the intersection of supports of bigc and smallc
+	\\ and if i is in inters but bigc(i) is not in inters, then put
 	\\ smallc=smallc.(i bigc(i))
 	\\ bigc=(i bigc(i)).bigc
-	\\ then i is not in S anymore but bigc(i) is in S
-	for(i=1, n,
-		if(S[i] && !S[bigc[i]],
-			lts[ind]=[i, bigc[i]];
+	\\ then i is not in inters anymore but bigc(i) is in inters
+	my(ts, ind=1, diff=abs(m2-m1)/2);
+	ts=vector(diff);
+	print(topop);
+	while(ind<=diff,
+		e=topop[#topop];
+		listpop(~topop);
+		ts[ind]=[e, bigc[e]];
+		ininters[e]=0;
+		ininters[bigc[e]]=1;
+		if(!ininters[bigc[bigc[e]]],
+			listput(~topop, bigc[e]);
 		);
+		ind++;
 	);
 
 	\\TODO: trouver un bon critère pour le faire sans se soucier.
-	my(t,tinv);
 	t=vectorsmall(n,i,i);
 	for(i=1, #ts,
 		mulpermcyc(~t,~ts[i]);
 	);
-	tinv=t^-1;
-	print(permcycles0(t));
-	if(smallest=2,
-		return([bigc*tinv,tinv*smallc]);
-	,/*else*/
-		return([smallc*t, t*bigc]);
-	);
+	print(permcycles0(t), " ",diff);
+	return([smallc*t, t*bigc]);
 }
 
 \\TODO : sort 1... n à chaque étape en mettant les sii à la fin,
