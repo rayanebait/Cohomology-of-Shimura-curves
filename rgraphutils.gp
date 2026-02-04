@@ -310,6 +310,9 @@ makeindex(s2, seed)={
 }
 
 
+is_cycle(s)={
+	return(#permcycles(s)==#s-permorder(s)+1);
+}
 is_kcycle(s, k)={
 	return(#permcycles(s)==#s-k+1);
 }
@@ -336,7 +339,10 @@ perm_as_prodoftwocycs_small(s,{k})={
 
 
 permcycles0(s)={
-	return(select((c)->(1<#c), permcycles(s)));
+	my(sc0);
+	sc0=permcycles(s);
+	if(#sc0==#s, return(sc0));
+	return(select((c)->(1<#c), sc0));
 }
 cyc_lmtokk(cs)={
 	my(ords);
@@ -346,7 +352,7 @@ cyc_lmtokk(cs)={
 	m1=ords[1];
 	m2=ords[2];
 	if(m1==m2, return(cs));
-	if(!(m1-m2)%2, return([]));
+	if((m1-m2)%2, error("The product c1*c2 must be even."));
 
 	my(smallest, m=max(m1,m2));
 	if(m==m1, smallest=2, smallest=1);
@@ -381,9 +387,7 @@ cyc_lmtokk(cs)={
 		smallc=smallc*t;
 		bigc=t*bigc;
 		ininters[smalle]=1;
-		listput(~inters, smalle);
 		ininters[bige]=1;
-		listput(~inters, bige);
 	);
 
 	my(topop);
@@ -409,7 +413,6 @@ cyc_lmtokk(cs)={
 		listpop(~topop);
 
 		ts[ind]=[e, bigc[e]];
-		ininters[e]=0;
 		ininters[bigc[e]]=1;
 		if(!ininters[bigc[bigc[e]]],
 			listput(~topop, bigc[e]);
@@ -426,19 +429,17 @@ cyc_lmtokk(cs)={
 }
 
 perm_as_prodoftwocycs(s)={
-	my(n, sc, f, g, fixedpts, findex);
+	my(n, sc, f, g, findex);
 	n=#s;
 	sc=permcycles(s);
 	f=#sc;
 	g=vectorsmall(n,i,i);
 	findex=vectorsmall(n);
-	fixedpts=0;
 
-	my(k);
+	my(k, c);
 	k=0;
 	for(i=1, #sc,
 		c=sc[i];
-		if(#c==1, fixedpts++);
 		for(j=1, #c,
 			g[c[j]]=j+k;
 			findex[j+k]=i;
@@ -472,7 +473,7 @@ perm_as_prodoftwocycs(s)={
 	\\print("fn_1 : ", fn_1);
 	\\print("fn : ", fn);
 
-	my(c, cs, j, b);
+	my(cs, j, b);
 	cs=List();
 	c=List();
 	b=2*(sigsn_3==1) \
@@ -487,7 +488,7 @@ perm_as_prodoftwocycs(s)={
 		);
 	);
 
-	my(i,m, j, lis, ris, f0, f1);
+	my(m, lis, ris, f0, f1);
 	m=0; j=1; f0=0; f1=f0;
 	lis=vector(n-(1+b+fn_2*(sigsn_3==1)\
 					+fn_1*(sigsn_3==-1 && sigsn_2==1)\
@@ -543,7 +544,7 @@ perm_as_prodoftwocycs(s)={
 	);
 	c1=c1*c01;
 
-	my(c2,j);
+	my(c2);
 	c2=vectorsmall(n,i,i);
 	for(l=1, #ris,
 		j=#ris-l+1;
@@ -558,18 +559,19 @@ perm_as_prodoftwocycs(s)={
 
 
 perm_is_conj(s1,s2)={
-	my(sc1,sc2,ords);
-	sc1=vecsort(permcycles(s1), (c)->(#c));
-	sc2=vecsort(permcycles(s2), (c)->(#c));
-	ords=apply((c)->(#c), [sc1,sc2]);
-	if(ords[1]!=ords[2],
-		return();
+	my(sc1, sc2, ords1, ords2);
+	sc1=vecsort(apply((c)->([c,#c]), permcycles(s1)), (v)->(v[2]));
+	sc2=vecsort(apply((c)->([c,#c]), permcycles(s2)), (v)->(v[2]));
+	ords1=apply((v)->(v[2]), sc1);
+	ords2=apply((v)->(v[2]), sc2);
+	if(ords1!=ords2,
+		error("not conjugate");
 	);
 	my(g, c1, c2);
 	g=vectorsmall(n);
 	for(i=1, #sc1,
-		c1=sc1[i];
-		c2=sc2[i];
+		c1=sc1[i][1];
+		c2=sc2[i][1];
 		for(j=1, #c1,
 			g[c1[j]]=c2[j];
 		);
