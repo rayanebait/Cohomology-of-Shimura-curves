@@ -568,7 +568,7 @@ perm_is_conj(s1,s2)={
 		error("not conjugate");
 	);
 	my(g, c1, c2);
-	g=vectorsmall(n);
+	g=vectorsmall(#s1);
 	for(i=1, #sc1,
 		c1=sc1[i][1];
 		c2=sc2[i][1];
@@ -589,43 +589,25 @@ perm_as_commutator(s)={
 	return([c1, g]);
 }
 
-\\ Assumes G is a one handle word
+\\ Assumes R is a one-handle relation
+\\ for a one-handle presentation
+
 \\ O(nd)
-rand_rgraphpermrepr(c,n,d)={
-	my(n, seed, eindex);
-	seed=c[1];
-	eindex=makeeindex(cycles_to_perm(n, [c]), seed);
-
-	my(eend, eendinv, seen);
-	eend=c[#c];
-	eendinv=s1[eeinv];
-	seen=vectorsmall(n);
-
-	my(permrepr, e);
-	permrepr=vector(#c);
-	for(i=1, eindex[eendinv],
-		e=c[i];
-		if(seen[e], next);
+rand_rgraphpermrepr(rel,d)={
+	my(permrepr, e, s);
+	permrepr=vector(#rel/2);
+	s=vectorsmall(d,i,i);
+	for(i=5, #rel,
+		e=rel[i];
+		print(e);
+		if(e<0, s=s*permrepr[-e]^-1; next);
 		permrepr[e]=rand_perm(d);
-		permrepr[s1[e]]=permrepr[e]^-1;
-		seen[e]=1;
-		seen[s1[e]]=1;
+		s=s*permrepr[e];
 	);
-	w1=vecprod(permrepr[seed..eindex[eendinv]-1]);
-	w2=permconj(w1, permrepr[eend]);
-
-	for(i=eindex[eendinv]+1, #c-2,
-		e=c[i];
-		if(seen[e], next);
-		permrepr[e]=rand_perm(d);
-		permrepr[s1[e]]=permrepr[e]^-1;
-		seen[e]=1;
-		seen[s1[e]]=1;
-	);
-
-
-
-	permrepr[n]=vecprod(permrepr[1..n-1])^-1;
+	my(a,b);
+	[a,b]=perm_as_commutator(s^-1);
+	permrepr[1]=a;
+	permrepr[2]=b;
 	return(permrepr);
 }
 
