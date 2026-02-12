@@ -22,7 +22,7 @@ rand_rgraph(n, {f=0})={
 		-f=5 : reduced, not connected ribbon 
 		graph.
 		*/
-	if(f==0, return([cycles_to_perm(2*n, vector(n, i, [2*i-1,2*i])),rand_perm(2*n)]),
+	if(f==0, return([cycs_to_perm(2*n, vector(n, i, [2*i-1,2*i])),rand_perm(2*n)]),
 		f==1, return([rand_invol(2*n,n),vectorsmall(2*n,u,(u%(2*n))+1)]),
 		f==2, G=rand_rgraph(n,0);
 		return(rgraph_reduce(G)),
@@ -477,8 +477,8 @@ rgraph_connected_components(G, {CC=List()})={
 		);
 	);
 	my(s2CC, s2left);
-	s2CC=cycles_to_perm(n, s2CCc);
-	s2left=cycles_to_perm(n, s2leftc);
+	s2CC=cycs_to_perm(n, s2CCc);
+	s2left=cycs_to_perm(n, s2leftc);
 
 	listput(~CC, perm_normalize_wrt([s1CC,s2CC],1));
 
@@ -492,15 +492,13 @@ rgraph_connected_components(G, {CC=List()})={
 }
 
 
-rgraph_one_face_reduction(G, {withGone=0})={
+/**/
+rgraph_gluealongT(G, T, {withGone=0})={
 		my(n,s1,s2);
 		[s1,s2]=G;
 		n=#s1;
 		/*Return if it already has one face.*/
 		if(#permcycles(s2)==1, return(G));
-		my(data=vector(6), T);
-		rgraph_dfs(~G,~data);
-		T=data[2];
 		
 		my(in_T, e);
 		in_T=vector(n);
@@ -589,7 +587,7 @@ cut_and_paste_one(s2_, s1, seedslp, eindex)={
 	\\ a and b are used because they are not in the vecs.
 	my(updated_w, updated_s2_, updated_eindex);
 	updated_w=concat([vecgamma, vecbeta, [a], [b], [s1[a]], [s1[b]], vecalpha, vecdelta]);
-	updated_s2_=cycles_to_perm(n, [updated_w]);
+	updated_s2_=cycs_to_perm(n, [updated_w]);
 	updated_eindex=makeindex(updated_s2_, updated_w[1]);
 		
 	return([a,b, vecalpha, vecbeta, vecgamma, vecdelta, slpc, slpd, w, updated_w, updated_s2_, updated_eindex]);
@@ -804,11 +802,17 @@ rgraph_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
 	s2dualinv=s2dual^-1;
 	n=#s2dual;
 
-	my(s2dual_, dfsfGdual, data, T);
-	[s2dual_,data]=rgraph_one_face_reduction(Gdual);
-	/*#w=O(g)=n-2(f-1)*/
-	[T, dfsfGdual]=data[2..3];
+	/*Get tree and an ordering on the vertices.*/
+	/*Usually bfs or dfs ordering.*/
+	my(data=vector(6), T, dfsfGdual, fGdual);
+	rgraph_dfs(~G,~data);
+	T=data[2];
+	dfsfGdual=data[3];
 	fGdual=data[6];
+
+	my(s2dual_)
+	s2dual_=rgraph_gluealongT(Gdual, T, dfsfGdual);
+	/*#w=O(g)=n-2(f-1)*/
 
 	my(s2dualc, f);
 	s2dualc=permcycles(s2dual);
@@ -963,3 +967,26 @@ rgraph_from_permrepr(G, d, permrepr)={
 	
 	return([s1rev, s1*s0rev^-1]);
 }
+
+\\ Build a covering ribbon graph coming from a monodromy
+\\ action.
+\\ The new edge set is Erev=E x {1,..., d}, we view it as 
+\\ {1,...,#E*d} with lexicographic ordering.
+\\ The covering vertex permutation s0rev is s0 x id_{1,...,d}
+\\ while s1rev is s1 x (monodromy*s1).
+\\ TODO: Le sidepairing devrait être calculé dans fdompres.
+rgraph_from_monodromy(G, d, monodromy)={
+	my(s0, s1, s2, n);
+	[s1,s2]=G;
+	s0=(s2^-1)*s1;
+	n=#s0;
+
+	my(m=d*n);
+	for(j=0, d-1,
+		for(i=1, n,
+			s0rev[i+j*n]=s0[i]+j*n;
+			s1rev[i+j*n]=s1[i]+monodromy[s1[j]]*n;
+		);
+	);
+	return([s1rev, s1*s0rev^-1]);
+};

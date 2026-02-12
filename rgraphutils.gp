@@ -1,5 +1,5 @@
 /*Builds (i j) in Sn */
-maketij(n,i,j)={
+permtij(n,i,j)={
 	my(tij);
 
 	tij=vectorsmall(n,u,u);
@@ -8,7 +8,7 @@ maketij(n,i,j)={
 	return(tij);
 }
 /*Builds (a b c) in Sn */
-make3c(n,a,b,c)={
+perm3c(n,a,b,c)={
 	my(c3);
 	c3=vectorsmall(n,u,u);
 	c3[a]=b;
@@ -29,18 +29,21 @@ rand_perm(n) =
   );
   return(g);
 }
+rand_cycs
 
-
+isperm(s)={
+	return(#Set(s)==#s);
+}
 cyctoperm0(n, cs)={
 	my(s);
-	s=cycles_to_perm(n,[cs[1]]);
+	s=cycs_to_perm(n,[cs[1]]);
 	for(i=2, #cs,
 		mulpermcyc(~s, ~cs[i]);
 	);
 	return(s);
 }
 
-cycles_to_perm(n,cs)={
+cycs_to_perm(n,cs)={
 	/*Assumes the cycles are disjoint, so that
 	we can iterate the single cycle procedure.*/
 	my(f, s, cardc);
@@ -58,11 +61,11 @@ cycles_to_perm(n,cs)={
 }
 
 /*random k-cycle in Sn*/
-rand_kcycle(n,k,{conj=1})={
+rand_kcyc(n,k,{conj=1})={
 	if(k>n, print("invalid cycle size\n"); return([]););
-	if(k==n, return(cycles_to_perm(n,[rand_perm(n)])));
+	if(k==n, return(cycs_to_perm(n,[rand_perm(n)])));
 	my(kcycnorm);
-	kcycnorm=cycles_to_perm(n, [rand_perm(k)]);
+	kcycnorm=cycs_to_perm(n, [rand_perm(k)]);
 	if(!conj, return(kcycnorm));
 	my(g);
 	g=rand_perm(n);
@@ -78,7 +81,7 @@ rand_invol(n,k)={
 	g=rand_perm(n);
 
 	involcycs = vector(k, i, Vecsmall([2*i-1, 2*i]));
-	invol=cycles_to_perm(n, involcycs);
+	invol=cycs_to_perm(n, involcycs);
 	invol=permconj(invol, g);
 
 	return(invol);
@@ -104,12 +107,6 @@ conjcycperm(~c, ~s)={
 	return();
 }
 
-
-mulcycperm(~c, ~s)={
-	tmp=cycles_to_perm(#s, [c])*s;
-	for(i=1, #s, s[i]=tmp[i]);
-	return();
-}
 
 mulpermcyc(~s, ~c)={
 	my(sc, tmp);
@@ -266,7 +263,10 @@ rgraph_info0(G, {w=0},{c=1}, {edgetoletter=0})={
 	return();
 }
 
-fvec(v)={return((i)->(v[i]))}
+vectofun(v)={
+	return((i)->(v[i]));
+}
+
 find_w(s2_,etol)={
 	my(w);
 	etol=fvec(etol);
@@ -310,10 +310,7 @@ makeindex(s2, seed)={
 }
 
 
-is_cycle(s)={
-	return(#permcycles(s)==#s-permorder(s)+1);
-}
-is_kcycle(s, k)={
+iscyc(s,{k=permorder(s)})={
 	return(#permcycles(s)==#s-k+1);
 }
 
@@ -326,11 +323,11 @@ perm_as_prodoftwocycs_small(s,{k})={
 	s=permconj(s, g);
 	if(!k, k=n-fixedpts);
 	\\s is now of the form (1 2 ... k1)(k1+1 k1+2...k1+k2)(...)
-	c=rand_kcycle(n,k,0);
+	c=rand_kcyc(n,k,0);
 	n=#s;
 	error("");
-	while(!is_kcycle(s*c,k),
-		c=rand_kcycle(n,k,0);
+	while(!iscyc(s*c,k),
+		c=rand_kcyc(n,k,0);
 	);
 	s=permconj(s, g);
 	c=permconj(c, g);
@@ -382,7 +379,7 @@ cyc_lmtokk(cs)={
 		\\ The cycles are disjoint
 		smalle=permcycles0(smallc)[1][1];
 		bige=permcycles0(bigc)[1][1];
-		t=maketij(n, smalle, bige);
+		t=permtij(n, smalle, bige);
 
 		smallc=smallc*t;
 		bigc=t*bigc;
@@ -518,14 +515,14 @@ perm_as_prodoftwocycs(s)={
 	);
 
 	\\print(cs);
-	c=cycles_to_perm(n, cs);
+	c=cycs_to_perm(n, cs);
 	my(c01,c02);
 	if(sigsn_3==-1,
-		c01=maketij(n,n-1,n);
+		c01=permtij(n,n-1,n);
 		c02=c01;
 	,/*else*/
 		if(c[n-2]==n-2,
-			c01=cycles_to_perm(n, [[n-2,n-1,n]]);
+			c01=cycs_to_perm(n, [[n-2,n-1,n]]);
 			c02=c01^-1;
 		,/*else*/
 			c01=c^2;

@@ -1,9 +1,9 @@
-test_rand_kcycle({iter=10})={
+test_rand_kcyc({iter=10})={
 	for(n=10,10^2,
 		for(k=1, n,
 			for(i=1, iter,
-				c=rand_kcycle(n,k);
-				if(!is_kcycle(c, k), error("c not a k-cycle in test_rand_kcycle."));
+				c=rand_kcyc(n,k);
+				if(!iscyc(c, k), error("c not a k-cycle in test_rand_kcycle."));
 			);
 		);
 	);
@@ -19,8 +19,8 @@ test_as_prodoftwocycs({iter=10^2})={
 			);
 			[c1,c2]=perm_as_prodoftwocycs(s);
 			if(c1*c2!=s, error("c1*c2!=s in test_as_prodoftwocycs"));
-			if(!is_cycle(c1), error("c1 is not a cycle in test_as_prodoftwocycs"));
-			if(!is_cycle(c2), error("c2 is not a cycle in test_as_prodoftwocycs"));
+			if(!iscyc(c1), error("c1 is not a cycle in test_as_prodoftwocycs"));
+			if(!iscyc(c2), error("c2 is not a cycle in test_as_prodoftwocycs"));
 		);
 	);
 	return();
@@ -37,13 +37,13 @@ test_cyc_lmtokk({iter=10^2})={
 				m=random(n-1)+1;
 			);
 			k=abs((l-m))/2;
-			c1=rand_kcycle(n, l);
-			c2=rand_kcycle(n, m);
+			c1=rand_kcyc(n, l);
+			c2=rand_kcyc(n, m);
 
 			[c1_,c2_]=cyc_lmtokk([c1,c2]);
 			if(c1_*c2_!=c1*c2, error("c1_*c2_!=c1*c2 in test_cyc_lmtokk."));
-			if(!is_cycle(c1_), error("c1_ is not a cycle in test_cyc_lmtokk."));
-			if(!is_cycle(c2_), error("c2_ is not a cycle in test_cyc_lmtokk."));
+			if(!iscyc(c1_), error("c1_ is not a cycle in test_cyc_lmtokk."));
+			if(!iscyc(c2_), error("c2_ is not a cycle in test_cyc_lmtokk."));
 
 			if(!permorder(c1_)==permorder(c2_), error("c1_ and c2_ not of the same length."));
 		);
@@ -51,6 +51,6 @@ test_cyc_lmtokk({iter=10^2})={
 	return();
 }
 
-test_rand_kcycle();
+test_rand_kcyc();
 test_as_prodoftwocycs();
 test_cyc_lmtokk();

@@ -155,6 +155,12 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		return([gens,rels]);
 }
 
+afuch_covering(X, monodromy)={
+	my();
+	
+	return();
+}
+
 tosig(v)={
 	if(type(v)!="t_STR", return(Str(v)));
 	return(v);

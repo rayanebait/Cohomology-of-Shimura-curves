@@ -427,3 +427,6 @@ slp_normalize(slp, h, m)={
 	);
 	return(slp);
 }
+
+
+slpreverse()={}
