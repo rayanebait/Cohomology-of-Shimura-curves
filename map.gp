@@ -136,10 +136,10 @@ map_normalize(G)={
 			k=k+1;
 		);
 	);
-	my(s1_,s2_);
-	s2_=permconj(s2,g);
+	my(s1_,s2one);
+	s2one=permconj(s2,g);
 	s1_=permconj(s1,g);
-	return([s1_,s2_]);
+	return([s1_,s2one]);
 }
 
 /*Removes patterns of the form ...aa^-1... in 
@@ -185,13 +185,13 @@ map_reduce(G)={
 
 		t=t*t_;
 	);
-	my(s1_,s2_);
+	my(s1_,s2one);
 	s1_=s1*t;
-	s2_=s2*r;
+	s2one=s2*r;
 	/*
 	Then move fixed points to the end and truncate.
 	*/
-	return(map_reduce(perm_normalize_wrt([s1_,s2_],1)));
+	return(map_reduce(perm_normalize_wrt([s1_,s2one],1)));
 }
 
 /*Checks for any patterns of the form ...aa^-1...
@@ -315,56 +315,61 @@ map_dfsgen(G)={
 }
 
 
-/*Performs a depth first search in the graph associated to
-a graph embedding G starting at edge seed=1.
+map_dfsinit(G, ~Phi, ~data)={
+	my(s,vG,s1,sc)
+	/*Dfs is on Gdual.*/
+	s=G[2];
+	vG=map_face_index(G);
+	/*Go through the faces in reversed orientation. Needed for the slps.*/
+	s=s^-1;
+	s1=G[1];
+	sc=permcycles(s);
 
-Initialize my(data) as a reference with map_dfs(G, ~data)
-to perform a dfs in Gdual and compute a covering tree T.
-Phi has the form
+	my(explored, vdfsindex, dfsvG, seed);
+	explored=vector(#sc);
+	vdfsindex=1;
+	dfsvG=vector(#sc);
+	seed=1;
+
+	my(bufPhi);
+	bufPhi=[s1, s, sc, vG];
+	for(i=1, #Phi, Phi[i]=bufPhi[i]);
+
+	my(bufdata, tempT);
+	tempT=List();
+	bufdata=[explored, tempT, dfsvG, vdfsindex, seed, vG];
+	for(i=1, #data, data[i]=bufdata[i]);
+
+	return();
+}
+
+/*
+	Performs a depth first search in the graph associated to
+	a graph embedding G starting at edge seed=1.
+
+	Initialize my(data) as a reference with map_dfs(G, ~data)
+	to perform a dfs in Gdual and compute a covering tree T.
+	Phi has the form
 		[s1, s, sc, vG]=Phi;
-data has the form
-		[explored, T, slp, dfsvG, vdfsindex, seed]=data
+	data has the form
+		[explored, T, dfsvG, vdfsindex, seed]=data
+ */
 
-
-At the end data has the form : [explored,T,dfsvG,fdfsindex,seed, vG]=data*/
 map_dfs(~Phi, ~data)={
-	/*Data of G*/
-	my(s1, s, sc, vG, T, seed);
+	my(G);
 	/*rec_prof++;*/
 	/*if(rec_prof > 5, breakpoint());*/
 	if(#Phi==2,
-		/*Initialize*/
-		my(G);
 		G=Phi;
-		/*Dfs is on Gdual.*/
-		s=G[2];
-		vG=map_face_index(G);
-
-		/*Go through the faces in reversed orientation. Needed for the slps.*/
-		s=s^-1;
-		s1=G[1];
-		sc=permcycles(s);
-
-		my(explored, vdfsindex, dfsvG);
-		explored=vector(#sc);
-		vdfsindex=1;
-		dfsvG=vector(#sc);
-		seed=1;
-
-		my(tempT);
-		tempT=List();
-
-		Phi=[s1, s, sc, vG];
-		my(bufdata);
-		bufdata=[explored, tempT, dfsvG, vdfsindex, seed, vG];
-		for(i=1, #data, data[i]=bufdata[i]);
+		Phi=vector(4);
+		map_dfsinit(G, ~Phi, ~data);
 	,/*else*/
 		/*data[4] is the index of the current recursion*/
 		data[4]++;
 	);
 
 	/*Data related to current vertex.*/
-	my(v, vindex);
+	my(seed, v, vindex);
 	/*seed is the first edge to be visited in this*/
 	/*vertex*/
 	seed=data[5];
@@ -508,10 +513,10 @@ map_gluealongT(G, T, {withGone=0})={
 			in_T[e[2]]=1;
 		); 
 		
-		/*Build s1_ and s2_*/
-		my(s1_, s2_, k, s2inv);
+		/*Build s1_ and s2one*/
+		my(s1_, s2one, k, s2inv);
 		s1_=vectorsmall(n,i,i);
-		s2_=vectorsmall(n,i,i);
+		s2one=vectorsmall(n,i,i);
 		s2inv=s2^-1;
 		for(i=1, n, 
 			if(in_T[i], next);
@@ -522,16 +527,20 @@ map_gluealongT(G, T, {withGone=0})={
 				\\k=s2[s1[k]];
 				k=s2inv[s1[k]];
 			);
-			s2_[i]=k;
+			s2one[i]=k;
 		);
-		s2_=s2_^-1;
+		s2one=s2one^-1;
 		if(withGone, 
-			return([s2_, perm_normalize_wrt([s1_,s2_], 1, in_T)]);
+			return([s2one, perm_normalize_wrt([s1_,s2one], 1, in_T)]);
 		,/*else*/
-			return(s2_);
+			return(s2one);
 		);
 }
 
+
+/*Each gi is homotopic to the unique path in T between*/
+/*face 1 and i. So that the tree made of the gis is isomorphic*/
+/*to T. */
 map_liftalongT(G, T, TfG)={
 	my(s1,s2, n, s2c, f);
 	[s1,s2]=G;
@@ -541,7 +550,7 @@ map_liftalongT(G, T, TfG)={
 	fG=map_face_index(G);
 
 	my(makeslpgammai, maxfacesize = 1);
-	/*Encodes a face of Gdual starting at seed and*/
+	/*Encodes a face of Gdual starting at seed (inclusive) and*/
 	/*went through in reversed orientation.*/
 	makeslpgammai=(u-> 
 		my(seed, e, k=1);
@@ -553,11 +562,6 @@ map_liftalongT(G, T, TfG)={
 		my(slpgammai);
 		slpgammai=vector(#s2c[fG[seed]]);
 		e=seed;
-		/*On commence à s2dual^-1[seed suivant s2dual^-1*/
-		/*et termine juste avant. Puis gi+1 va*/
-		/*de s2dual[seed] à j suivant s2dual.*/
-		/*le mémo c'est gammai commence en seed */
-		/*pas gi, et gi contient pas j.*/
 		until(e==seed,
 			/*Faut tenir compte des générateurs*/
 			if(k==1, 
@@ -576,8 +580,8 @@ map_liftalongT(G, T, TfG)={
 	slpsgammai=vector(f,u, makeslpgammai(u));
 
 
-   	my(slpsgens, seedlp, n_);
-	n_=n-2*(f-1);
+   	my(slpsgens, seedlp, n_one);
+	n_one=n-2*(f-1);
 	
 	my(slpgis, pointersgi, approxtotlength=maxfacesize*n);
 	/*straight line program to compute loopfaces paths.*/
@@ -638,14 +642,14 @@ map_liftalongT(G, T, TfG)={
 }
 
 /*Assumes G is of genus > 0*/
-findab(s2_,s1, seed, eindex)={
+findab(s2one,s1, seed, eindex)={
 	my(a, ainv, ainvindex);
 	a=seed; ainv=s1[a]; ainvindex=eindex[ainv];
 	my(b, binv, binvindex);
-	b=s2_[a]; binv=s1[b]; binvindex=eindex[binv];
+	b=s2one[a]; binv=s1[b]; binvindex=eindex[binv];
 	while(binvindex<ainvindex && b!=ainv,
 		/*here aindex:=eindex[a]<bindex:=eindex[b]<ainvindex by definition*/
-		b=s2_[b];
+		b=s2one[b];
 		binv=s1[b];
 		binvindex=eindex[binv];
 	);
@@ -653,34 +657,34 @@ findab(s2_,s1, seed, eindex)={
 }
 
 /*
-   Performs a single cut and paste on the only cycle of s2_,
+   Performs a single cut and paste on the only cycle of s2one,
  representing the oneface reduction of the graph embedding
  [s1,s2].
 */
-cut_and_paste_one(s2_, s1, seedslp, eindex)={
-	my(n, n_, a,b,vecalpha, vecbeta, vecgamma, vecdelta);
-	n=#s1; n_=permorder(s2_);
-	[a,b]=findab(s2_, s1, s2_[seedslp], eindex);
+cut_and_paste_one(s2one, s1, seedslp, eindex)={
+	my(n, n_one, a,b,vecalpha, vecbeta, vecgamma, vecdelta);
+	n=#s1; n_one=permorder(s2one);
+	[a,b]=findab(s2one, s1, s2one[seedslp], eindex);
 	e=seedslp;
 
 	my(w);
-	w=vector(n_, u, e=s2_[e]; e);
+	w=vector(n_one, u, e=s2one[e]; e);
 	e=a;
 
 	my(card);
 	card=(eindex[b]-1)-eindex[a];
-	vecalpha=vector(card, u, e=s2_[e]; e);
-	e=s2_[e];
+	vecalpha=vector(card, u, e=s2one[e]; e);
+	e=s2one[e];
 	
 	card=(eindex[s1[a]]-1)-eindex[b];
-	vecbeta=vector(card, u, e=s2_[e]; e);
-	e=s2_[e];
+	vecbeta=vector(card, u, e=s2one[e]; e);
+	e=s2one[e];
 	
 	card=(eindex[s1[b]]-1)-eindex[s1[a]];
-	vecgamma=vector(card, u, e=s2_[e]; e);
-	e=s2_[e];
+	vecgamma=vector(card, u, e=s2one[e]; e);
+	e=s2one[e];
 	
-	vecdelta=vector(n_-eindex[s1[b]], u, e=s2_[e]; e);
+	vecdelta=vector(n_one-eindex[s1[b]], u, e=s2one[e]; e);
 	
 	
 	my(slpc, slpd);
@@ -688,26 +692,25 @@ cut_and_paste_one(s2_, s1, seedslp, eindex)={
 	slpc=slpconcat([slpinvert(vectoslp(vecbeta,n),s1,n), slpinvert(vectoslp(vecgamma,n),s1,n), [[0, a]] ],n,,1);
 
 	\\updated_w=gamma beta c d c^-1d^-1 alpha delta
-	\\ a and b are used because they are not in the vecs.
-	my(updated_w, updated_s2_, updated_eindex);
+	\\ a and b are used because they are not in the vecs
+	\\ the side pairing then associates to a and b
+	\\ the evaluation of slpc and slpd respectively
+	my(updated_w, updated_s2one, updated_eindex);
 	updated_w=concat([vecgamma, vecbeta, [a], [b], [s1[a]], [s1[b]], vecalpha, vecdelta]);
-	updated_s2_=cycs_to_perm(n, [updated_w]);
-	updated_eindex=makeindex(updated_s2_, updated_w[1]);
+	updated_s2one=cycs_to_perm(n, [updated_w]);
+	updated_eindex=makeindex(updated_s2one, updated_w[1]);
 		
-	return([a,b, vecalpha, vecbeta, vecgamma, vecdelta, slpc, slpd, w, updated_w, updated_s2_, updated_eindex]);
+	return([a,b, vecalpha, vecbeta, vecgamma, vecdelta, slpc, slpd, w, updated_w, updated_s2one, updated_eindex]);
 }
+
 
 /*Deals with the genus 0 case of map_buildpres*/
 map_genus0pres(f, s2, s1, slpsgammai,slpgis, pointersgi, {testing=0})={
 	my(n);
 	n=#s1;
-	\\Pointers has size 4*g at this point, that is it points on
-	\\2*g topological generators and their inverses 
-	\\This filters 2*g topological generators and builds
-	\\the appropriate relation.
 	my(rels, rel);
 	rels=List();
-	\\Face relation
+	\\ Empty face relation
 	rel=vector(f, u, u);
 	listput(~rels, rel);
 
@@ -746,13 +749,154 @@ map_genus0pres(f, s2, s1, slpsgammai,slpgis, pointersgi, {testing=0})={
 	);
 }
 
+map_surface_presentation(Gone, seedslp, type)={
+	my(s1one, s2one);
+	[s1one,s2one]=Gone;
+	n=#s1one;
+	n_one=permorder(s2one);
+	if(n_one==1, return());
+	f=(n-n_one)/2+1;
+
+	my(slp, pointers, seen, eindex);
+	seen=vectorsmall(n);
+	\\Each edge e points to e(1).
+	eindex=makeindex(s2one,s2one[seedslp]);
+
+	my(vecalpha, vecbeta, vecgamma, vecdelta,\
+		slpalpha, slpbeta, slpgamma, slpdelta,\
+	   	   	slpc,slpd);
+	my(a,b, w, updated_w, updated_s2one, updated_eindex);
+	if(type=="oneword",
+		pointers=vectorsmall(n_one, i, i);
+		w=vectorsmall(n_one);
+		slp=vector(n_one, u,\
+			   	e=s2one[e];\
+				if(!seen[s1[e]], seen[e]=1);\
+				w[u]=e;
+			   	[0, e]);
+	,type=="onehandle",/*else if*/
+		\\w_one=gamma beta c d c^-1d^-1 alpha delta
+		\\ Recover updated pointers of gis before concatening
+		\\ the loopfaces to slp and pointers.
+		\\ In building pointers we wish to point to the 2*g
+		\\ generators and the f loopfaces. As each edge
+		\\ appears with its inverse in the one word, we
+		\\ point only to the first of the two appearing
+		\\ following the w_one.
+		[a,b, vecalpha, vecbeta,vecgamma, vecdelta, slpc, slpd,
+	   	w, updated_w, updated_s2one, updated_eindex]=\
+			cut_and_paste_one(s2one,s1,seedslp,eindex);
+
+		slpalpha=vectoslp(vecalpha, n, 0);
+		slpbeta=vectoslp(vecbeta, n, 0);
+		slpgamma=vectoslp(vecgamma, n, 0);
+		slpdelta=vectoslp(vecdelta, n, 0);
+
+		[slp, pointers]=slpconcat(
+			\\ SLPS
+			[slpgamma, slpbeta, slpc, slpd], n,\
+			\\ POINTERS
+			[vector(#slpgamma, i,
+				if(!seen[s1[slpgamma[i][2]]], seen[slpgamma[i][2]]=1); i),\
+			vector(#slpbeta, i,
+				if(!seen[s1[slpbeta[i][2]]], seen[slpbeta[i][2]]=1); i),\
+			[#slpc], [#slpd]]\
+		);
+		
+		\\ Add slpc^-1 and slpd^-1
+		slp=concat([slp,\
+			[[-(n+#slpgamma+#slpbeta+#slpc), -1]],\
+		   	[[-(n+#slpgamma+#slpbeta+#slpc+#slpd), -1]]]);
+		pointers=concat([pointers,[n+#slpgamma+#slpbeta+#slpc+#slpd+1,n+#slpgamma+#slpbeta+#slpc+#slpd+2]]);
+		
+		[slp, pointers]=slpconcat(
+			\\ SLPS
+			[slp,\
+	   		slpalpha, slpdelta], n,\
+			\\ POINTERS
+			[pointers,
+			vector(#slpalpha, i,
+				if(!seen[s1[slpalpha[i][2]]], seen[slpalpha[i][2]]=1); i),\
+			vector(#slpdelta, i,
+				if(!seen[s1[slpdelta[i][2]]], seen[slpdelta[i][2]]=1); i)]\
+		);
+		s2one=updated_s2one;
+		eindex=updated_eindex;
+		\\ a and b are now c and d respectively for updated_eindex
+		\\ This works as only their index in updated_w is used.
+		seen[a]=1;
+		seen[b]=1;
+	);
+	\\Pointers has size 4*g at this point, that is it points on
+	\\2*g topological generators and their inverses 
+	\\This filters 2*g topological generators and builds
+	\\the appropriate relation.
+	my(rel);
+	[pointers,rel]=buildrel_and_pointers(pointers, slp[1][2], s2one, s1, eindex, seen);
+	\\Face relation
+	rel=concat(rel, vector(f, u, n_one/2+u));
+
+	return([slp, pointers, rel]);
+}
+
+map_loopfaces(n, slpsgammai,slpgis, pointersgi)={
+	my(f, n_one, rel);
+	f=#slpsgammai;
+	n_one=n-2*(f-1);
+	
+	rel=vector(f, i, n_one/2+i);
+	\\ Makes slps of gammais into a single slp
+   	my(slpgammais, pointersgammai);
+	[slpgammais, pointersgammai]=slpconcat(slpsgammai, n,\
+		vector(#slpsgammai, u, [#slpsgammai[u]]);
+	);
+	my(slp, pointers);
+	\\ Add slp of gis and gammais 
+	[slp, pointers]=slpconcat(
+		\\ SLPS
+		[slpgis, slpgammais], n,\
+		\\ POINTERS
+		[pointersgi, pointersgammai]\
+	);
+
+	\\ Add loopfaces
+	my(lenslp_gis_gammai);
+	lenslp_gis_gammais=#slp;
+	slp=concat([slp,\
+		concat(vector(f, u, 
+			[[n+pointers[n_one/2+u],n+pointers[n_one/2+f+u]],\
+			[-(n+pointers[n_one/2+u]), -1],\
+			[n+lenslp_gis_gammais+3*u-2, n+lenslp_gis_gammais+3*u-1]]))\
+	]);
+	\\ Remove pointers of gis and gammais and add those of
+	\\ loopfaces.
+	pointers=vector(f,u, lenslp_gis_gammais+3*u);  
+	return([slp, pointers, rel]);
+}
+
+map_topological_presentation(Gone, seedslp, slpsgammai, slpgis, pointersgi, type)={
+	my(surface_slp, surface_pointers,surface_rel,\
+			loopfaces_slp, loopfaces_pointers, face_rel);
+	[surface_slp, surface_pointers, surface_rel]=map_surface_presentation(Gone, seedslp,  type);
+	[loopface_slp, loopfaces_pointers, face_rel]=map_loopfaces(G, slpsgammai, slpgis, pointersgi);
+
+	my(fullslp, pointers, rels);
+	fullslp=slpconcat(\
+			\\ SLPS
+			[surface_slp, loopfaces_slp], #Gone[1],\
+			\\ POINTERS
+			[surface_pointers, loopfaces_pointers]);
+	rels=concat(surface_rel, face_rel);
+	return([fullslp, pointers, rels]);
+}
+
 /*Build the returned slp of generators and loopfaces.*/
-map_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0})={
-	my(n, n_, f);
+map_buildpres(s2one,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0})={
+	my(n, n_one, f);
 	n=#s1;
-	n_=permorder(s2_);
-	if(n_==1, error("Genus 0 is handled in another function : this is a bug"));
-	f=(n-n_)/2+1;
+	n_one=permorder(s2one);
+	if(n_one==1, error("Genus 0 is handled in another function : this is a bug"));
+	f=(n-n_one)/2+1;
 
 	my(e);
 	e=seedslp;
@@ -760,17 +904,17 @@ map_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0}
 	my(fullslp, pointers, seen, eindex);
 	seen=vectorsmall(n);
 	\\Each edge e points to e(1).
-	eindex=makeindex(s2_,s2_[seedslp]);
+	eindex=makeindex(s2one,s2one[seedslp]);
 
 	my(vecalpha, vecbeta, vecgamma, vecdelta,\
 		slpalpha, slpbeta, slpgamma, slpdelta,\
 	   	   	slpc,slpd);
-	my(a,b, w, updated_w, updated_s2_, updated_eindex);
+	my(a,b, w, updated_w, updated_s2one, updated_eindex);
 	if(type=="oneword",
-		pointers=vectorsmall(n_, i, i);
-		w=vectorsmall(n_);
-		fullslp=vector(n_, u,\
-			   	e=s2_[e];\
+		pointers=vectorsmall(n_one, i, i);
+		w=vectorsmall(n_one);
+		fullslp=vector(n_one, u,\
+			   	e=s2one[e];\
 				if(!seen[s1[e]], seen[e]=1);\
 				w[u]=e;
 			   	[0, e]);
@@ -784,8 +928,8 @@ map_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0}
 		\\ point only to the first of the two appearing
 		\\ following the w_one.
 		[a,b, vecalpha, vecbeta,vecgamma, vecdelta, slpc, slpd,
-	   	w, updated_w, updated_s2_, updated_eindex]=\
-			cut_and_paste_one(s2_,s1,seedslp,eindex);
+	   	w, updated_w, updated_s2one, updated_eindex]=\
+			cut_and_paste_one(s2one,s1,seedslp,eindex);
 
 		slpalpha=vectoslp(vecalpha, n, 0);
 		slpbeta=vectoslp(vecbeta, n, 0);
@@ -820,7 +964,7 @@ map_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0}
 			vector(#slpdelta, i,
 				if(!seen[s1[slpdelta[i][2]]], seen[slpdelta[i][2]]=1); i)]\
 		);
-		s2_=updated_s2_;
+		s2one=updated_s2one;
 		eindex=updated_eindex;
 		\\ a and b are now c and d respectively for updated_eindex
 		\\ This works as only their index in updated_w is used.
@@ -833,9 +977,9 @@ map_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0}
 	\\the appropriate relation.
 	my(rels, rel);
 	rels=List();
-	[pointers,rel]=buildrel_and_pointers(pointers, fullslp[1][2], s2_, s1, eindex, seen);
+	[pointers,rel]=buildrel_and_pointers(pointers, fullslp[1][2], s2one, s1, eindex, seen);
 	\\Face relation
-	rel=concat(rel, vector(f, u, n_/2+u));
+	rel=concat(rel, vector(f, u, n_one/2+u));
 	listput(~rels, rel);
 
 	\\ Makes slps of gammais into a single slp
@@ -858,13 +1002,13 @@ map_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0}
 	lenslp_gens_gis_gammais=#fullslp;
 	fullslp=concat([fullslp,\
 		concat(vector(f, u, 
-			[[n+pointers[n_/2+u],n+pointers[n_/2+f+u]],\
-			[-(n+pointers[n_/2+u]), -1],\
+			[[n+pointers[n_one/2+u],n+pointers[n_one/2+f+u]],\
+			[-(n+pointers[n_one/2+u]), -1],\
 			[n+lenslp_gens_gis_gammais+3*u-2, n+lenslp_gens_gis_gammais+3*u-1]]))\
 	]);
 	\\ Remove pointers of gis and gammais and add those of
 	\\ loopfaces.
-	pointers=concat([pointers[1..n_/2],\
+	pointers=concat([pointers[1..n_one/2],\
 			vector(f,u, lenslp_gens_gis_gammais+3*u)]);  
 	
 	if(testing,
@@ -872,12 +1016,12 @@ map_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0}
 			return([slpsgammai, slpgis, pointersgi,\
 		   		fullslp, pointers, rels,\
 		   		a, b, eindex,\
-		   		s1, s2_, w, seen]);
+		   		s1, s2one, w, seen]);
 		,/*else*/
 			return([slpsgammai, slpgis, pointersgi,\
 			   	fullslp, pointers, rels,\
 			   	a, b, eindex,\
-			   	s1, s2_, w, updated_w, seen,
+			   	s1, s2one, w, updated_w, seen,
 			   	vecalpha, vecbeta, vecgamma, vecdelta,\
 			   	slpalpha, slpbeta, slpgamma, slpdelta, slpc, slpd]);
 		);
