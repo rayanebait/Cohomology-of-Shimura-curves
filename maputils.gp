@@ -177,7 +177,7 @@ perm_iplusk(n,k)={
 
 /*If G has less than 26 edges, returns a word representing
  its associated surface.*/
-rgraph_to_word(G, {edgetoletter=0})={
+map_to_word(G, {edgetoletter=0})={
 	my(s1,s2,n);
 	[s1,s2]=G;
 	n=#s2;
@@ -211,9 +211,9 @@ rgraph_to_word(G, {edgetoletter=0})={
 
 	my(words, fG, face);
 	words=vector(f,u, vector(#s2c[u]));
-	fG=rgraph_face_index(G);
+	fG=map_face_index(G);
 	/*Build words following the cycle structure of
-	s2_c which is normalized, cf. rgraph_normalize.*/
+	s2_c which is normalized, cf. map_normalize.*/
 	for(i=1,f,
 		face=s2c[i];
 		for(j=1, #face,
@@ -224,16 +224,16 @@ rgraph_to_word(G, {edgetoletter=0})={
 	return([apply(strjoin, words), edgetoletter]);
 }
 
-rgraph_info0(G, {w=0},{c=1}, {edgetoletter=0})={
-	if(#G[2]<=1, print("\nEmpty ribbon graph\n"); return());
+map_info0(G, {w=0},{c=1}, {edgetoletter=0})={
+	if(#G[2]<=1, print("\nEmpty map\n"); return());
 	my(s1, s2, red, conn);
-	red=rgraph_is_reduced(G);
-	if(c, conn=rgraph_is_connected(G));
+	red=map_is_reduced(G);
+	if(c, conn=map_is_connected(G));
 	[s1,s2]=G;
 
 
 	my(v,e,f, g);
-	[v,e,f,g]=rgraph_numbers(G);
+	[v,e,f,g]=map_numbers(G);
 
 	my(not, vs, es, fs);
 	not = ["not ",""];
@@ -259,7 +259,7 @@ rgraph_info0(G, {w=0},{c=1}, {edgetoletter=0})={
 			print("It has ", v , vs[(v==1)+1], e, es[(e==1)+1], f,fs[(f==1)+1],".\n");
 		);
 	);
-	if(w, print("Word presentation : ",rgraph_to_word(G,edgetoletter)[1]));
+	if(w, print("Word presentation : ",map_to_word(G,edgetoletter)[1]));
 	return();
 }
 
@@ -274,17 +274,17 @@ find_w(s2_,etol)={
 	w=concat(apply(etol,w));
 	return(w);
 }
-rgraph_info(G,{edgetoletter=0})={
+map_info(G,{edgetoletter=0})={
 		my(n=#G[1]); 
 		if(n<=50,
-				rgraph_info0(G,1,edgetoletter);
+				map_info0(G,1,edgetoletter);
 		,\\else
-				rgraph_info0(G);
+				map_info0(G);
 		);
 		return();
 }
 
-rgraph_genword(g)={
+map_genword(g)={
 	if(g<=0, return([[],[]]));
 	my(s1g,s2g);
 	s1g=concat(vector(g, i, j=(i-1)*4;\
@@ -590,7 +590,7 @@ perm_as_commutator(s)={
 \\ for a one-handle presentation
 
 \\ O(nd)
-rand_rgraphpermrepr(rel,d)={
+rand_mappermrepr(rel,d)={
 	my(permrepr, e, s);
 	permrepr=vector(#rel/2);
 	s=vectorsmall(d,i,i);

@@ -12,14 +12,14 @@ a Fuchsian group from a file. */
 
 
 
-/*Returns a ribbon graph (or graph embedding) associated*/
+/*Returns a map (or graph embedding) associated*/
 /*to the fundamental domain stored in X. In the format */
-/*of rgraph.gp*/
-rgraph_from_afuch(X,{with_h=1})={
+/*of map.gp*/
+map_from_afuch(X,{with_h=1})={
 		if(with_h, 
-				return(rgraph_from_invol(afuchspair(X)));
+				return(map_from_invol(afuchspair(X)));
 		,/*else*/
-				return(rgraph_from_invol(afuchspair(X))[1]);
+				return(map_from_invol(afuchspair(X))[1]);
 		);
 }
 
@@ -67,7 +67,7 @@ elliptic_order(A, x, {data=0})={
 	ord=lcm(ords);
 	return([ord,data]);
 }
-rgraph_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
+map_get_ellipticrels(X, Gdual, h, m, dfsfGdual)={
 		my(sc, elts, n);
 		sc=permcycles(Gdual[2]);
 		n=#Gdual[2];
@@ -133,13 +133,13 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		my(G,h);
 		/*h est utilisé pour traduire le slp provenant*/
 		/*de (G,s2) en slp pour (A,elts).*/
-		[G,h]=rgraph_from_afuch(X);
+		[G,h]=map_from_afuch(X);
 
 		my(ret);
-		[ret, dfsfGdual]=rgraph_get_presentation(G,type,1,0);
+		[ret, dfsfGdual]=map_get_presentation(G,type,1,0);
 		/*Add elliptic relations and renormalize the slp*/
 		ret[1]=slp_normalize(ret[1],h,#afuchspair(X));
-		ret[3]=concat(Vec(ret[3]),rgraph_get_ellipticrels(X,rgraph_dual(G), h, #ret[2],dfsfGdual));
+		ret[3]=concat(Vec(ret[3]),map_get_ellipticrels(X,map_dual(G), h, #ret[2],dfsfGdual));
 		if(!eval, return(ret));
 
 		my(slp, pointers, rels);
@@ -155,7 +155,11 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		return([gens,rels]);
 }
 
-afuch_covering(X, monodromy)={
+
+afuch_spair_from_monodromy()={
+	return();
+}
+afuch_from_monodromy(X, monodromy)={
 	my();
 	
 	return();
@@ -198,7 +202,7 @@ afuchfromfile(sig,{storagepath})={
 
 infoafuch(X)={
 	my(G);
-	G=rgraph_dual(rgraph_from_afuch(X)[1]);
+	G=map_dual(map_from_afuch(X)[1]);
 	info(G);
 	return();
 }

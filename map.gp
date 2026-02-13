@@ -1,21 +1,21 @@
 /* 
-   This package implements ribbon graphs which are equivalent
+   This package implements maps which are equivalent
    to combinatorial embeddings of graphs in surfaces. 
 
    Given a combinatorial graph embedding G -> S, the function
-   rgraph_get_presentation computes a topological
+   map_get_presentation computes a topological
    presentation of the fundamental group of the  of the 
 */
 
 /*WARNING: For big n, f==4 will almost never work as 
-  most ribbon graph are disconnected. */
-rand_rgraph(n, {f=0})={
+  most map are disconnected. */
+rand_map(n, {f=0})={
 	/*differents f's :
-		-f=0 : ribbon graph.
-		-f=1 : ribbon graph with one 
+		-f=0 : map.
+		-f=1 : map with one 
 		face.
-		-f=2 : reduced ribbon graph.
-		-f=3 : reduced ribbon graph with
+		-f=2 : reduced map.
+		-f=3 : reduced map with
 		one face.
 		-f=4 : reduced, connected ribbon
 		graph.
@@ -24,28 +24,28 @@ rand_rgraph(n, {f=0})={
 		*/
 	if(f==0, return([cycs_to_perm(2*n, vector(n, i, [2*i-1,2*i])),rand_perm(2*n)]),
 		f==1, return([rand_invol(2*n,n),vectorsmall(2*n,u,(u%(2*n))+1)]),
-		f==2, G=rand_rgraph(n,0);
-		return(rgraph_reduce(G)),
-		f==3, G=rand_rgraph(n,1);
-		return(rgraph_reduce(G)),
+		f==2, G=rand_map(n,0);
+		return(map_reduce(G)),
+		f==3, G=rand_map(n,1);
+		return(map_reduce(G)),
 
-		f==4, G=rgraph_reduce(rand_rgraph(n,0));
-			while(!rgraph_is_connected(G),
-				G_=rand_rgraph(n,0);
+		f==4, G=map_reduce(rand_map(n,0));
+			while(!map_is_connected(G),
+				G_=rand_map(n,0);
 			);
-			return(rgraph_reduce(G)),
+			return(map_reduce(G)),
 
-		f==5, G=rgraph_connected_components(rand_rgraph(n,0))[1];
+		f==5, G=map_connected_components(rand_map(n,0))[1];
 			return(G)
 	);
 }
 
 /*Given an involution representing a side pairing of a fundamental
   domain, with possible fixed points, slices each fixed edge in 2
-  and returns a ribbon graph together with a map associating to
-  each edge of the ribbon graph the index of its associated 
+  and returns a map together with a map associating to
+  each edge of the map the index of its associated 
   generator.*/
-rgraph_from_invol(invol)={
+map_from_invol(invol)={
 	my(n,sliced,k,ki);
 	n=#invol;
 	k=0;
@@ -91,7 +91,7 @@ rgraph_from_invol(invol)={
 }
 
 
-rgraph_dual(G)={
+map_dual(G)={
 	my(s0,s1,s2, Gdual);
 	[s1,s2]=G;
 	s0=s2^-1*s1;
@@ -101,7 +101,7 @@ rgraph_dual(G)={
 
 /*Return the genus, number of edges vertices and faces of the
   graph embedding G*/
-rgraph_numbers(G)={
+map_numbers(G)={
 	if(#G[2]<=1, return([0,0,0,0]));
 	my(e,f,v,g);
 	e=#permcycles(G[1]);
@@ -117,7 +117,7 @@ rgraph_numbers(G)={
   s2=(1...f1)(f1+1...f1+f2)...((f1+...+f_f-1) ... f1+...+f_f)
 
 where f=#permcycles(s2). */
-rgraph_normalize(G)={
+map_normalize(G)={
 	my(n, s1,s2);	
 	[s1,s2]=G;
 	n=#s1;
@@ -148,8 +148,8 @@ faces of G as they are nullhomotopic.*/
 une perm juste un vecsmall, j'ai eu un exemple ou #s2=40
 et s2[2]=43 et c'était le seul pb.*/
 /*TODO: To be fixed. Currently shouldn't be used.*/
-rgraph_reduce(G)={
-	if(rgraph_is_reduced(G), return(G));
+map_reduce(G)={
+	if(map_is_reduced(G), return(G));
 	my(n,s1,s2);
 	[s1,s2]=G;
 	n=#s1;
@@ -191,12 +191,12 @@ rgraph_reduce(G)={
 	/*
 	Then move fixed points to the end and truncate.
 	*/
-	return(rgraph_reduce(perm_normalize_wrt([s1_,s2_],1)));
+	return(map_reduce(perm_normalize_wrt([s1_,s2_],1)));
 }
 
 /*Checks for any patterns of the form ...aa^-1...
 in the faces of G.*/
-rgraph_is_reduced(G)={
+map_is_reduced(G)={
 	my(s1,s2,n,a);
 	[s1,s2]=G;
 	n=#s2;
@@ -211,7 +211,7 @@ rgraph_is_reduced(G)={
 
 /*Given the ordering induced by permcycles on cycles of s2 (faces),
 associates to each oriented edge the index of the face it belongs to.*/
-rgraph_face_index(G)={
+map_face_index(G)={
 	my(s2, n, fG);
 	s2=G[2];
 	n=#s2;
@@ -233,9 +233,9 @@ rgraph_face_index(G)={
 
 
 /*
-Equivalent to rgraph_face_index([s1,s0]).
+Equivalent to map_face_index([s1,s0]).
 */
-rgraph_vertex_index(G)={
+map_vertex_index(G)={
 	my(s0, s1, s2, n, vG, vertices);
 
 	[s1,s2]=G;
@@ -254,22 +254,22 @@ rgraph_vertex_index(G)={
 }
 
 
-/*NOTE: The set of edges of a ribbon graph G on edges 
+/*NOTE: The set of edges of a map G on edges 
 E={1,...,n} is given by :
 	-E(G)=E
 	-V(G)={(ci, i) | i=1,...,vG} where 
 	Prod_i c_i = s0 is the cycle decomposition 
 	of s0 and the indexing is the one computed in  
-	rgraph_vertex_index. Recall that s0 is a 
+	map_vertex_index. Recall that s0 is a 
 	permutation of E so that it makes sense to ask
 	if e is in a given cycle ci.
   This function returns a map Phi : E(G)->V(G)xV(G) such
   that Phi(e)=(e(0),e(1)):=(e,s1[e]).*/
 /*NOTE:O(n^2) space as each cycle is O(n) and |E|=n.
 Here only for completeness.*/
-rgraph_graph(G)={
+map_graph(G)={
 	my(vG, s1, s2, Phi, n);
-	vG=rgraph_vertex_index(G);
+	vG=map_vertex_index(G);
 	[s1, s2]=G;
 	n=#s1;
 
@@ -283,16 +283,16 @@ rgraph_graph(G)={
 
 /*NOTE: Standard depth first search using the underlying
 graph
-of G output by rgraph_graph. Currently O(n^2) time and
+of G output by map_graph. Currently O(n^2) time and
 space due to the representation of G as a graph. Can
 be done in much less using a vertex index and s0.*/
-rgraph_dfsgen(G)={
+map_dfsgen(G)={
 	my(s0, cardvertices);
 	s0=G[2]^-1*G[1];
 	cardvertices=#permcycles(s0);
 
 	my(PhiG, v, explored, to_explore, e);
-	PhiG=rgraph_graph(G);
+	PhiG=map_graph(G);
 	v=PhiG[1][1];
 	explored=vector(cardvertices);
 	to_explore=List();
@@ -318,7 +318,7 @@ rgraph_dfsgen(G)={
 /*Performs a depth first search in the graph associated to
 a graph embedding G starting at edge seed=1.
 
-Initialize my(data) as a reference with rgraph_dfs(G, ~data)
+Initialize my(data) as a reference with map_dfs(G, ~data)
 to perform a dfs in Gdual and compute a covering tree T.
 Phi has the form
 		[s1, s, sc, vG]=Phi;
@@ -327,7 +327,7 @@ data has the form
 
 
 At the end data has the form : [explored,T,dfsvG,fdfsindex,seed, vG]=data*/
-rgraph_dfs(~Phi, ~data)={
+map_dfs(~Phi, ~data)={
 	/*Data of G*/
 	my(s1, s, sc, vG, T, seed);
 	/*rec_prof++;*/
@@ -338,7 +338,7 @@ rgraph_dfs(~Phi, ~data)={
 		G=Phi;
 		/*Dfs is on Gdual.*/
 		s=G[2];
-		vG=rgraph_face_index(G);
+		vG=map_face_index(G);
 
 		/*Go through the faces in reversed orientation. Needed for the slps.*/
 		s=s^-1;
@@ -388,7 +388,7 @@ rgraph_dfs(~Phi, ~data)={
 		/*Update seed*/
 		data[5]=Phi[1][seed];
 
-		rgraph_dfs(~Phi,~data);
+		map_dfs(~Phi,~data);
 		return();
 	);
 	
@@ -409,7 +409,7 @@ rgraph_dfs(~Phi, ~data)={
 		listput(~data[2],[j,Phi[1][j]]);
 		/*Update seed*/
 		data[5]=jinv;
-		rgraph_dfs(~Phi, ~data);
+		map_dfs(~Phi, ~data);
 
 		/*Increment*/
 		j=Phi[2][j];
@@ -418,22 +418,22 @@ rgraph_dfs(~Phi, ~data)={
 	return();
 }
 
-rgraph_is_connected(G)={
+map_is_connected(G)={
 	if(#permcycles(G[2])<=1, return(1));
 	my(data=vector(6), explored);
-	rgraph_dfs(~G,~data);
+	map_dfs(~G,~data);
 	explored=data[1];
 	foreach(explored,i, if(!i, return(0)));
 	return(1);
 }
 
-/*Utility function : Builds a list of ribbon graphs CC such that
+/*Utility function : Builds a list of maps CC such that
   each is isomorphic to a connected component of G.*/
-rgraph_connected_components(G, {CC=List()})={
+map_connected_components(G, {CC=List()})={
 	my(n, s1, s2, s2c, explored, e);
 	if(#G[1]==0 || #G[2]==0, return(CC));
 	my(data=vector(6));
-	rgraph_dfs(~G,~data);
+	map_dfs(~G,~data);
 	explored = data[1];
 	e=0;
 	foreach(explored, i, e=e+i);
@@ -448,7 +448,7 @@ rgraph_connected_components(G, {CC=List()})={
 	);
 
 	/*NOTE: Build a connected component 
-	aswell as a ribbon graph with the remaining 
+	aswell as a map with the remaining 
 	connected components.*/
 	my(s2CCc, s2leftc, s1CC, s1left);
 	s2CCc=List();
@@ -460,14 +460,14 @@ rgraph_connected_components(G, {CC=List()})={
 	for(i=1, #explored,
 		c=Vec(s2c[i]);
 		if(explored[i],
-			/*Build ribbon graph out of 
+			/*Build map out of 
 			the connected component*/
 			listput(~s2CCc, c); 
 			foreach(c, j,
 				s1CC[j]=s1[j];
 			);
 		,/*else*/
-			/*Build ribbon graph out of 
+			/*Build map out of 
 			the remaining
 			connected components*/
 			listput(~s2leftc, c);
@@ -485,15 +485,15 @@ rgraph_connected_components(G, {CC=List()})={
 	my(Gleft);
 	Gleft=perm_normalize_wrt([s1left,s2left],1);
 
-	/*NOTE: Recursive call on the ribbon graph left*/
-	CC=rgraph_connected_components(Gleft, CC);
+	/*NOTE: Recursive call on the map left*/
+	CC=map_connected_components(Gleft, CC);
 
 	return(CC);
 }
 
-
-/**/
-rgraph_gluealongT(G, T, {withGone=0})={
+/*Builds the map obtained by gluing the faces of G along T*/
+/*a tree in the underlying graph of G^* */
+map_gluealongT(G, T, {withGone=0})={
 		my(n,s1,s2);
 		[s1,s2]=G;
 		n=#s1;
@@ -526,12 +526,116 @@ rgraph_gluealongT(G, T, {withGone=0})={
 		);
 		s2_=s2_^-1;
 		if(withGone, 
-			return([s2_, data, perm_normalize_wrt([s1_,s2_], 1, in_T)]);
+			return([s2_, perm_normalize_wrt([s1_,s2_], 1, in_T)]);
 		,/*else*/
-			return([s2_, data]);
+			return(s2_);
 		);
 }
 
+map_liftalongT(G, T, TfG)={
+	my(s1,s2, n, s2c, f);
+	[s1,s2]=G;
+	n=#s1;
+	s2c=permcycles(s2);
+	f=#s2c;
+	fG=map_face_index(G);
+
+	my(makeslpgammai, maxfacesize = 1);
+	/*Encodes a face of Gdual starting at seed and*/
+	/*went through in reversed orientation.*/
+	makeslpgammai=(u-> 
+		my(seed, e, k=1);
+		if(u==1,
+			seed=1;
+		,/*else*/
+			seed=T[u-1][2];
+		);
+		my(slpgammai);
+		slpgammai=vector(#s2c[fG[seed]]);
+		e=seed;
+		/*On commence à s2dual^-1[seed suivant s2dual^-1*/
+		/*et termine juste avant. Puis gi+1 va*/
+		/*de s2dual[seed] à j suivant s2dual.*/
+		/*le mémo c'est gammai commence en seed */
+		/*pas gi, et gi contient pas j.*/
+		until(e==seed,
+			/*Faut tenir compte des générateurs*/
+			if(k==1, 
+					slpgammai[k]=[0, s1dual[e]];
+		    ,\\else
+					slpgammai[k]=[k-1+n, s1dual[e]];
+				
+			);
+			e=s2dualinv[e];
+			k++;
+		);
+		maxfacesize=max(maxfacesize, k-1);
+		return(slpgammai);
+	);
+	my(slpsgammai);
+	slpsgammai=vector(f,u, makeslpgammai(u));
+
+
+   	my(slpsgens, seedlp, n_);
+	n_=n-2*(f-1);
+	
+	my(slpgis, pointersgi, approxtotlength=maxfacesize*n);
+	/*straight line program to compute loopfaces paths.*/
+	slpgis=vector(approxtotlength);
+	/*Used to read the slp : pointersgi[fTindex]*/
+	/*points to the index of the last edge of the path*/
+	/*associated to fTindex in slpgis.*/
+	pointersgi=vector(f);
+	slpgis[1]=[-1,0];
+	pointersgi[1]=1;
+
+	my(last, estart, eend, flastindex, flastTindex, k, e);
+	k=2;
+	for(i=2, f,
+		/*
+			The path associated to gi is used to join
+			the first face to the face 
+			of index i in the ordering of T.
+		*/
+		if(i==2,
+			[estart, eend]=[1, T[1][1]];
+			last=1;
+		,/*else*/
+			flastindex=fG[T[i-1][1]];
+			flastTindex=TfG[flastindex];
+			if(flastTindex==1,
+				[estart, eend]=[1, T[i-1][1]];
+			,/*else*/
+				[estart, eend]=[T[flastTindex-1][2], T[i-1][1]];
+			);
+			/*Recover index of last instruction in slp*/
+			last=pointersgi[flastTindex];
+		);
+
+		if(s2[estart]==eend,
+				/*Add Empty path*/
+				/*TODO: transformer en ne rien faire et pas incrémenter k.*/
+				slpgis[k]=[0, n+last];
+				k++;
+		,/*else*/
+				e=s2[estart];
+				until(e==eend,
+					/*Unique path contained in face*/
+					/*going from s2dual[estart] to */
+					/*s2dual^-1[eend] in clockwise */
+					/*orientation.*/
+					slpgis[k]=[n+last, e];
+					e=s2[e];
+					last=k;
+					k++;
+				);
+		);
+		pointersgi[i]=k-1;
+	);
+
+	slpgis=slpgis[1..(k-1)];
+	return([slpsgammai, pointersgi, slpgis]);
+}
 
 /*Assumes G is of genus > 0*/
 findab(s2_,s1, seed, eindex)={
@@ -593,8 +697,8 @@ cut_and_paste_one(s2_, s1, seedslp, eindex)={
 	return([a,b, vecalpha, vecbeta, vecgamma, vecdelta, slpc, slpd, w, updated_w, updated_s2_, updated_eindex]);
 }
 
-/*Deals with the genus 0 case of rgraph_buildpres*/
-rgraph_genus0pres(f, s2, s1, slpsgammai,slpgis, pointersgi, {testing=0})={
+/*Deals with the genus 0 case of map_buildpres*/
+map_genus0pres(f, s2, s1, slpsgammai,slpgis, pointersgi, {testing=0})={
 	my(n);
 	n=#s1;
 	\\Pointers has size 4*g at this point, that is it points on
@@ -643,7 +747,7 @@ rgraph_genus0pres(f, s2, s1, slpsgammai,slpgis, pointersgi, {testing=0})={
 }
 
 /*Build the returned slp of generators and loopfaces.*/
-rgraph_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0})={
+map_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing=0})={
 	my(n, n_, f);
 	n=#s1;
 	n_=permorder(s2_);
@@ -786,17 +890,17 @@ rgraph_buildpres(s2_,s1, seedslp, slpsgammai, slpgis, pointersgi, type, {testing
 
 /*type="oneword","onehandle","geometric"
 
-Given a ribbon graph G with one face, computes a presentation
-of the fundamental group of the dual ribbon graph of the given
+Given a map G with one face, computes a presentation
+of the fundamental group of the dual map of the given
 type.
 
 The output is a tuple [slp, pointers, rels] with format as describe
-in rgraph_buildpres.
+in map_buildpres.
  */
-rgraph_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
+map_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
 	if(type=="geometric", /*TODO*/ error("Not implemented yet."); return());
 	my(Gdual);
-	Gdual=rgraph_dual(G);
+	Gdual=map_dual(G);
 	my(s1dual, s2dual, s2dualinv, n);
 	[s1dual, s2dual]=Gdual;
 	s2dualinv=s2dual^-1;
@@ -805,115 +909,20 @@ rgraph_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
 	/*Get tree and an ordering on the vertices.*/
 	/*Usually bfs or dfs ordering.*/
 	my(data=vector(6), T, dfsfGdual, fGdual);
-	rgraph_dfs(~G,~data);
+	map_dfs(~G,~data);
 	T=data[2];
 	dfsfGdual=data[3];
 	fGdual=data[6];
 
 	my(s2dual_)
-	s2dual_=rgraph_gluealongT(Gdual, T, dfsfGdual);
+	s2dual_=map_gluealongT(Gdual, T, dfsfGdual);
 	/*#w=O(g)=n-2(f-1)*/
 
-	my(s2dualc, f);
-	s2dualc=permcycles(s2dual);
-	f=#s2dualc;
+	my(slpsgammai, slpgis, pointersgi);
+	[slpsgammai, slpgis, pointersgi]=map_liftalongT(Gdual, T, dfsfGdual);
 	
-	my(makeslpgammai, maxfacesize = 1);
-	/*Encodes a face of Gdual starting at seed and*/
-	/*went through in reversed orientation.*/
-	makeslpgammai=(u-> 
-		my(seed, e, k=1);
-		if(u==1,
-			seed=1;
-		,/*else*/
-			seed=T[u-1][2];
-		);
-		my(slpgammai);
-		slpgammai=vector(#s2dualc[fGdual[seed]]);
-		e=seed;
-		/*On commence à s2dual^-1[seed suivant s2dual^-1*/
-		/*et termine juste avant. Puis gi+1 va*/
-		/*de s2dual[seed] à j suivant s2dual.*/
-		/*le mémo c'est gammai commence en seed */
-		/*pas gi, et gi contient pas j.*/
-		until(e==seed,
-			/*Faut tenir compte des générateurs*/
-			if(k==1, 
-					slpgammai[k]=[0, s1dual[e]];
-		    ,\\else
-					slpgammai[k]=[k-1+n, s1dual[e]];
-				
-			);
-			e=s2dualinv[e];
-			k++;
-		);
-		maxfacesize=max(maxfacesize, k-1);
-		return(slpgammai);
-	);
-	my(slpsgammai);
-	slpsgammai=vector(f,u, makeslpgammai(u));
 
-
-   	my(slpsgens, seedlp, n_);
-	n_=n-2*(f-1);
-	
-	my(slpgis, pointersgi, approxtotlength=maxfacesize*n);
-	/*straight line program to compute loopfaces paths.*/
-	slpgis=vector(approxtotlength);
-	/*Used to read the slp : pointersgi[fdfsindex]*/
-	/*points to the index of the last edge of the path*/
-	/*associated to fdfsindex in slpgis.*/
-	pointersgi=vector(f);
-	slpgis[1]=[-1,0];
-	pointersgi[1]=1;
-
-	my(last, estart, eend, flastindex, flastdfsindex, k);
-	k=2;
-	for(i=2, f,
-		/*
-			The path associated to gi is used to join
-			the first face to the face 
-			of index i in the dfs.
-		*/
-		if(i==2,
-			[estart, eend]=[1, T[1][1]];
-			last=1;
-		,/*else*/
-			flastindex=fGdual[T[i-1][1]];
-			flastdfsindex=dfsfGdual[flastindex];
-			if(flastdfsindex==1,
-				[estart, eend]=[1, T[i-1][1]];
-			,/*else*/
-				[estart, eend]=[T[flastdfsindex-1][2], T[i-1][1]];
-			);
-			/*Recover index of last instruction in slp*/
-			last=pointersgi[flastdfsindex];
-		);
-
-		my(e);
-		if(s2dual[estart]==eend,
-				/*Add Empty path*/
-				/*TODO: transformer en ne rien faire et pas incrémenter k.*/
-				slpgis[k]=[0, n+last];
-				k++;
-		,/*else*/
-				e=s2dual[estart];
-				until(e==eend,
-					/*Unique path contained in face*/
-					/*going from s2dual[estart] to */
-					/*s2dual^-1[eend] in clockwise */
-					/*orientation.*/
-					slpgis[k]=[n+last, e];
-					e=s2dual[e];
-					last=k;
-					k++;
-				);
-		);
-		pointersgi[i]=k-1;
-	);
-
-	slpgis=slpgis[1..(k-1)];
-
+	\\ BESOIN DE : T, s1dual, s2dual, s0dual, f, s2dual_, slps+pointers
 	my(in_T);
 	seed=1;
 	in_T=vector(n);
@@ -922,19 +931,19 @@ rgraph_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
 		in_T[e[2]]=1;
 	);
 	/*As G has one face (in particular s2 has no fixed points)*/
-	/*Gdual is reduced, that it, for any e s2dual[e]!=e^-1*/
+	/*Gdual is reduced, that is, for any e s2dual[e]!=e^-1*/
 	/*so that we can compute the genus of Gdual.*/
 	seedslp=seed;
 	my(ret, genus);
-	genus=(#permcycles(Gdual[1]*Gdual[2])-#Gdual[1]/2+f-2)\(-2);
+	genus=(#permcycles(s1dual*s2dual)-#s1dual/2+f-2)\(-2);
 	if(genus,
 		/*Fails in genus 0*/
 		while(in_T[seedslp],
 			seedslp=s2dualinv[s1dual[seedslp]];
 		);
-		ret=rgraph_buildpres(s2dual_,s1dual, seedslp, slpsgammai, slpgis, pointersgi, type, testing);
+		ret=map_buildpres(s2dual_,s1dual, seedslp, slpsgammai, slpgis, pointersgi, type, testing);
 	,/*else*/
-		ret=rgraph_genus0pres(f, s2dual, s1dual, slpsgammai, slpgis, pointersgi, testing);
+		ret=map_genus0pres(f, s2dual, s1dual, slpsgammai, slpgis, pointersgi, testing);
 	);
 
 	if(withdfsfG, return([ret, dfsfGdual]));
@@ -943,7 +952,7 @@ rgraph_get_presentation(G, {type="oneword"}, {withdfsfG=0}, {testing=0})={
 
 
 /*permrepr = fonction E-> Sd*/
-rgraph_from_permrepr(G, d, permrepr)={
+map_from_permrepr(G, d, permrepr)={
 	my(s1, n, s0, s0rev, s1rev);
 	s1=G[1];
 	n=#s1;
@@ -968,14 +977,14 @@ rgraph_from_permrepr(G, d, permrepr)={
 	return([s1rev, s1*s0rev^-1]);
 }
 
-\\ Build a covering ribbon graph coming from a monodromy
+\\ Build a covering map coming from a monodromy
 \\ action.
 \\ The new edge set is Erev=E x {1,..., d}, we view it as 
 \\ {1,...,#E*d} with lexicographic ordering.
 \\ The covering vertex permutation s0rev is s0 x id_{1,...,d}
 \\ while s1rev is s1 x (monodromy*s1).
 \\ TODO: Le sidepairing devrait être calculé dans fdompres.
-rgraph_from_monodromy(G, d, monodromy)={
+map_from_monodromy(G, d, monodromy)={
 	my(s0, s1, s2, n);
 	[s1,s2]=G;
 	s0=(s2^-1)*s1;
