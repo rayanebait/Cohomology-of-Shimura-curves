@@ -1,9 +1,9 @@
 /*TODO : Faire des exemples vérifiables à la main.*/
 /*Les hardcoder dans les tests ensuite.*/
 
-rgraph_not_connected(n)={
-	my(G=rand_rgraph(n));
-	while(rgraph_is_connected(G), G=rand_rgraph(n));
+map_not_connected(n)={
+	my(G=rand_map(n));
+	while(map_is_connected(G), G=rand_map(n));
 	info(G);
 	return(G);
 }
@@ -11,11 +11,11 @@ rgraph_not_connected(n)={
 test_connected_components0(n,{m=1})={
 	my(G,CC);
 	for(j=1,m,
-		G=rgraph_not_connected(n);
-		CC=Vec(rgraph_connected_components(G));
+		G=map_not_connected(n);
+		CC=Vec(map_connected_components(G));
 		print("\n\n Connected components :\n");
 		foreach(CC, G,
-			rgraph_info(G,1);
+			map_info(G,1);
 		);
 	);
 	return();
@@ -57,7 +57,7 @@ tested_graph(p)={
 		if(permorder(s*t)!=3, error("Problème : s*t est pas d'ordre 3."));
 		
 		my(res);
-		res = rgraph_one_face_reduction(G);
+		res = map_one_face_reduction(G);
 		return(res);
 }
 
@@ -70,28 +70,28 @@ test_connected_components()={
 		GCC2=[Vecsmall([2, 1, 4, 3]), Vecsmall([2, 3, 4, 1])];
 		GCC3=[Vecsmall([3, 4, 1, 2]), Vecsmall([2, 3, 4, 1])];
 
-		CCsG=rgraph_connected_components(G);
-		if(Vec(CCsG)!=[GCC1,GCC2,GCC3], error("rgraph_connected_components failed : invalid connected components."));
+		CCsG=map_connected_components(G);
+		if(Vec(CCsG)!=[GCC1,GCC2,GCC3], error("map_connected_components failed : invalid connected components."));
 
 		my(Gempty=[Vecsmall([]), Vecsmall([])],CCsGempty);
-		CCsGempty=rgraph_connected_components(Gempty); 
-		if(CCsGempty!=List([]), error("rgraph_connected_components failed : failed on empty ribbon graph."));
+		CCsGempty=map_connected_components(Gempty); 
+		if(CCsGempty!=List([]), error("map_connected_components failed : failed on empty ribbon graph."));
 		return();
 }
 test_covtree(n, {iter=100})={
 		my(G,s1,s2,s2c,f,j=0);
 		while(j<=iter,
-				G=rand_rgraph(n);
+				G=rand_map(n);
 				[s1,s2]=G; 
 				s2c=permcycles(s2);
 				f=#s2c;
 				if(f==1,next); 
-				if(!rgraph_is_connected(G), next);
+				if(!map_is_connected(G), next);
 				j++;
 
 				my(data);
 				data=vector(6);
-				rgraph_dfs(G,~data);
+				map_dfs(G,~data);
 
 				my(covtree,fG); 
 				covtree=data[2];
@@ -99,7 +99,7 @@ test_covtree(n, {iter=100})={
 						error("Not a covering tree, invalid size.");
 						return();
 				);
-				fG=rgraph_face_index(G);
+				fG=map_face_index(G);
 
 				my(seen, findex, findexinv);
 				seen=vector(f, u, u==data[3][1]);
@@ -128,12 +128,12 @@ test_one_face_reduction()={
 		covtree11tested=[[1,10],[2,5],[3,7]];
 		G11redtested=[Vecsmall([3, 4, 1, 2]), Vecsmall([2, 3, 4, 1])];
 
-		[w11, data11, G11red]=rgraph_one_face_reduction(rgraph_dual(G11tested),1);
+		[w11, data11, G11red]=map_one_face_reduction(map_dual(G11tested),1);
 
 		covtree11=Vec(data11[2]);
-		if(covtree11!=covtree11tested, error("rgraph_one_face_reduction failed : Invalid tree."));
+		if(covtree11!=covtree11tested, error("map_one_face_reduction failed : Invalid tree."));
 
-		if(G11red!=G11redtested, error("rgraph_one_face_reduction failed : Invalid resulting graph."));
+		if(G11red!=G11redtested, error("map_one_face_reduction failed : Invalid resulting graph."));
 		return();
 }
 

@@ -52,7 +52,7 @@ afuchtest_relation(Xs,{prnt=0},{mul=0}, {type="oneword"})={
 	);
 	my(X, A, h, elts);
 	X=Xs;
-	h=rgraph_from_afuch(X)[2];
+	h=map_from_afuch(X)[2];
 	A=afuchalg(X);
 	elts=afuchelts(X);
 
@@ -128,7 +128,7 @@ afuchsamples({nsamples=10},{comp=0},{store=1})={
 
 /*Example of use : 
 	Run [ret,toeval]=afuchtestdata(X); eval(toeval);
- 	rgraph_info(Gdual);
+ 	map_info(Gdual);
 	datadfs[2]
 		->Outputs the word representation of
 		the dual graph embedding associated to X
@@ -137,18 +137,18 @@ afuchsamples({nsamples=10},{comp=0},{store=1})={
 */
 afuchtestdata(X, {type="oneword"})={
 	my(G,h, Gdual, datadfs,n);
-	[G,h]=rgraph_from_afuch(X);
-	Gdual=rgraph_dual(G);
+	[G,h]=map_from_afuch(X);
+	Gdual=map_dual(G);
 	n=#G[1];
 	my(v,e,f,g);
-	[v,e,f,g]=rgraph_numbers(Gdual);
+	[v,e,f,g]=map_numbers(Gdual);
 
 	my(s2_, data, etol, w, datadfs, Gone);
-	[s2_,data,Gone]=rgraph_one_face_reduction(Gdual,1);
-	etol=rgraph_to_word(G)[2];
+	[s2_,data,Gone]=map_one_face_reduction(Gdual,1);
+	etol=map_to_word(G)[2];
 	if(g && #etol,
 		w=find_w(s2_,etol);
-		wis=rgraph_to_word(Gdual,etol)[1];
+		wis=map_to_word(Gdual,etol)[1];
 	,/*else*/
 		w=s2_;
 		wis=permcycles(Gdual[2]);
@@ -179,7 +179,7 @@ the center of the algebra afuchalg(X).
 
 afuchtest_comparerelation(X)={
 	my(G, h);
-	[G,h]=rgraph_from_afuch(X);
+	[G,h]=map_from_afuch(X);
 
 	my(n,n_,f);
 	n=#G[1];

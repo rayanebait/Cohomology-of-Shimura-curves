@@ -136,7 +136,7 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		[G,h]=map_from_afuch(X);
 
 		my(ret);
-		[ret, dfsfGdual]=map_get_presentation(G,type,1,0);
+		[ret, dfsfGdual]=map_topological_presentation(G,type,1,0);
 		/*Add elliptic relations and renormalize the slp*/
 		ret[1]=slp_normalize(ret[1],h,#afuchspair(X));
 		ret[3]=concat(Vec(ret[3]),map_get_ellipticrels(X,map_dual(G), h, #ret[2],dfsfGdual));

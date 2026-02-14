@@ -370,7 +370,7 @@ slpstovec(slps,n)={
 
 /* 
    Used to filter 2g generators and build a relation in buildpres
-   function in rgraph.gp.
+   function in map.gp.
  */
 buildrel_and_pointers(pointers, seed, s, s1, eindex, seen)={
 	if(#pointers==1, return([pointers,[]]));
