@@ -136,10 +136,10 @@ map_normalize(G)={
 			k=k+1;
 		);
 	);
-	my(s1_,s2one);
+	my(s1one,s2one);
 	s2one=permconj(s2,g);
-	s1_=permconj(s1,g);
-	return([s1_,s2one]);
+	s1one=permconj(s1,g);
+	return([s1one,s2one]);
 }
 
 /*Removes patterns of the form ...aa^-1... in 
@@ -185,13 +185,13 @@ map_reduce(G)={
 
 		t=t*t_;
 	);
-	my(s1_,s2one);
-	s1_=s1*t;
+	my(s1one,s2one);
+	s1one=s1*t;
 	s2one=s2*r;
 	/*
 	Then move fixed points to the end and truncate.
 	*/
-	return(map_reduce(perm_normalize_wrt([s1_,s2one],1)));
+	return(map_reduce(perm_normalize_wrt([s1one,s2one],1)));
 }
 
 /*Checks for any patterns of the form ...aa^-1...
@@ -316,7 +316,7 @@ map_dfsgen(G)={
 
 
 map_dfsinit(G, ~Phi, ~data)={
-	my(s,vG,s1,sc)
+	my(s,vG,s1,sc);
 	/*Dfs is on Gdual.*/
 	s=G[2];
 	vG=map_face_index(G);
@@ -423,6 +423,19 @@ map_dfs(~Phi, ~data)={
 	return();
 }
 
+\\Returns a covering tree in G
+\\in the format of a vector of couple
+\\ of edges [e, s1(e)] such that 
+\\e and s1(e) lie in different vertices of G
+\\It also returns the ordering of
+\\ permcycles(s2) coming from the dfs.
+map_getT(G)={
+	my(data=vector(6), T, TfG);
+	map_dfs(~G, ~data);
+	[T, TfG]=data[2..3];
+	return([Vec(T),TfG]);
+}
+
 map_is_connected(G)={
 	if(#permcycles(G[2])<=1, return(1));
 	my(data=vector(6), explored);
@@ -499,13 +512,32 @@ map_connected_components(G, {CC=List()})={
 /*Builds the map obtained by gluing the faces of G along T*/
 /*a tree in the underlying graph of G^* */
 map_gluealongT(G, T, {withGone=0})={
+		/*Return if it already has one face that is T is empty*/
+		if(#T==0, 
+			if(withGone,
+				return([G[2], 1, G]);
+			,/*else*/
+				return([G[2], 1]);
+			);
+		);
+
 		my(n,s1,s2);
 		[s1,s2]=G;
 		n=#s1;
-		/*Return if it already has one face.*/
-		if(#permcycles(s2)==1, return(G));
+
+		my(g, s2one);
+		g=(2-(#permcycles(s1*s2)-n/2+#T+1))/2;
+		if(g==0,
+			s2one=vectorsmall(n,i,i);
+			s1one=vectorsmall(n,i,i);
+			if(withGone,
+				return([s1one,s2one,1, [[],[]]]);
+			,/*else*/
+				return([s1one,s2one,1]);
+			);
+		);
 		
-		my(in_T, e);
+		my(in_T);
 		in_T=vector(n);
 		
 		foreach(T, e,
@@ -513,14 +545,14 @@ map_gluealongT(G, T, {withGone=0})={
 			in_T[e[2]]=1;
 		); 
 		
-		/*Build s1_ and s2one*/
-		my(s1_, s2one, k, s2inv);
-		s1_=vectorsmall(n,i,i);
+		/*Build s1one and s2one*/
+		my(s1one, s2one, k, s2inv);
+		s1one=vectorsmall(n,i,i);
 		s2one=vectorsmall(n,i,i);
 		s2inv=s2^-1;
 		for(i=1, n, 
 			if(in_T[i], next);
-			s1_[i]=s1[i];
+			s1one[i]=s1[i];
 			k=s2inv[i];
 			\\k=s2[i];
 			while(in_T[k],
@@ -530,10 +562,15 @@ map_gluealongT(G, T, {withGone=0})={
 			s2one[i]=k;
 		);
 		s2one=s2one^-1;
+
+		my(seed=1);
+		while(in_T[seed],
+			seed=s2inv[s1[seed]];
+		);
 		if(withGone, 
-			return([s2one, perm_normalize_wrt([s1_,s2one], 1, in_T)]);
+			return([s1one, s2one, seed, perm_normalize_wrt([s1one,s2one], 1, in_T)]);
 		,/*else*/
-			return(s2one);
+			return([s1one, s2one, seed]);
 		);
 }
 
@@ -542,8 +579,9 @@ map_gluealongT(G, T, {withGone=0})={
 /*face 1 and i. So that the tree made of the gis is isomorphic*/
 /*to T. */
 map_liftalongT(G, T, TfG)={
-	my(s1,s2, n, s2c, f);
+	my(s1,s2, s2inv, n, s2c, f);
 	[s1,s2]=G;
+	s2inv=s2^-1;
 	n=#s1;
 	s2c=permcycles(s2);
 	f=#s2c;
@@ -565,12 +603,12 @@ map_liftalongT(G, T, TfG)={
 		until(e==seed,
 			/*Faut tenir compte des générateurs*/
 			if(k==1, 
-					slpgammai[k]=[0, s1dual[e]];
+					slpgammai[k]=[0, s1[e]];
 		    ,\\else
-					slpgammai[k]=[k-1+n, s1dual[e]];
+					slpgammai[k]=[k-1+n, s1[e]];
 				
 			);
-			e=s2dualinv[e];
+			e=s2inv[e];
 			k++;
 		);
 		maxfacesize=max(maxfacesize, k-1);
@@ -708,7 +746,7 @@ map_surface_presentation(Gone, seedslp, type)={
 	[s1one,s2one]=Gone;
 	n=#s1one;
 	n_one=permorder(s2one);
-	if(n_one==1, return());
+	if(n_one==1, return([[],[],[]]));
 	f=(n-n_one)/2+1;
 
 	my(slp, pointers, seen, eindex);
@@ -828,36 +866,39 @@ map_loopfaces(n, slpsgammai,slpgis, pointersgi)={
 	return([slp, pointers, rel]);
 }
 
-map_topological_presentation_from_T(G, T, TfG, type)={
+map_topological_presentation_fromT(G, T, TfG, type)={
+	my(Gone, s1one, s2one, seed);
+	[s1one, s2one, seed]=map_gluealongT(G, T);
+	Gone=[s1one,s2one];
+	my(slpsgammai, slpgis, pointersgi);
+	[slpsgammai, slpgis, pointersgi]=map_liftalongT(G,T, TfG);
 
 	my(surface_slp, surface_pointers,surface_rel,\
 			loopfaces_slp, loopfaces_pointers, face_rel);
-	[surface_slp, surface_pointers, surface_rel]=map_surface_presentation(Gone, seedslp,  type);
-	[loopface_slp, loopfaces_pointers, face_rel]=map_loopfaces(G, slpsgammai, slpgis, pointersgi);
+	[surface_slp, surface_pointers, surface_rel]=\
+			map_surface_presentation(Gone, seed,  type);
+	[loopfaces_slp, loopfaces_pointers, face_rel]=\
+			map_loopfaces(#G[1], slpsgammai, slpgis, pointersgi);
 
 	my(fullslp, pointers, rels);
 	fullslp=slpconcat(\
 			\\ SLPS
-			[surface_slp, loopfaces_slp], #Gone[1],\
+			[surface_slp, loopfaces_slp], #G[1],\
 			\\ POINTERS
 			[surface_pointers, loopfaces_pointers]);
-	rels=concat(surface_rel, face_rel);
-	return([fullslp, pointers, rels]);
+	rel=concat(surface_rel, face_rel);
+	return([fullslp, pointers, rel]);
 }
 
+/*Recover presentation of a map G -> S*/
+/*associated to its dual map G^*->S*/
 map_topological_presentation(G, type)={
-	my(data=vector(6))
-	map_dfs(~G, ~data);
+	my(Gdual);
+	Gdual=map_dual(G);
 
-	my(s2one, T, TfG);
-	T=data[2];
-	TfG=data[3];
-	s2one=map_gluealongT(G, T);
-
-	my(slpsgammai, slpgis, pointersgi);
-	[slpsgammai, slpgis, pointersgi]=map_liftalongT([s1,s2one],T, TfG);
-
-	return();
+	my(T, TfGdual);
+	[T, TfGdual]=map_getT(Gdual);
+	return([map_topological_presentation_fromT(Gdual, T, TfGdual, type), T, TfGdual]);
 }
 
 /*permrepr = fonction E-> Sd*/

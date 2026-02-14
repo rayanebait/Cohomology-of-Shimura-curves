@@ -135,11 +135,12 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		/*de (G,s2) en slp pour (A,elts).*/
 		[G,h]=map_from_afuch(X);
 
-		my(ret);
-		[ret, dfsfGdual]=map_topological_presentation(G,type,1,0);
+		my(ret, T, TfGdual);
+		[ret, T, TfGdual]=\
+				map_topological_presentation(G,type);
 		/*Add elliptic relations and renormalize the slp*/
 		ret[1]=slp_normalize(ret[1],h,#afuchspair(X));
-		ret[3]=concat(Vec(ret[3]),map_get_ellipticrels(X,map_dual(G), h, #ret[2],dfsfGdual));
+		ret[3]=concat(ret[3],map_get_ellipticrels(X,map_dual(G), h, #ret[2],TfGdual));
 		if(!eval, return(ret));
 
 		my(slp, pointers, rels);
@@ -151,7 +152,6 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 
 		my(gens);
 		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
-		/*TODO : rajouter les relations des elliptiques*/
 		return([gens,rels]);
 }
 

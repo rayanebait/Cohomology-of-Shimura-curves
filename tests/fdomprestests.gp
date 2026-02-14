@@ -143,14 +143,18 @@ afuchtestdata(X, {type="oneword"})={
 	my(v,e,f,g);
 	[v,e,f,g]=map_numbers(Gdual);
 
-	my(s2_, data, etol, w, datadfs, Gone);
-	[s2_,data,Gone]=map_one_face_reduction(Gdual,1);
+
+	my(T, TfG);
+	[T,TfG]=map_getT(Gdual);
+	
+	my(s1one, s2one, seed, etol, w, Gone);
+	[s1one, s2one, seed, Gone]=map_gluealongT(Gdual,T,1);
 	etol=map_to_word(G)[2];
 	if(g && #etol,
-		w=find_w(s2_,etol);
+		w=find_w(s2one,etol);
 		wis=map_to_word(Gdual,etol)[1];
 	,/*else*/
-		w=s2_;
+		w=s2one;
 		wis=permcycles(Gdual[2]);
 	);
 
@@ -159,9 +163,9 @@ afuchtestdata(X, {type="oneword"})={
 	elts=afuchelts(X);
 
 	my(ret,toeval);
-	ret=[G,h,Gdual,n,datadfs,A,elts];
+	ret=[n, G,Gdual,[s1one, s2one], T, TfG, h, A, elts];
 
-	toeval="[G,h,Gdual,n, datadfs, A,elts, fullslp, pointers, rels,wis,w,etol]=ret;";
+	toeval="[n, G, Gdual, Gone, T, TfG, h A,elts, fullslp, pointers, rels,wis,w,etol]=ret;";
 	ret=concat(ret, afuch_presentation(X,type));
 	ret=concat(ret, [wis,w,etol]);
 

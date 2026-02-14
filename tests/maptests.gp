@@ -23,20 +23,6 @@ test_connected_components0(n,{m=1})={
 
 /*NOTE :Deux trois utilitaires*/
 
-is_perm(s)={
-	my(n, m=1);
-	n=#s;
-	rep=vector(n);
-	for(i=1,n,
-		if(m<s[i],m=s[i]);
-		rep[s[i]]++;
-	);
-	if(m<n, print("Maximum of im(s) : ",m));
-	for(j=1, n, if(rep[j]>1, print(j," a deux antécédents\n")));
-	return();
-}
-
-
 /*Requires p=3 mod 4 so that s has no fixed points. */
 tested_graph(p)={
 		if(p%4 != 3, error("p=1 mod 4"); return(););
@@ -122,22 +108,25 @@ test_covtree(n, {iter=100})={
 		return();
 }
 /*TODO: Tester le genre 0 et non réduit.*/
-test_one_face_reduction()={
-		my(G11tested, G11redtested, covtree11tested,slpdata11tested, G11red,w11, data11);
+test_gluealongT()={
+		my(G11tested, G11redtested, covtree11tested, G11red,w11, data11);
 		G11tested = [Vecsmall([10, 5, 7, 8, 2, 9, 3, 4, 6, 1]), Vecsmall([2, 3, 4, 5, 6, 7, 8, 9, 10, 1])];
 		covtree11tested=[[1,10],[2,5],[3,7]];
 		G11redtested=[Vecsmall([3, 4, 1, 2]), Vecsmall([2, 3, 4, 1])];
 
-		[w11, data11, G11red]=map_one_face_reduction(map_dual(G11tested),1);
+		my(Gdual, T, TfG, seed);
+		Gdual=map_dual(G11tested);
+		[T,TfG]=map_getT(Gdual);
+		[w11, seed, G11red]=map_gluealongT(map_dual(G11tested),T,1)[2..4];
 
-		covtree11=Vec(data11[2]);
-		if(covtree11!=covtree11tested, error("map_one_face_reduction failed : Invalid tree."));
+		covtree11=T;
+		if(covtree11!=covtree11tested, error("map_gluealongT failed : Invalid tree."));
 
-		if(G11red!=G11redtested, error("map_one_face_reduction failed : Invalid resulting graph."));
+		if(G11red!=G11redtested, error("map_gluealongT failed : Invalid resulting graph."));
 		return();
 }
 
-test_get_presentation()={
+test_topological_presentation()={
 	my(G, Gdual, data, w, updated_w, a,b, ainv,binv,vecalpha, vecbeta, vecgamma, vecdelta);
 	Gdual=[Vecsmall([6, 3, 2, 5, 4, 1, 100, 62, 21, 33, 12, 11, 32, 29, 26, 82, 65, 87, 43, 34, 9, 61, 68, 77, 83, 15, 28, 27, 14, 31, 30, 13, 10, 20, 42, 74, 71, 48, 45, 85, 75, 35, 19, 86, 39, 47, 46, 38, 70, 59, 52, 51, 58, 55, 54, 57, 56, 53, 50, 69, 22, 8, 99, 88, 17, 81, 78, 23, 60, 49, 37, 73, 72, 36, 41, 84, 24, 67, 80, 79, 66, 16, 25, 76, 40, 44, 18, 64, 98, 95, 92, 91, 94, 93, 90, 97, 96, 89, 63, 7, 102, 101]), Vecsmall([101, 6, 3, 2, 5, 4, 1, 100, 62, 21, 33, 12, 11, 32, 29, 26, 82, 65, 87, 43, 34, 9, 61, 68, 77, 83, 15, 28, 27, 14, 31, 30, 13, 10, 20, 42, 74, 71, 48, 45, 85, 75, 35, 19, 86, 39, 47, 46, 38, 70, 59, 52, 51, 58, 55, 54, 57, 56, 53, 50, 69, 22, 8, 99, 88, 17, 81, 78, 23, 60, 49, 37, 73, 72, 36, 41, 84, 24, 67, 80, 79, 66, 16, 25, 76, 40, 44, 18, 64, 98, 95, 92, 91, 94, 93, 90, 97, 96, 89, 63, 7, 102])];
 	G=[Vecsmall([6, 3, 2, 5, 4, 1, 100, 62, 21, 33, 12, 11, 32, 29, 26, 82, 65, 87, 43, 34, 9, 61, 68, 77, 83, 15, 28, 27, 14, 31, 30, 13, 10, 20, 42, 74, 71, 48, 45, 85, 75, 35, 19, 86, 39, 47, 46, 38, 70, 59, 52, 51, 58, 55, 54, 57, 56, 53, 50, 69, 22, 8, 99, 88, 17, 81, 78, 23, 60, 49, 37, 73, 72, 36, 41, 84, 24, 67, 80, 79, 66, 16, 25, 76, 40, 44, 18, 64, 98, 95, 92, 91, 94, 93, 90, 97, 96, 89, 63, 7, 102, 101]), Vecsmall([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 1])];
@@ -157,7 +146,6 @@ updated_w=[44, 75, 49, 86, 25, 34, 83, 66, 63, 22, 99, 61, 70, 81, 41, 20];
 
 
 
-/*TODO: Étendre en test_dfs*/
 test_connected_components(); 
 test_covtree(25);
-test_one_face_reduction();
+test_gluealongT();
