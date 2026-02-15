@@ -1,42 +1,9 @@
-test_vectoslp({n=25})={
-	my(testlin1, testlin2, testpow3, testpow4,\
-				v1, v2, v3, v4);
+test_vectoslp()={
+	my(slpall, vall);
+	slpall=[[-1, 1], [-2, 1], [11, 12], [-1, -1], [13, 14], [-2, -1], [15, 16], [-3, 1], [17, 18], [-4, 1], [19, 20], [-5, 1], [21, 22], [-6, 1], [23, 24], [-3, 1], [25, 26], [-4, 1], [27, 28], [-5, 1], [29, 30], [-6, 1], [31, 32], [-7, 8], [33, 34], [-3, 3], [35, 36], [-2, -1], [37, 38]];
+	vall=[1, 2, -1, -2, 3, 4, 5, 6, 3, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7, 7, 3, 3, 3, -2];
 
-	testlin1=[[0, 3], [n+1, 2], [n+2, 10], [n+3, 5]];
-	v1=[3, 2, 10, 5];
-
-	my(slplin);
-	slplin1=vectoslp(v1,n);
-	if(slplin1!=testlin1, 
-		error("test_vectoslp failed.");
-	);
-
-	testlin2=[[0, 20], [n+1, 7], [n+2, 15], [n+3, 9]];
-	v2=[20, 7, 15, 9];
-
-	my(slplin2);
-	slplin2=vectoslp(v2,n);
-	if(slplin2!=testlin2, 
-		error("test_vectoslp failed.");
-	);
-
-	testpow3=[[-25, -30], [n+1, 4], [n+2, 13], [n+3, 7]];
-	v3=concat(vector(30, u, -25),[4,13,7]);
-
-	my(slppow3);
-	slppow3=vectoslp(v3,n);
-	if(slppow3!=testpow3, 
-		error("test_vectoslp failed.");
-	);
-
-	testpow4=[[-19, 22], [n+1, 21], [n+2, 23], [n+3, 25]];
-	v4=concat(vector(22, u, 19),[21, 23, 25]);
-
-	my(slppow4);
-	slppow4=vectoslp(v4,n);
-	if(slppow4!=testpow4, 
-		error("test_vectoslp failed.");
-	);
+	if(slpall!=vectoslp(vall,10), error("test_vectoslp failed"));
 	return();
 }
 
@@ -88,6 +55,11 @@ test_slptovec({n=25})={
 	if(vlin4!=v4 || vpow4!=v4, 
 		error("test_slptovec failed.");
 	);
+
+	my(slpall, vall);
+	slpall=[[-1, 1], [-2, 1], [11, 12], [-1, -1], [13, 14], [-2, -1], [15, 16], [-3, 1], [17, 18], [-4, 1], [19, 20], [-5, 1], [21, 22], [-6, 1], [23, 24], [-3, 1], [25, 26], [-4, 1], [27, 28], [-5, 1], [29, 30], [-6, 1], [31, 32], [-7, 8], [33, 34], [-3, 3], [35, 36], [-2, -1], [37, 38]];
+	vall=[1, 2, -1, -2, 3, 4, 5, 6, 3, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7, 7, 3, 3, 3, -2];
+	if(vall!=slptovec(slpall, 10), error("test_slptovec failed."));
 	return();
 }
 

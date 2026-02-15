@@ -327,8 +327,10 @@ slptovec(slp,n)={
 		,j<=n,/*else if*/
 			/*j<=n*/
 			listput(~v,j);
+		,i==n+k-2 && j==n+k-1,/*else*/
+			next;
 		,/*else*/
-			error("Invalid slp, either not connected or not a line.")
+			error("Invalid slp.")
 		);
 	);
 	return(Vec(v));
@@ -336,29 +338,47 @@ slptovec(slp,n)={
 
 /* Reciprocal of slptovec*/
 vectoslp(v,n, {connect=1})={
+	if(!connect, n=0);
 	if(#v==0,
-		return(v);
+		return([]);
 	);
 	if(#v==1, return([[0,v[1]]]));
-	my(pow, e, last);
-	last=v[1]; e=v[2]; pow=1;
-	while(e==last && pow<#v,
-		pow++;
-		last=v[pow];
-		e=v[pow+1];
-	);
-	my(slp);
-	if(pow==1,
-		slp=[[0,v[1]]];
-	,/*else*/
-		slp=[[-(sign(v[1])*v[1]), sign(v[1])*pow]];
+	my(slp=vector(2*#v), i=2, k=1, e, s);
+	e=v[1];
+	while(i<=#v,
+		pow=1;
+		nxt=v[i];
+		while(nxt==e && i<#v,
+			i++;
+			pow++;
+			nxt=v[i];
+		);
+		if(1<pow || e<0,
+			s=sign(e);
+			e=abs(e);
+			slp[k]=[-e, s*pow];
+			k++;
+			if(connect,
+				slp[k]=[n+k-2, n+k-1];
+				k++;
+			);
+		,/*else*/
+			slp[k]=[-e, 1];
+			if(k!=1 && connect,
+				slp[k+1]=[n+k-1, n+k];
+				k++;
+			);
+			k++;
+		);
+		i++;
+		e=nxt;
 	);
 	if(connect,
-		slp=concat(slp, vector(#v-pow, u, [n+u, v[pow+u]]));
-	,/*else*/
-		slp=concat(slp, vector(#v-pow, u, [0, v[pow+u]]));
+		slp[k]=[-abs(e),sign(e)];
+		slp[k+1]=[n+k-1, n+k];
 	);
-	return(slp);
+
+	return(slp[1..(k+1)]);
 }
 
 slpstovec(slps,n)={

@@ -269,7 +269,7 @@ vectofun(v)={
 
 find_w(s2one,etol)={
 	my(w);
-	etol=fvec(etol);
+	etol=vectofun(etol);
 	w=Vec(select((c)->(1<#c), permcycles(s2one))[1]);
 	w=concat(apply(etol,w));
 	return(w);

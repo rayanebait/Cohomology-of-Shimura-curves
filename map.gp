@@ -702,8 +702,8 @@ findab(s2one,s1, seed, eindex)={
 cut_and_paste_one(s2one, s1, seedslp, eindex)={
 	my(n, n_one, a,b,vecalpha, vecbeta, vecgamma, vecdelta);
 	n=#s1; n_one=permorder(s2one);
-	[a,b]=findab(s2one, s1, s2one[seedslp], eindex);
 	e=seedslp;
+	[a,b]=findab(s2one, s1, s2one[e], eindex);
 
 	my(w);
 	w=vector(n_one, u, e=s2one[e]; e);
@@ -742,9 +742,10 @@ cut_and_paste_one(s2one, s1, seedslp, eindex)={
 }
 
 map_surface_presentation(Gone, seedslp, type)={
-	my(s1one, s2one);
+	my(s1one, s2one,s2oneinv);
 	[s1one,s2one]=Gone;
 	n=#s1one;
+	s2oneinv=s2one^-1;
 	n_one=permorder(s2one);
 	if(n_one==1, return([[],[],[]]));
 	f=(n-n_one)/2+1;
@@ -752,8 +753,8 @@ map_surface_presentation(Gone, seedslp, type)={
 	my(slp, pointers, seen, eindex, e);
 	seen=vectorsmall(n);
 	\\Each edge e points to e(1).
-	eindex=makeindex(s2one,s2one[seedslp]);
-	e=seedslp;
+	e=s2oneinv[seedslp];
+	eindex=makeindex(s2one,s2one[e]);
 
 	my(vecalpha, vecbeta, vecgamma, vecdelta,\
 		slpalpha, slpbeta, slpgamma, slpdelta,\
@@ -826,8 +827,6 @@ map_surface_presentation(Gone, seedslp, type)={
 	\\the appropriate relation.
 	my(rel);
 	[pointers,rel]=buildrel_and_pointers(pointers, slp[1][2], s2one, s1one, eindex, seen);
-	\\Face relation
-	rel=concat(rel, vector(f, u, n_one/2+u));
 
 	return([slp, pointers, rel]);
 }
@@ -851,15 +850,18 @@ map_loopfaces(n, slpsgammai, slpgis, pointersgi)={
 		\\ POINTERS
 		[pointersgi, pointersgammai]\
 	);
-	print(pointers);
 
 	\\ Add loopfaces
 	my(lenslp_gis_gammai);
 	lenslp_gis_gammais=#slp;
 	slp=concat([slp,\
 		concat(vector(f, u, 
-			[[n+pointers[n_one/2+u],n+pointers[n_one/2+f+u]],\
-			[-(n+pointers[n_one/2+u]), -1],\
+			\\ u points to u-th gi, f+u points to 
+			\\ u-th gammai
+			[[n+pointers[u],n+pointers[f+u]],\
+			\\ compute gi^-1
+			[-(n+pointers[u]), -1],\
+			\\ (gi.gammai)gi^-1
 			[n+lenslp_gis_gammais+3*u-2, n+lenslp_gis_gammais+3*u-1]]))\
 	]);
 	\\ Remove pointers of gis and gammais and add those of
@@ -883,7 +885,7 @@ map_topological_presentation_fromT(G, T, TfG, type)={
 			map_loopfaces(#G[1], slpsgammai, slpgis, pointersgi);
 
 	my(fullslp, pointers, rels);
-	fullslp=slpconcat(\
+	[fullslp,pointers]=slpconcat(\
 			\\ SLPS
 			[surface_slp, loopfaces_slp], #G[1],\
 			\\ POINTERS
@@ -900,7 +902,9 @@ map_topological_presentation(G, type)={
 
 	my(T, TfGdual);
 	[T, TfGdual]=map_getT(Gdual);
-	return([map_topological_presentation_fromT(Gdual, T, TfGdual, type), T, TfGdual]);
+	my(slp, pointers, rel);
+	[slp, pointers, rel]=map_topological_presentation_fromT(Gdual, T, TfGdual, type);
+	return([slp, pointers, rel, T, TfGdual]);
 }
 
 /*permrepr = fonction E-> Sd*/
