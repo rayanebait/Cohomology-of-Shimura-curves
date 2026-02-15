@@ -213,7 +213,7 @@ map_to_word(G, {edgetoletter=0})={
 	words=vector(f,u, vector(#s2c[u]));
 	fG=map_face_index(G);
 	/*Build words following the cycle structure of
-	s2_c which is normalized, cf. map_normalize.*/
+	s2onec which is normalized, cf. map_normalize.*/
 	for(i=1,f,
 		face=s2c[i];
 		for(j=1, #face,
@@ -267,10 +267,10 @@ vectofun(v)={
 	return((i)->(v[i]));
 }
 
-find_w(s2_,etol)={
+find_w(s2one,etol)={
 	my(w);
 	etol=fvec(etol);
-	w=Vec(select((c)->(1<#c), permcycles(s2_))[1]);
+	w=Vec(select((c)->(1<#c), permcycles(s2one))[1]);
 	w=concat(apply(etol,w));
 	return(w);
 }
@@ -296,14 +296,14 @@ map_genword(g)={
 
 
 
-makeindex(s2, seed)={
+makeindex(s2one, seed)={
 	my(eindex, e, k);
-	eindex=vectorsmall(#s2);
+	eindex=vectorsmall(#s2one);
 	e=seed;
 	k=1;
 	until(e==seed,
 			eindex[e]=k;
-			e=s2_[e];
+			e=s2one[e];
 			k++;
 	);
 	return(eindex);

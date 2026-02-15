@@ -676,7 +676,7 @@ map_liftalongT(G, T, TfG)={
 	);
 
 	slpgis=slpgis[1..(k-1)];
-	return([slpsgammai, pointersgi, slpgis]);
+	return([slpsgammai, slpgis, pointersgi]);
 }
 
 /*Assumes G is of genus > 0*/
@@ -749,10 +749,11 @@ map_surface_presentation(Gone, seedslp, type)={
 	if(n_one==1, return([[],[],[]]));
 	f=(n-n_one)/2+1;
 
-	my(slp, pointers, seen, eindex);
+	my(slp, pointers, seen, eindex, e);
 	seen=vectorsmall(n);
 	\\Each edge e points to e(1).
 	eindex=makeindex(s2one,s2one[seedslp]);
+	e=seedslp;
 
 	my(vecalpha, vecbeta, vecgamma, vecdelta,\
 		slpalpha, slpbeta, slpgamma, slpdelta,\
@@ -763,7 +764,7 @@ map_surface_presentation(Gone, seedslp, type)={
 		w=vectorsmall(n_one);
 		slp=vector(n_one, u,\
 			   	e=s2one[e];\
-				if(!seen[s1[e]], seen[e]=1);\
+				if(!seen[s1one[e]], seen[e]=1);\
 				w[u]=e;
 			   	[0, e]);
 	,type=="onehandle",/*else if*/
@@ -777,7 +778,7 @@ map_surface_presentation(Gone, seedslp, type)={
 		\\ following the w_one.
 		[a,b, vecalpha, vecbeta,vecgamma, vecdelta, slpc, slpd,
 	   	w, updated_w, updated_s2one, updated_eindex]=\
-			cut_and_paste_one(s2one,s1,seedslp,eindex);
+			cut_and_paste_one(s2one,s1one,seedslp,eindex);
 
 		slpalpha=vectoslp(vecalpha, n, 0);
 		slpbeta=vectoslp(vecbeta, n, 0);
@@ -789,9 +790,9 @@ map_surface_presentation(Gone, seedslp, type)={
 			[slpgamma, slpbeta, slpc, slpd], n,\
 			\\ POINTERS
 			[vector(#slpgamma, i,
-				if(!seen[s1[slpgamma[i][2]]], seen[slpgamma[i][2]]=1); i),\
+				if(!seen[s1one[slpgamma[i][2]]], seen[slpgamma[i][2]]=1); i),\
 			vector(#slpbeta, i,
-				if(!seen[s1[slpbeta[i][2]]], seen[slpbeta[i][2]]=1); i),\
+				if(!seen[s1one[slpbeta[i][2]]], seen[slpbeta[i][2]]=1); i),\
 			[#slpc], [#slpd]]\
 		);
 		
@@ -808,9 +809,9 @@ map_surface_presentation(Gone, seedslp, type)={
 			\\ POINTERS
 			[pointers,
 			vector(#slpalpha, i,
-				if(!seen[s1[slpalpha[i][2]]], seen[slpalpha[i][2]]=1); i),\
+				if(!seen[s1one[slpalpha[i][2]]], seen[slpalpha[i][2]]=1); i),\
 			vector(#slpdelta, i,
-				if(!seen[s1[slpdelta[i][2]]], seen[slpdelta[i][2]]=1); i)]\
+				if(!seen[s1one[slpdelta[i][2]]], seen[slpdelta[i][2]]=1); i)]\
 		);
 		s2one=updated_s2one;
 		eindex=updated_eindex;
@@ -824,14 +825,14 @@ map_surface_presentation(Gone, seedslp, type)={
 	\\This filters 2*g topological generators and builds
 	\\the appropriate relation.
 	my(rel);
-	[pointers,rel]=buildrel_and_pointers(pointers, slp[1][2], s2one, s1, eindex, seen);
+	[pointers,rel]=buildrel_and_pointers(pointers, slp[1][2], s2one, s1one, eindex, seen);
 	\\Face relation
 	rel=concat(rel, vector(f, u, n_one/2+u));
 
 	return([slp, pointers, rel]);
 }
 
-map_loopfaces(n, slpsgammai,slpgis, pointersgi)={
+map_loopfaces(n, slpsgammai, slpgis, pointersgi)={
 	my(f, n_one, rel);
 	f=#slpsgammai;
 	n_one=n-2*(f-1);
@@ -850,6 +851,7 @@ map_loopfaces(n, slpsgammai,slpgis, pointersgi)={
 		\\ POINTERS
 		[pointersgi, pointersgammai]\
 	);
+	print(pointers);
 
 	\\ Add loopfaces
 	my(lenslp_gis_gammai);
