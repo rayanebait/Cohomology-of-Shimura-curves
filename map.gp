@@ -753,7 +753,7 @@ map_surface_presentation(Gone, seedslp, type)={
 	my(slp, pointers, seen, eindex, e);
 	seen=vectorsmall(n);
 	\\Each edge e points to e(1).
-	e=s2oneinv[seedslp];
+	e=seedslp;
 	eindex=makeindex(s2one,s2one[e]);
 
 	my(vecalpha, vecbeta, vecgamma, vecdelta,\
@@ -768,6 +768,7 @@ map_surface_presentation(Gone, seedslp, type)={
 				if(!seen[s1one[e]], seen[e]=1);\
 				w[u]=e;
 			   	[0, e]);
+		slp=slp[1..n_one/2];
 	,type=="onehandle",/*else if*/
 		\\w_one=gamma beta c d c^-1d^-1 alpha delta
 		\\ Recover updated pointers of gis before concatening
@@ -885,11 +886,12 @@ map_topological_presentation_fromT(G, T, TfG, type)={
 			map_loopfaces(#G[1], slpsgammai, slpgis, pointersgi);
 
 	my(fullslp, pointers, rels);
+	\\ Concatenate without connecting
 	[fullslp,pointers]=slpconcat(\
 			\\ SLPS
 			[surface_slp, loopfaces_slp], #G[1],\
 			\\ POINTERS
-			[surface_pointers, loopfaces_pointers]);
+			[surface_pointers, loopfaces_pointers],0);
 	rel=concat(surface_rel, face_rel);
 	return([fullslp, pointers, rel]);
 }
