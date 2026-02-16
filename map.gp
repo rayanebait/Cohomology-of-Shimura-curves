@@ -852,17 +852,17 @@ map_loopfaces(n, slpsgammai, slpgis, pointersgi)={
 	);
 
 	\\ Add loopfaces, slp with generator set <gi, gammaj;i,j>
-	my(lenslp_gis_gammai, slp_loopfaces, pointers_loopfaces);
+	\\ of size #pointers==2*f
+	my(slp_loopfaces, pointers_loopfaces);
 	slp_loopfaces=vector(f, u,\
 			\\ u-th gammai
 			[[u, f+u],\
 			\\ compute gi^-1
 			[-u, -1],\
 			\\ (gi.gammai)gi^-1
-			[#pointers+3*u-2, #pointers+3*u-1]]);
+			[2*f+3*u-2, 2*f+3*u-1]]);
 	pointers_loopfaces=vector(f,u, 3*u);
-	[slp,pointers]=slpcompose([n, #pointers], [slp, slp_loopfaces],\
-			n,\
+	[slp,pointers]=slpcompose([n, 2*f], [slp, slp_loopfaces],\
 			[pointers, pointers_loopfaces]
 	);
 	return([slp, pointers, rel]);
@@ -888,7 +888,7 @@ map_topological_presentation_fromT(G, T, TfG, type)={
 			\\ SLPS
 			[surface_slp, loopfaces_slp], #G[1],\
 			\\ POINTERS
-			[surface_pointers, loopfaces_pointers],0);
+			[surface_pointers, loopfaces_pointers]);
 	rel=concat(surface_rel, face_rel);
 	return([fullslp, pointers, rel]);
 }
