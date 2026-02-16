@@ -157,6 +157,58 @@ slpconcat(slps, n, {oldpointers=0}, {connect=0})={
 	return(slp[1..k]);
 }
 
+slpcompose0(n1,n2, slp1, slp2, pointers1, pointers2)={
+	if(n2!=#pointers1, error("Slps are not composable in slpcompose0."));
+
+	my(slp, k, i, j);
+	slp=concat(slp1, vector(#slp2));
+	k=#slp1;
+	for(v=1, slp2,
+		[i,j]=slp2[v];
+		if(i<0,
+			if(-n2<=i,
+				i=-pointers1[-i];
+			,/*else*/
+				i=i+n2-n1-k;
+			);
+		,i==0,/*else if*/
+			if(j<=n2,
+				j=pointers1[j];
+			,/*else*/
+				j=j-n2+n1+k;
+			);
+		,/*else*/
+			if(i<=n2,
+				i=pointers1[i]+n1;
+			,/*else*/
+				i=i-n2+n1+k;
+			);
+			if(j<=n2,
+				j=pointers1[j]+n1;
+			,/*else*/
+				j=j-n2+n1+k;
+			);
+		);
+		slp[k+v]=[i,j];
+  	);
+	\\);
+	return([slp, pointers2]);
+}
+
+/*Assumes i+1'th slp has domain the generators output*/
+/*by i'th slp*/
+slpcompose(nis, slps, pointerss)={
+	if(#Set([#nis, #slps, #pointerss])!=1, error("Inconsistent data in slpcompose."));
+	if(#slps==0 || #slps==1, return([slps, pointerss]));
+
+	my(slp, pointers, n);
+	n=nis[1]; slp=slps[1]; pointers=pointerss[1];
+	for(i=2,#slps,
+		[slp, pointers]=slpcompose0(n, nis[i], slp, slps[i], pointers, pointerss[i]);
+	);
+	return([slp, pointers]);
+}
+
 
 /*Extracts a linear slp from slp starting at index k. */
 
@@ -414,6 +466,7 @@ buildrel_and_pointers(pointers, seed, s, s1, eindex, seen)={
 	\\error("");
 	return([newpointers, rel]);
 }
+
 slp_normalize(slp, h, m)={
 	my(i,j,n);
 	n=#h;

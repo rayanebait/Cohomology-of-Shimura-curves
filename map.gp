@@ -768,7 +768,6 @@ map_surface_presentation(Gone, seedslp, type)={
 				if(!seen[s1one[e]], seen[e]=1);\
 				w[u]=e;
 			   	[0, e]);
-		slp=slp[1..n_one/2];
 	,type=="onehandle",/*else if*/
 		\\w_one=gamma beta c d c^-1d^-1 alpha delta
 		\\ Recover updated pointers of gis before concatening
@@ -852,22 +851,20 @@ map_loopfaces(n, slpsgammai, slpgis, pointersgi)={
 		[pointersgi, pointersgammai]\
 	);
 
-	\\ Add loopfaces
-	my(lenslp_gis_gammai);
-	lenslp_gis_gammais=#slp;
-	slp=concat([slp,\
-		concat(vector(f, u, 
-			\\ u points to u-th gi, f+u points to 
+	\\ Add loopfaces, slp with generator set <gi, gammaj;i,j>
+	my(lenslp_gis_gammai, slp_loopfaces, pointers_loopfaces);
+	slp_loopfaces=vector(f, u,\
 			\\ u-th gammai
-			[[n+pointers[u],n+pointers[f+u]],\
+			[[u, f+u],\
 			\\ compute gi^-1
-			[-(n+pointers[u]), -1],\
+			[-u, -1],\
 			\\ (gi.gammai)gi^-1
-			[n+lenslp_gis_gammais+3*u-2, n+lenslp_gis_gammais+3*u-1]]))\
-	]);
-	\\ Remove pointers of gis and gammais and add those of
-	\\ loopfaces.
-	pointers=vector(f,u, lenslp_gis_gammais+3*u);  
+			[#pointers+3*u-2, #pointers+3*u-1]]);
+	pointers_loopfaces=vector(f,u, 3*u);
+	[slp,pointers]=slpcompose([n, #pointers], [slp, slp_loopfaces],\
+			n,\
+			[pointers, pointers_loopfaces]
+	);
 	return([slp, pointers, rel]);
 }
 
