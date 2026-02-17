@@ -780,7 +780,7 @@ map_surface_presentation(Gone, seedslp, type)={
 	my(slp, pointers, seen, index, e, w);
 	seen=vectorsmall(n);
 	w=vectorsmall(n_one);
-	e=s2one[seedslp];
+	e=seedslp;
 	index=map_indexcycle(s2one,s2one[e]);
 	\\Each edge e points to e(1).
 	for(i=1, n_one,
@@ -788,7 +788,7 @@ map_surface_presentation(Gone, seedslp, type)={
 		if(!seen[s1one[e]], seen[e]=1);\
 		w[i]=e;
 	);
-	e=s2one[seedslp];
+	e=seedslp;
 
 	my(vecalpha, vecbeta, vecgamma, vecdelta,\
 		slpalpha, slpbeta, slpgamma, slpdelta,\
@@ -852,12 +852,11 @@ map_surface_presentation(Gone, seedslp, type)={
 		seen[b]=1;
 	);
 	\\Pointers has size 4*g at this point, that is it points on
-	\\2*g topological generators and their inverses 
+	\\2*g topological generators and their inverses. 
 	\\This filters 2*g topological generators and builds
 	\\the appropriate relation.
 	my(rel);
 	[pointers,rel]=buildrel_and_pointers(pointers, slp[1][2], s2one, s1one, index, seen);
-
 	return([slp, pointers, rel]);
 }
 
@@ -870,7 +869,7 @@ map_loopfaces(n, slpsgammai, slpgis, pointersgi)={
 	\\ Makes slps of gammais into a single slp
    	my(slpgammais, pointersgammai);
 	[slpgammais, pointersgammai]=slpconcat(slpsgammai, n,\
-		vector(#slpsgammai, u, [#slpsgammai[u]]);
+		vector(#slpsgammai, u, [#slpsgammai[u]])\
 	);
 	my(slp, pointers);
 	\\ Add slp of gis and gammais 
@@ -892,7 +891,7 @@ map_loopfaces(n, slpsgammai, slpgis, pointersgi)={
 			\\ compute gi^-1
 			[-u, -1],\
 			\\ (gi.gammai).(gi^-1)
-			[2*f+3*u-2, 2*f+3*u-1]])\
+			[(2*f+3*u)-2, (2*f+3*u)-1]])\
 		);
 	pointers_loopfaces=vector(f,u, 3*u);
 	[slp,pointers]=slpcompose([n, 2*f], [slp, slp_loopfaces],\
@@ -939,38 +938,12 @@ map_topological_presentation(G, type)={
 	return([slp, pointers, rel, T, TfGdual]);
 }
 
-/*permrepr = fonction E-> Sd*/
-map_from_permrepr(G, d, permrepr)={
-	my(s1, n, s0, s0rev, s1rev);
-	s1=G[1];
-	n=#s1;
-	s0=s1*G[2]^-1;
-
-	/*acts as s0 x id_{1,...,d}*/
-	s0rev=vectorsmall(n*d);
-	for(i=1, n,
-		for(j=1, d,
-			s0rev[i+j*n]=s0[i]+j*n;
-		);
-	);
-
-	/*acts as s1 x (rho o s1) on E x {1,...,d}*/
-	s1rev=vectorsmall(n*d);
-	for(i=1, n,
-		for(j=1, d,
-			s1rev[i+j*n]=s1[i]+permrepr[s1[i]][j]*n;
-		);
-	);
-	
-	return([s1rev, s1*s0rev^-1]);
-}
-
 \\ Build a covering map coming from a monodromy
 \\ action.
 \\ The new edge set is Erev=E x {1,..., d}, we view it as 
 \\ {1,...,#E*d} with lexicographic ordering.
 \\ The covering vertex permutation s0rev is s0 x id_{1,...,d}
-\\ while s1rev is s1 x (monodromy*s1).
+\\ while s1rev is s1(_) x (monodromy(_)(s1(_))).
 \\ TODO: Le sidepairing devrait être calculé dans fdompres.
 map_from_monodromy(G, d, monodromy)={
 	my(s0, s1, s2, n);
@@ -978,12 +951,25 @@ map_from_monodromy(G, d, monodromy)={
 	s0=(s2^-1)*s1;
 	n=#s0;
 
-	my(m=d*n);
-	for(j=0, d-1,
+	my(s0rev, s1rev, m=d*n);
+	s0rev=vectorsmall(m);
+	s1rev=vectorsmall(m);
+	for(j=1, d,
 		for(i=1, n,
-			s0rev[i+j*n]=s0[i]+j*n;
-			s1rev[i+j*n]=s1[i]+monodromy[s1[j]]*n;
+			s0rev[i+(j-1)*n]=s0[i]+(j-1)*n;
+			s1rev[i+(j-1)*n]=s1[i]+(monodromy[s1[i]][j]-1)*n;
 		);
 	);
-	return([s1rev, s1*s0rev^-1]);
-};
+	return([s1rev, s1rev*s0rev^-1]);
+}
+
+map_spair_from_monodromy(G, monodromy)={
+	my(Gdual, Gdualrev, Gdualrevdual, d);
+	d=#monodromy[1];
+	Gdual=map_dual(G);
+	Gdualrev=map_from_monodromy(Gdual, d, monodromy);
+
+	Gdualrevdual=map_dual(Gdualrev);
+
+	return();
+}

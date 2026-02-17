@@ -129,18 +129,19 @@ slpconcat(slps, n, {oldpointers=0}, {connect=0})={
 			,/*else*/
 				if(i<0,
 					if(i<-n,
-						[i,j]=[i-k,j];
-					,/*else*/
-						[i,j]=[i,j];
+						i=i-k;
 					);
 				,i==0,/*else if*/
-					if(j<=n,
-						[i,j]=[0,j];
-					,/*else*/
-						[i,j]=[0,k+j];
+					if(n<j,
+						j=j+k;
 					);
 				,/*else*/
-					[i,j]=[i+k, j];
+					if(n<i,
+						i=i+k;
+					);
+					if(n<j,
+						j=j+k;
+					);
 				);
 				slp[k+v]=[i,j];
 	  		);
@@ -167,13 +168,13 @@ slpcompose0(n1,n2, slp1, slp2, pointers1, pointers2)={
 		[i,j]=slp2[v];
 		if(i<0,
 			if(-n2<=i,
-				i=-pointers1[-i];
+				i=-pointers1[-i]-n1;
 			,/*else*/
 				i=i+n2-n1-k;
 			);
 		,i==0,/*else if*/
 			if(j<=n2,
-				j=pointers1[j];
+				j=pointers1[j]+n1;
 			,/*else*/
 				j=j-n2+n1+k;
 			);

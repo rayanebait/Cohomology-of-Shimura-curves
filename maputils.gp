@@ -292,7 +292,31 @@ map_genword(g)={
 	s2g=perm_iplusk(4*g, 1);
 	return([s1g,s2g]);
 }
+map_genrel(g)={
+	my(j,rel, k);
+	rel=vector(4*g);
+	for(i=1, g,
+		j=2*(i-1)+1;
+		k=4*(i-1)+1;
+		rel[k]=j;
+		rel[k+1]=j+1;
+		rel[k+2]=-rel[k];
+		rel[k+3]=-rel[k+1];
+	);
+	return(rel);
+}
 
+map_genmonodromy(mono0, g, d)={
+	my(mono);
+	mono=vector(4*g);
+	for(i=0, g-1,
+		mono[4*i+1]=mono0[2*i+1];
+		mono[4*i+2]=mono0[2*i+2];
+		mono[4*i+3]=mono0[2*i+1]^-1;
+		mono[4*i+4]=mono0[2*i+2]^-1;
+	);
+	return(mono);
+}
 
 
 \\ Assumes s2one is a cycle
@@ -578,7 +602,7 @@ perm_is_conj(s1,s2)={
 }
 
 perm_as_commutator(s)={
-	my(c1,c2);
+	my(g, c1,c2);
 	[c1,c2]=perm_as_prodoftwocycs(s);
 
 	\\gc1^-1g^-1=c2 so that c1*c2=c1gc1^-1 g^-1
@@ -591,22 +615,26 @@ perm_as_commutator(s)={
 \\ for a one-handle presentation
 
 \\ O(nd)
-rand_mappermrepr(rel,d)={
-	my(permrepr, e, s);
-	permrepr=vector(#rel/2);
+rand_monodromy0(rel,d)={
+	my(mono, e, s);
+	mono=vector(#rel/2);
 	s=vectorsmall(d,i,i);
 	for(i=5, #rel,
 		e=rel[i];
-		print(e);
-		if(e<0, s=s*permrepr[-e]^-1; next);
-		permrepr[e]=rand_perm(d);
-		s=s*permrepr[e];
+		if(e<0, s=s*mono[-e]^-1; next);
+		mono[e]=rand_perm(d);
+		s=s*mono[e];
 	);
 	my(a,b);
 	[a,b]=perm_as_commutator(s^-1);
-	permrepr[1]=a;
-	permrepr[2]=b;
-	return(permrepr);
+	mono[1]=a;
+	mono[2]=b;
+	return(mono);
+}
+
+map_monodromy(G, d)={
+	
+
 }
 
 \\ faire representation
@@ -620,3 +648,5 @@ rand_afuchpermrepr_fromR(R,s1)={
 
 	return();
 }
+\\g=20; d=12; relg=map_genrel(g); Gg=map_genword(g); mono0=rand_monodromy0(relg, d); mono=map_genmonodromy(mono0, g,d); Grev=map_from_monodromy(Gg, d, mono); map_info(Grev)
+

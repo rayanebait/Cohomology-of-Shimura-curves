@@ -157,6 +157,8 @@ afuchtestdata(X, {type="oneword"})={
 		w=s2one;
 		wis=permcycles(Gdual[2]);
 	);
+	my(slpsgammai, slpgis, pointersgi);
+	[slpsgammai, slpgis, pointersgi]=map_liftalongT(Gdual, T, TfG);
 
 	my(A, elts);
 	A=afuchalg(X);
@@ -165,8 +167,10 @@ afuchtestdata(X, {type="oneword"})={
 	my(ret,toeval);
 	ret=[n, G,Gdual,[s1one, s2one], T, TfG, h, A, elts];
 
-	toeval="[n, G, Gdual, Gone, T, TfG, h, A,elts, fullslp, pointers, rels,wis,w,etol]=ret;";
+	toeval="[n, G, Gdual, Gone, T, TfG, h, A,elts, fullslp, pointers,rels, slpsgammai, slpgis, pointersgi, S, R, wis,w,etol]=ret;";
 	ret=concat(ret, afuch_presentation(X,type));
+	ret=concat(ret, map_liftalongT(Gdual, T, TfG));
+	ret=concat(ret, afuch_presentation(X,type,1));
 	ret=concat(ret, [wis,w,etol]);
 
 	
@@ -294,7 +298,7 @@ listput(~Xs, X);
 \\Xs=afuchsamples(50,1,1);
 
 \\/*Retrieves at most 50 fundamental domains from storage*/
-\\Xs=afuchsamples(50,0,1);
+Xs=afuchsamples(50,0,1);
 afuchtest_relation(Xs,0,1, "oneword");
 \\afuchtest_relation(Xs,0,1, "onehandle");
 
