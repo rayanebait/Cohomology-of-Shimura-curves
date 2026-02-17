@@ -680,16 +680,16 @@ map_liftalongT(G, T, TfG)={
 }
 
 /*Assumes G is of genus > 0*/
-findab(s2one,s1, seed, eindex)={
+findab(s2one,s1, seed, index)={
 	my(a, ainv, ainvindex);
-	a=seed; ainv=s1[a]; ainvindex=eindex[ainv];
+	a=seed; ainv=s1[a]; ainvindex=index[ainv];
 	my(b, binv, binvindex);
-	b=s2one[a]; binv=s1[b]; binvindex=eindex[binv];
+	b=s2one[a]; binv=s1[b]; binvindex=index[binv];
 	while(binvindex<ainvindex && b!=ainv,
-		/*here aindex:=eindex[a]<bindex:=eindex[b]<ainvindex by definition*/
+		/*here aindex:=index[a]<bindex:=index[b]<ainvindex by definition*/
 		b=s2one[b];
 		binv=s1[b];
-		binvindex=eindex[binv];
+		binvindex=index[binv];
 	);
 	return([a,b]);
 }
@@ -699,30 +699,30 @@ findab(s2one,s1, seed, eindex)={
  representing the oneface reduction of the graph embedding
  [s1,s2].
 */
-cut_and_paste_one(s2one, s1, seedslp, eindex)={
+cut_and_paste_one(s2one, s1, seedslp, index)={
 	my(n, n_one, a,b,vecalpha, vecbeta, vecgamma, vecdelta);
 	n=#s1; n_one=permorder(s2one);
 	e=seedslp;
-	[a,b]=findab(s2one, s1, s2one[e], eindex);
+	[a,b]=findab(s2one, s1, s2one[e], index);
 
 	my(w);
 	w=vector(n_one, u, e=s2one[e]; e);
 	e=a;
 
 	my(card);
-	card=(eindex[b]-1)-eindex[a];
+	card=(index[b]-1)-index[a];
 	vecalpha=vector(card, u, e=s2one[e]; e);
 	e=s2one[e];
 	
-	card=(eindex[s1[a]]-1)-eindex[b];
+	card=(index[s1[a]]-1)-index[b];
 	vecbeta=vector(card, u, e=s2one[e]; e);
 	e=s2one[e];
 	
-	card=(eindex[s1[b]]-1)-eindex[s1[a]];
+	card=(index[s1[b]]-1)-index[s1[a]];
 	vecgamma=vector(card, u, e=s2one[e]; e);
 	e=s2one[e];
 	
-	vecdelta=vector(n_one-eindex[s1[b]], u, e=s2one[e]; e);
+	vecdelta=vector(n_one-index[s1[b]], u, e=s2one[e]; e);
 	
 	
 	my(slpc, slpd);
@@ -733,12 +733,39 @@ cut_and_paste_one(s2one, s1, seedslp, eindex)={
 	\\ a and b are used because they are not in the vecs
 	\\ the side pairing then associates to a and b
 	\\ the evaluation of slpc and slpd respectively
-	my(updated_w, updated_s2one, updated_eindex);
+	my(updated_w, updated_s2one, updated_index);
 	updated_w=concat([vecgamma, vecbeta, [a], [b], [s1[a]], [s1[b]], vecalpha, vecdelta]);
 	updated_s2one=cycs_to_perm(n, [updated_w]);
-	updated_eindex=makeindex(updated_s2one, updated_w[1]);
+	updated_index=map_indexcycle(updated_s2one, updated_w[1]);
 		
-	return([a,b, vecalpha, vecbeta, vecgamma, vecdelta, slpc, slpd, w, updated_w, updated_s2one, updated_eindex]);
+	return([a,b, vecalpha, vecbeta, vecgamma, vecdelta, slpc, slpd, w, updated_w, updated_s2one, updated_index]);
+}
+
+/* 
+   Used to filter 2g generators and build a relation in buildpres
+   function in map.gp.
+ */
+buildrel_and_pointers(pointers, seed, s, s1, index, seen)={
+	if(#pointers==1, return([pointers,[]]));
+	my(e=seed, rel, j=1, newpointers, newindex, m=0);
+	newindex=index;
+	newpointers=vector(#pointers/2);
+	rel=vector(#pointers);
+
+	for(i=1, permorder(s),
+		if(seen[s1[e]], 
+			rel[i]=-newindex[s1[e]];
+			m++;
+		,/*else*/
+			newpointers[j]=pointers[i];
+			j++;
+			newindex[e]+=-m;
+			rel[i]=newindex[e];
+		);
+		e=s[e];
+	);
+	\\error("");
+	return([newpointers, rel]);
 }
 
 map_surface_presentation(Gone, seedslp, type)={
@@ -750,24 +777,27 @@ map_surface_presentation(Gone, seedslp, type)={
 	if(n_one==1, return([[],[],[]]));
 	f=(n-n_one)/2+1;
 
-	my(slp, pointers, seen, eindex, e);
+	my(slp, pointers, seen, index, e, w);
 	seen=vectorsmall(n);
+	w=vectorsmall(n_one);
+	e=s2one[seedslp];
+	index=map_indexcycle(s2one,s2one[e]);
 	\\Each edge e points to e(1).
-	e=seedslp;
-	eindex=makeindex(s2one,s2one[e]);
+	for(i=1, n_one,
+		e=s2one[e];\
+		if(!seen[s1one[e]], seen[e]=1);\
+		w[i]=e;
+	);
+	e=s2one[seedslp];
 
 	my(vecalpha, vecbeta, vecgamma, vecdelta,\
 		slpalpha, slpbeta, slpgamma, slpdelta,\
 	   	   	slpc,slpd);
-	my(a,b, w, updated_w, updated_s2one, updated_eindex);
+	my(a,b, updated_w, updated_s2one, updated_index);
 	if(type=="oneword",
 		pointers=vectorsmall(n_one, i, i);
-		w=vectorsmall(n_one);
-		slp=vector(n_one, u,\
-			   	e=s2one[e];\
-				if(!seen[s1one[e]], seen[e]=1);\
-				w[u]=e;
-			   	[0, e]);
+		slp=vector(n_one, i,\
+			   	[0, w[i]]);
 	,type=="onehandle",/*else if*/
 		\\w_one=gamma beta c d c^-1d^-1 alpha delta
 		\\ Recover updated pointers of gis before concatening
@@ -778,8 +808,8 @@ map_surface_presentation(Gone, seedslp, type)={
 		\\ point only to the first of the two appearing
 		\\ following the w_one.
 		[a,b, vecalpha, vecbeta,vecgamma, vecdelta, slpc, slpd,
-	   	w, updated_w, updated_s2one, updated_eindex]=\
-			cut_and_paste_one(s2one,s1one,seedslp,eindex);
+	   	w, updated_w, updated_s2one, updated_index]=\
+			cut_and_paste_one(s2one,s1one,seedslp,index);
 
 		slpalpha=vectoslp(vecalpha, n, 0);
 		slpbeta=vectoslp(vecbeta, n, 0);
@@ -815,8 +845,8 @@ map_surface_presentation(Gone, seedslp, type)={
 				if(!seen[s1one[slpdelta[i][2]]], seen[slpdelta[i][2]]=1); i)]\
 		);
 		s2one=updated_s2one;
-		eindex=updated_eindex;
-		\\ a and b are now c and d respectively for updated_eindex
+		index=updated_index;
+		\\ a and b are now c and d respectively for updated_index
 		\\ This works as only their index in updated_w is used.
 		seen[a]=1;
 		seen[b]=1;
@@ -826,7 +856,7 @@ map_surface_presentation(Gone, seedslp, type)={
 	\\This filters 2*g topological generators and builds
 	\\the appropriate relation.
 	my(rel);
-	[pointers,rel]=buildrel_and_pointers(pointers, slp[1][2], s2one, s1one, eindex, seen);
+	[pointers,rel]=buildrel_and_pointers(pointers, slp[1][2], s2one, s1one, index, seen);
 
 	return([slp, pointers, rel]);
 }
@@ -854,13 +884,16 @@ map_loopfaces(n, slpsgammai, slpgis, pointersgi)={
 	\\ Add loopfaces, slp with generator set <gi, gammaj;i,j>
 	\\ of size #pointers==2*f
 	my(slp_loopfaces, pointers_loopfaces);
-	slp_loopfaces=vector(f, u,\
+	slp_loopfaces=concat(\
+			\\SLPS
+			vector(f, u,\
 			\\ u-th gammai
 			[[u, f+u],\
 			\\ compute gi^-1
 			[-u, -1],\
-			\\ (gi.gammai)gi^-1
-			[2*f+3*u-2, 2*f+3*u-1]]);
+			\\ (gi.gammai).(gi^-1)
+			[2*f+3*u-2, 2*f+3*u-1]])\
+		);
 	pointers_loopfaces=vector(f,u, 3*u);
 	[slp,pointers]=slpcompose([n, 2*f], [slp, slp_loopfaces],\
 			[pointers, pointers_loopfaces]

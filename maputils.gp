@@ -295,18 +295,19 @@ map_genword(g)={
 
 
 
-
-makeindex(s2one, seed)={
-	my(eindex, e, k);
-	eindex=vectorsmall(#s2one);
+\\ Assumes s2one is a cycle
+\\ with seed in its support
+map_indexcycle(s2one, seed)={
+	my(index, e, k);
+	index=vectorsmall(#s2one);
 	e=seed;
 	k=1;
 	until(e==seed,
-			eindex[e]=k;
+			index[e]=k;
 			e=s2one[e];
 			k++;
 	);
-	return(eindex);
+	return(index);
 }
 
 

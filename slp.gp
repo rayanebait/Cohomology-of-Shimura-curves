@@ -163,7 +163,7 @@ slpcompose0(n1,n2, slp1, slp2, pointers1, pointers2)={
 	my(slp, k, i, j);
 	slp=concat(slp1, vector(#slp2));
 	k=#slp1;
-	for(v=1, slp2,
+	for(v=1, #slp2,
 		[i,j]=slp2[v];
 		if(i<0,
 			if(-n2<=i,
@@ -191,7 +191,9 @@ slpcompose0(n1,n2, slp1, slp2, pointers1, pointers2)={
 		);
 		slp[k+v]=[i,j];
   	);
-	\\);
+	for(i=1, #pointers2,
+		pointers2[i]=k+pointers2[i]; 
+	);
 	return([slp, pointers2]);
 }
 
@@ -440,32 +442,6 @@ slpstovec(slps,n)={
 	return(concat(vecs));
 }
 
-/* 
-   Used to filter 2g generators and build a relation in buildpres
-   function in map.gp.
- */
-buildrel_and_pointers(pointers, seed, s, s1, eindex, seen)={
-	if(#pointers==1, return([pointers,[]]));
-	my(e=seed, rel, j=1, newpointers, neweindex, m=0);
-	neweindex=eindex;
-	newpointers=vector(#pointers/2);
-	rel=vector(#pointers);
-
-	for(i=1, permorder(s),
-		if(seen[s1[e]], 
-			rel[i]=-neweindex[s1[e]];
-			m++;
-		,/*else*/
-			newpointers[j]=pointers[i];
-			j++;
-			neweindex[e]+=-m;
-			rel[i]=neweindex[e];
-		);
-		e=s[e];
-	);
-	\\error("");
-	return([newpointers, rel]);
-}
 
 slp_normalize(slp, h, m)={
 	my(i,j,n);
