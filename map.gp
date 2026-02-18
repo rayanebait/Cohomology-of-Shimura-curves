@@ -589,7 +589,12 @@ map_gluealongT(G, T, {type=1}, {withGone=0})={
 		);
 }
 
-map_(G, T, TvG)={
+/*Act as if there are no punctures at vertices*/
+/*of G and lift shortest paths in T from vertex 1*/
+/*to each vertex. Then used to build the presentation*/
+/*of the fundamental group of the underlying graph of G*/
+/*associated to T the covering tree T.*/
+map_liftalongT(G, T, TvG)={
 	my(s1,s2, s, sinv, n, sc, f);
 	[s1,s2]=G;
 	s=(s2^-1)*s1;
@@ -603,37 +608,30 @@ map_(G, T, TvG)={
    	my(seedlp, n_one);
 	n_one=n-2*(f-1);
 	
-	my(slpgis, pointersgi, approxtotlength=2*f);
-	/*straight line program to compute loopfaces paths.*/
-	slpgis=vector(approxtotlength);
-	/*Used to read the slp : pointersgi[fTindex]*/
-	/*points to the index of the last edge of the path*/
-	/*associated to fTindex in slpgis.*/
-	pointersgi=vector(f);
-	slpgis[1]=[-1,0];
-	pointersgi[1]=1;
+	my(slpspaths, pointersspaths);
+	slpspaths=vector(f);
+	pointersspaths=vector(f);
+	slpspaths[1]=[-1,0];
+	pointersspaths[1]=1;
 
-	my(last, estart, eend, flastindex, flastTindex, k, e);
-	k=2;
-	for(i=1, f-1,
+	my(last, lastvindex, lastvTindex, index, k, e);
+	k=1;
+	for(i=2, f,
 		/*
-			The path associated to gi is used to join
-			the first face to the face 
+		   The shortest path from
+			the first node of T to the node 
 			of index i in the ordering of T.
 		*/
-		e=T[i][1];
-		if(i==1,
-			index=0;
-		,/*else*/
-			vlastindex=vG[T[i-1][1]];
-			vlastTindex=TvG[vlastindex];
+		e=T[i-1][1];
+		lastvindex=vG[T[i-1][1]];
+		lastvTindex=TvG[lastvindex];
 
-			/*Recover index of last instruction in slp*/
-			last=pointersgi[vlastTindex];
-			index=n+last;
-		);
-		slpgis[k]=[index, e];
-		pointersgi[i]=k;
+		/*Recover index of last instruction in slp*/
+		last=pointersspaths[lastvTindex];
+		index=n+last;
+
+		slpspaths[k]=[index, e];
+		pointersspaths[i]=k;
 		k++;
 	);
 
@@ -641,10 +639,11 @@ map_(G, T, TvG)={
 	return([slpspaths, pointersspaths);
 }
 
-/*Each gi is homotopic to the unique path in T between*/
-/*face 1 and i in the dual. So that the tree made of the gis is isomorphic*/
-/*to T. */
-map_liftalongT(G, T, TfG, {type=1})={
+/*Each path gi is homotopic to the unique shortest path in T between
+face 1 and i in the dual graph. So that the tree made of the gis 
+is isomorphic to T but avoids the hypothetic punctures at the center
+of the faces of the dual graph. */
+map_liftalongTspecial(G, T, TfG, {type=1})={
 	my(s1,s2,s, sinv, n, sc, f);
 	[s1,s2]=G;
 	if(type, s=s2, s=(s2^-1)*s1);
@@ -835,7 +834,7 @@ buildrel_and_pointers(pointers, seed, s, s1, index, seen)={
 	return([newpointers, rel]);
 }
 
-map_surface_presentation(Gone, seedslp, type)={
+map_surface_presentation(Gone, seedslp, {type="oneword"})={
 	my(s1one, s2one,s2oneinv);
 	[s1one,s2one]=Gone;
 	n=#s1one;
@@ -972,7 +971,7 @@ map_topological_presentation_fromT(G, T, TfG, type)={
 	[s1one, s2one, seed]=map_gluealongT(G, T);
 	Gone=[s1one,s2one];
 	my(slpsgammai, slpgis, pointersgi);
-	[slpsgammai, slpgis, pointersgi]=map_liftalongT(G,T, TfG);
+	[slpsgammai, slpgis, pointersgi]=map_liftalongTspecial(G,T, TfG);
 
 	my(surface_slp, surface_pointers,surface_rel,\
 			loopfaces_slp, loopfaces_pointers, face_rel);
@@ -994,7 +993,7 @@ map_topological_presentation_fromT(G, T, TfG, type)={
 
 /*Recover presentation of a map G -> S*/
 /*associated to its dual map G^*->S*/
-map_topological_presentation(G, type)={
+map_topological_presentation(G, {type="oneword"})={
 	my(Gdual);
 	Gdual=map_dual(G);
 
@@ -1005,13 +1004,57 @@ map_topological_presentation(G, type)={
 	return([slp, pointers, rel, T, TfGdual]);
 }
 
-map_graph_presentation(G)={
-	my(T, TvG);
-	[T, TvG]=map_getT(G, 0);
+/*Returns a side pairing for the map G/T->S as described in framework.txt*/
+/*Here G should be tought as G^*->S for a map G-> S*/
+map_quotientT(G, T, TvG)={
+	my(vG);
+	vG=map_vertex_index(G);
+
 	my(s0one, s1one, s2one, seed);
 	[s1one, s2one, seed]=map_gluealongT(G, T, 0);
+	s0one=(s2one^-1)*s1one;
 
-	return();
+	my(slpspaths, pointersspaths);
+	/*Slp and pointers of shortest paths*/
+	[slpspaths, pointersspaths]=map_liftalongT(G, T, TvG);
+
+	my(slpold, pointersold);
+	/*Slp and pointers of old side pairing*/
+	[slpold, pointersold]=map_surface_presentation([s1one, s0one], seed, "oneword");
+
+	my(slp_conjs, pointers_conjs, e);
+	e=seed;
+	/*Slp and pointers of new side pairing*/
+	slp_conjs=concat(\
+			\\SLPS
+			vector(n_one, u,\
+			\\ c.e
+			e=s0one[e];
+			[[u, f+TvG[vG[e]]],\
+			\\ compute c^-1
+			[-u, -1],\
+			\\ (c.e).(c-1)
+			[(n_one+f+3*u)-2, (n_one+f+3*u)-1]])\
+		);
+	pointers_conjs=vector(n_one,u, 3*u);
+	my(slp, pointers);
+	[slp, pointers]=slpconcat(
+			\\SLPS
+			[slpold, slpspaths], n,\
+			\\POINTERS
+			[pointersold, pointerspaths]\
+		);
+
+	/*Slp and pointers of new side pairing*/
+	[slp, pointers]=slpcompose([n,n_one+f], [slp, slp_conjs],[pointers, pointers_conjs]);
+	return([slp, pointers]);
+}
+map_quotient_spair(G)={
+	my(T, TvG);
+	[T, TvG]=map_getT(G, 0);
+	my(slp,pointers);
+	[slp,pointers]=map_quotientT(G, T, TvG);
+	return([slp,pointers]);
 }
 \\ Build a covering map coming from a monodromy
 \\ action.
@@ -1038,11 +1081,15 @@ map_from_monodromy(G, d, monodromy)={
 	return([s1rev, s1rev*s0rev^-1]);
 }
 
-map_spair_from_monodromy(G, monodromy)={
-	my(Gdual, Gdualrev, Gdualrevdual, d);
-	d=#monodromy[1];
+map_monodromy_getspair(G, d, monodromy)={
+	my(Gdual, Gdualrev, Gdualrevdual);
 	Gdual=map_dual(G);
 	Gdualrev=map_from_monodromy(Gdual, d, monodromy);
+
+
+	\\ Y ME FAUT AUSSI Gdualrevone puis récupérer G' tq G'dual=Gdualrevone
+	[slp,pointers]=map_quotient_spair(Gdualrev);
+	my();
 
 	Gdualrevdual=map_dual(Gdualrev);
 
