@@ -354,15 +354,16 @@ map_dfsinit(G, ~Phi, ~data)={
 	data has the form
 		[explored, T, dfsvG, vdfsindex, seed]=data
  */
-
-map_dfs(~Phi, ~data)={
+/*type=0 does a dfs in the vertices of G while type=1 in the*/
+/*faces of G, equivalently in the vertices of the dual graph.*/
+map_dfs(~Phi, ~data, {type=1})={
 	my(G);
 	/*rec_prof++;*/
 	/*if(rec_prof > 5, breakpoint());*/
 	if(#Phi==2,
 		G=Phi;
 		Phi=vector(4);
-		map_dfsinit(G, ~Phi, ~data);
+		map_dfsinit(G, ~Phi, ~data, type);
 	,/*else*/
 		/*data[4] is the index of the current recursion*/
 		data[4]++;
@@ -393,7 +394,7 @@ map_dfs(~Phi, ~data)={
 		/*Update seed*/
 		data[5]=Phi[1][seed];
 
-		map_dfs(~Phi,~data);
+		map_dfs(~Phi,~data, type);
 		return();
 	);
 	
@@ -414,7 +415,7 @@ map_dfs(~Phi, ~data)={
 		listput(~data[2],[j,Phi[1][j]]);
 		/*Update seed*/
 		data[5]=jinv;
-		map_dfs(~Phi, ~data);
+		map_dfs(~Phi, ~data, type);
 
 		/*Increment*/
 		j=Phi[2][j];
@@ -429,9 +430,10 @@ map_dfs(~Phi, ~data)={
 \\e and s1(e) lie in different vertices of G
 \\It also returns the ordering of
 \\ permcycles(s2) coming from the dfs.
-map_getT(G)={
+\\ type is as in map_dfs
+map_getT(G, {type=1})={
 	my(data=vector(6), T, TfG);
-	map_dfs(~G, ~data);
+	map_dfs(~G, ~data,type);
 	[T, TfG]=data[2..3];
 	return([Vec(T),TfG]);
 }
@@ -511,13 +513,21 @@ map_connected_components(G, {CC=List()})={
 
 /*Builds the map obtained by gluing the faces of G along T*/
 /*a tree in the underlying graph of G^* */
-map_gluealongT(G, T, {withGone=0})={
+map_gluealongT(G, T, {type=1}, {withGone=0})={
 		/*Return if it already has one face that is T is empty*/
 		if(#T==0, 
 			if(withGone,
-				return([G[2], 1, G]);
+				if(type, 
+					return([G[2], 1, G]);
+				,/*else*/
+					return([(G[2]^-1)*G[1], 1, G]);
+				);
 			,/*else*/
-				return([G[2], 1]);
+				if(type,
+					return([G[2], 1]);
+				,/*else*/
+					return([(G[2]^-1)*G[1], 1]);
+				);
 			);
 		);
 
@@ -525,15 +535,15 @@ map_gluealongT(G, T, {withGone=0})={
 		[s1,s2]=G;
 		n=#s1;
 
-		my(g, s2one);
+		my(g, sone);
 		g=(2-(#permcycles(s1*s2)-n/2+#T+1))/2;
 		if(g==0,
-			s2one=vectorsmall(n,i,i);
+			sone=vectorsmall(n,i,i);
 			s1one=vectorsmall(n,i,i);
 			if(withGone,
-				return([s1one,s2one,1, [[],[]]]);
+				return([s1one,sone,1, [[],[]]]);
 			,/*else*/
-				return([s1one,s2one,1]);
+				return([s1one,sone,1]);
 			);
 		);
 		
@@ -546,46 +556,103 @@ map_gluealongT(G, T, {withGone=0})={
 		); 
 		
 		/*Build s1one and s2one*/
-		my(s1one, s2one, k, s2inv);
+		my(s1one, k, sinv);
 		s1one=vectorsmall(n,i,i);
-		s2one=vectorsmall(n,i,i);
-		s2inv=s2^-1;
+		sone=vectorsmall(n,i,i);
+		if(type,
+			sinv=s2^-1;
+		,/*else*/
+			sinv=s1*s2;
+		);
 		for(i=1, n, 
 			if(in_T[i], next);
 			s1one[i]=s1[i];
-			k=s2inv[i];
+			k=sinv[i];
 			\\k=s2[i];
 			while(in_T[k],
 				\\k=s2[s1[k]];
-				k=s2inv[s1[k]];
+				k=sinv[s1[k]];
 			);
-			s2one[i]=k;
+			sone[i]=k;
 		);
-		s2one=s2one^-1;
+		sone=sone^-1;
 
 		my(seed=1);
 		while(in_T[seed],
-			seed=s2inv[s1[seed]];
+			seed=sinv[s1[seed]];
 		);
+		if(!type, sone=s1one*sone^-1);
 		if(withGone, 
-			return([s1one, s2one, seed, perm_normalize_wrt([s1one,s2one], 1, in_T)]);
+			return([s1one, sone, seed, perm_normalize_wrt([s1one,sone], 1, in_T)]);
 		,/*else*/
-			return([s1one, s2one, seed]);
+			return([s1one, sone, seed]);
 		);
 }
 
+map_(G, T, TvG)={
+	my(s1,s2, s, sinv, n, sc, f);
+	[s1,s2]=G;
+	s=(s2^-1)*s1;
+	sinv=s^-1;
+	n=#s1;
+	sc=permcycles(s);
+	f=#sc;
+	vG=map_face_index([s1,s]);
+
+
+   	my(seedlp, n_one);
+	n_one=n-2*(f-1);
+	
+	my(slpgis, pointersgi, approxtotlength=2*f);
+	/*straight line program to compute loopfaces paths.*/
+	slpgis=vector(approxtotlength);
+	/*Used to read the slp : pointersgi[fTindex]*/
+	/*points to the index of the last edge of the path*/
+	/*associated to fTindex in slpgis.*/
+	pointersgi=vector(f);
+	slpgis[1]=[-1,0];
+	pointersgi[1]=1;
+
+	my(last, estart, eend, flastindex, flastTindex, k, e);
+	k=2;
+	for(i=1, f-1,
+		/*
+			The path associated to gi is used to join
+			the first face to the face 
+			of index i in the ordering of T.
+		*/
+		e=T[i][1];
+		if(i==1,
+			index=0;
+		,/*else*/
+			vlastindex=vG[T[i-1][1]];
+			vlastTindex=TvG[vlastindex];
+
+			/*Recover index of last instruction in slp*/
+			last=pointersgi[vlastTindex];
+			index=n+last;
+		);
+		slpgis[k]=[index, e];
+		pointersgi[i]=k;
+		k++;
+	);
+
+	slpspaths=slpspaths[1..(k-1)];
+	return([slpspaths, pointersspaths);
+}
 
 /*Each gi is homotopic to the unique path in T between*/
-/*face 1 and i. So that the tree made of the gis is isomorphic*/
+/*face 1 and i in the dual. So that the tree made of the gis is isomorphic*/
 /*to T. */
-map_liftalongT(G, T, TfG)={
-	my(s1,s2, s2inv, n, s2c, f);
+map_liftalongT(G, T, TfG, {type=1})={
+	my(s1,s2,s, sinv, n, sc, f);
 	[s1,s2]=G;
-	s2inv=s2^-1;
+	if(type, s=s2, s=(s2^-1)*s1);
+	sinv=s^-1;
 	n=#s1;
-	s2c=permcycles(s2);
-	f=#s2c;
-	fG=map_face_index(G);
+	sc=permcycles(s);
+	f=#sc;
+	fG=map_face_index([s1,s]);
 
 	my(makeslpgammai, maxfacesize = 1);
 	/*Encodes a face of Gdual starting at seed (inclusive) and*/
@@ -598,7 +665,7 @@ map_liftalongT(G, T, TfG)={
 			seed=T[u-1][2];
 		);
 		my(slpgammai);
-		slpgammai=vector(#s2c[fG[seed]]);
+		slpgammai=vector(#sc[fG[seed]]);
 		e=seed;
 		until(e==seed,
 			/*Faut tenir compte des générateurs*/
@@ -608,7 +675,7 @@ map_liftalongT(G, T, TfG)={
 					slpgammai[k]=[k-1+n, s1[e]];
 				
 			);
-			e=s2inv[e];
+			e=sinv[e];
 			k++;
 		);
 		maxfacesize=max(maxfacesize, k-1);
@@ -618,7 +685,7 @@ map_liftalongT(G, T, TfG)={
 	slpsgammai=vector(f,u, makeslpgammai(u));
 
 
-   	my(slpsgens, seedlp, n_one);
+   	my(seedlp, n_one);
 	n_one=n-2*(f-1);
 	
 	my(slpgis, pointersgi, approxtotlength=maxfacesize*n);
@@ -654,20 +721,20 @@ map_liftalongT(G, T, TfG)={
 			last=pointersgi[flastTindex];
 		);
 
-		if(s2[estart]==eend,
+		if(s[estart]==eend,
 				/*Add Empty path*/
 				/*TODO: transformer en ne rien faire et pas incrémenter k.*/
 				slpgis[k]=[0, n+last];
 				k++;
 		,/*else*/
-				e=s2[estart];
+				e=s[estart];
 				until(e==eend,
 					/*Unique path contained in face*/
 					/*going from s2dual[estart] to */
 					/*s2dual^-1[eend] in clockwise */
 					/*orientation.*/
 					slpgis[k]=[n+last, e];
-					e=s2[e];
+					e=s[e];
 					last=k;
 					k++;
 				);
@@ -938,6 +1005,14 @@ map_topological_presentation(G, type)={
 	return([slp, pointers, rel, T, TfGdual]);
 }
 
+map_graph_presentation(G)={
+	my(T, TvG);
+	[T, TvG]=map_getT(G, 0);
+	my(s0one, s1one, s2one, seed);
+	[s1one, s2one, seed]=map_gluealongT(G, T, 0);
+
+	return();
+}
 \\ Build a covering map coming from a monodromy
 \\ action.
 \\ The new edge set is Erev=E x {1,..., d}, we view it as 
