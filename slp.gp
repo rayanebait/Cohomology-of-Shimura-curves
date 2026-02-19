@@ -443,8 +443,11 @@ slpstovec(slps,n)={
 	return(concat(vecs));
 }
 
-
-slp_normalize(slp, h, m)={
+/*h is a function from {1,...,n}->{1,..,m} */
+/*returns an slp such that each old generator*/
+/*e of index i is replaced by a generator */
+/*of index h[i].*/
+slpnormalize(slp, h, m)={
 	my(i,j,n);
 	n=#h;
 	for(k=1, #slp,
@@ -478,5 +481,7 @@ slp_normalize(slp, h, m)={
 	return(slp);
 }
 
+slpreverse(slp, pointers)={
 
-slpreverse()={}
+	return();
+}

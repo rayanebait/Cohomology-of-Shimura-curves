@@ -10,3 +10,11 @@ denote by G/T -> S the only map with underlying graph isomorphic to G^*/T and
 such that G/T-> S factors through G -> S. The graph G/T is the gluing of the faces
 of G-> S along T.
 
+
+Normalizations :
+	At the beginning we start with a side pairing elts from afuchelts and an
+involution from afuchspair associated to elts. Then we build a map G->S
+with a new involution without fixed points s1 and a function h with 
+side pairing i -> elts(h(i)).
+
+	In 

@@ -148,7 +148,7 @@ afuchtestdata(X, {type="oneword"})={
 	[T,TfG]=map_getT(Gdual);
 	
 	my(s1one, s2one, seed, etol, w, Gone);
-	[s1one, s2one, seed, Gone]=map_gluealongT(Gdual,T,1);
+	[s1one, s2one, seed, Gone]=map_gluealongT(Gdual,T,1,1);
 	etol=map_to_word(G)[2];
 	if(g && #etol,
 		w=find_w(s2one,etol);
@@ -158,7 +158,7 @@ afuchtestdata(X, {type="oneword"})={
 		wis=permcycles(Gdual[2]);
 	);
 	my(slpsgammai, slpgis, pointersgi);
-	[slpsgammai, slpgis, pointersgi]=map_liftalongT(Gdual, T, TfG);
+	[slpsgammai, slpgis, pointersgi]=map_liftalongTspecial(Gdual, T, TfG);
 
 	my(A, elts);
 	A=afuchalg(X);
@@ -169,7 +169,7 @@ afuchtestdata(X, {type="oneword"})={
 
 	toeval="[n, G, Gdual, Gone, T, TfG, h, A,elts, fullslp, pointers,rels, slpsgammai, slpgis, pointersgi, S, R, wis,w,etol]=ret;";
 	ret=concat(ret, afuch_presentation(X,type));
-	ret=concat(ret, map_liftalongT(Gdual, T, TfG));
+	ret=concat(ret, map_liftalongTspecial(Gdual, T, TfG));
 	ret=concat(ret, afuch_presentation(X,type,1));
 	ret=concat(ret, [wis,w,etol]);
 

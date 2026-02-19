@@ -117,7 +117,7 @@ test_gluealongT()={
 		my(Gdual, T, TfG, seed);
 		Gdual=map_dual(G11tested);
 		[T,TfG]=map_getT(Gdual);
-		[w11, seed, G11red]=map_gluealongT(map_dual(G11tested),T,1)[2..4];
+		[w11, seed, G11red]=map_gluealongT(map_dual(G11tested),T,1,1)[2..4];
 
 		covtree11=T;
 		if(covtree11!=covtree11tested, error("map_gluealongT failed : Invalid tree."));
@@ -143,8 +143,6 @@ updated_w=[44, 75, 49, 86, 25, 34, 83, 66, 63, 22, 99, 61, 70, 81, 41, 20];
 
 	return();
 }
-
-
 
 test_connected_components(); 
 test_covtree(25);

@@ -315,14 +315,13 @@ map_dfsgen(G)={
 }
 
 
-map_dfsinit(G, ~Phi, ~data)={
+map_dfsinit(G, ~Phi, ~data, {type=1})={
 	my(s,vG,s1,sc);
-	/*Dfs is on Gdual.*/
-	s=G[2];
-	vG=map_face_index(G);
+	s1=G[1];
+	if(type, s=G[2], s=(G[2]^-1)*s1);
+	vG=map_face_index([s1,s]);
 	/*Go through the faces in reversed orientation. Needed for the slps.*/
 	s=s^-1;
-	s1=G[1];
 	sc=permcycles(s);
 
 	my(explored, vdfsindex, dfsvG, seed);
@@ -518,15 +517,15 @@ map_gluealongT(G, T, {type=1}, {withGone=0})={
 		if(#T==0, 
 			if(withGone,
 				if(type, 
-					return([G[2], 1, G]);
+					return([G[1],G[2], 1, G]);
 				,/*else*/
-					return([(G[2]^-1)*G[1], 1, G]);
+					return([G[1], (G[2]^-1)*G[1], 1, G]);
 				);
 			,/*else*/
 				if(type,
-					return([G[2], 1]);
+					return([G[1], G[2], 1]);
 				,/*else*/
-					return([(G[2]^-1)*G[1], 1]);
+					return([G[1], (G[2]^-1)*G[1], 1]);
 				);
 			);
 		);
@@ -636,7 +635,7 @@ map_liftalongT(G, T, TvG)={
 	);
 
 	slpspaths=slpspaths[1..(k-1)];
-	return([slpspaths, pointersspaths);
+	return([slpspaths, pointersspaths]);
 }
 
 /*Each path gi is homotopic to the unique shortest path in T between
@@ -1047,14 +1046,12 @@ map_quotientT(G, T, TvG)={
 
 	/*Slp and pointers of new side pairing*/
 	[slp, pointers]=slpcompose([n,n_one+f], [slp, slp_conjs],[pointers, pointers_conjs]);
-	return([slp, pointers]);
+	return([slp, pointers, s1one, s2one, seed]);
 }
 map_quotient_spair(G)={
 	my(T, TvG);
 	[T, TvG]=map_getT(G, 0);
-	my(slp,pointers);
-	[slp,pointers]=map_quotientT(G, T, TvG);
-	return([slp,pointers]);
+	return(map_quotientT(G, T, TvG));
 }
 \\ Build a covering map coming from a monodromy
 \\ action.
@@ -1081,17 +1078,39 @@ map_from_monodromy(G, d, monodromy)={
 	return([s1rev, s1rev*s0rev^-1]);
 }
 
-map_monodromy_getspair(G, d, monodromy)={
+\\ Given a map G->S with orbifold points at vertices of G
+\\ and a covering orbifold Srev -> S coming from monodromy.
+\\ Computes a one face map Grevone -> Srev with orbifold
+\\ points at its vertices as well as a side pairing.
+map_monodromy_getonefacespair(G, d, monodromy)={
 	my(Gdual, Gdualrev, Gdualrevdual);
 	Gdual=map_dual(G);
 	Gdualrev=map_from_monodromy(Gdual, d, monodromy);
 
 
-	\\ Y ME FAUT AUSSI Gdualrevone puis récupérer G' tq G'dual=Gdualrevone
-	[slp,pointers]=map_quotient_spair(Gdualrev);
-	my();
+	my(s0one, s1one, s2one, index);
+	\\ To obtain the side pairing associated to s1one, order
+	\\ the edges in the support (the only cycle) of s0one starting
+	\\ at seed in clock-wise orientation (s0one). Then the i'th
+	\\ edge, that is e s.t index[e]=i is associated to slp[pointers[i]].
+	[slp, pointers, s1one, s2one, seed]=map_quotient_spair(Gdualrev);
+	index=map_indexcycle(s0one, s0one[seed]);
 
-	Gdualrevdual=map_dual(Gdualrev);
+	my(s0,s1,s2,g);
+	\\ Here s1=g^-1.s1one.g and s2=g^-1.s2one.g so that
+	\\ the side pairing of [s1,s2] is obtained from
+	\\ that of [s1one, s2one] by letting e in s1 associate
+	\\ slp[pointers[i]] if i=index[g[e]]
+	[s1, s2, g]=perm_normalize_wrt([s1one,s2one],1,,1);
+	g=g^-1[1..#s1];
 
-	return();
+	normalizer=vector(#s1, e, index[g[e]]);
+	slp=slpnormalize(slp, normalizer, #s1one);
+
+	my(Gdualrevone, Grevone);
+	Gdualrevone=[s1, s2];
+	s0=(s2^-1)*s1;
+	Grevone=[s1, s0];
+
+	return([Grevone, slp, pointers]);
 }

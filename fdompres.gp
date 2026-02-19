@@ -139,7 +139,7 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		[slp, pointers, rels, T, TfGdual]=\
 				map_topological_presentation(G,type);
 		/*Add elliptic relations and renormalize the slp*/
-		slp=slp_normalize(slp,h,#afuchspair(X));
+		slp=slpnormalize(slp,h,#afuchspair(X));
 		rels=[rels];
 		rels=concat(rels, map_get_ellipticrels(X,map_dual(G), h, #pointers,TfGdual));
 		if(!eval, return([slp, pointers, rels]));
