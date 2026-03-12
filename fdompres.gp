@@ -157,6 +157,48 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 afuch_spair_from_monodromy()={
 	return();
 }
+
+\\ P^1(F_q)
+homography_action(eltsmodpr, q)={
+
+	return();
+}
+
+\\ Given an arithmetic fuchsian group associated to
+\\ an order O and a level N computes the monodromy
+\\ representation of the subgroup O(N) 
+afuch_cong(X, N)={
+	my(A, F, dA, dF, deg);
+	A=afuchalg(X);
+	F=algcenter(A);
+	deg=poldegree(F.pol);
+	dF=F.disc;
+	dA=algdisc(A);
+
+	prs=factor(N);
+	my(p,pow);
+	foreach(prs, tempppow, [p, pow]=tempppow;
+		if(gcd(dF, p)!=1 || gcd(dA, p),
+
+		);
+	); 
+
+	my(p);
+	forprime(tempp=3,,
+		if(gcd(dF, tempp)!=1 || gcd(dA, tempp)!=1, next);
+		p=tempp;
+		break
+	);
+	my(splitprs, modprs);
+	splitprs=idealprimedec(F,p);
+	modprs = \
+		vector(#splitprs, i, algmodprinit(A, splitprs[i]));
+	data[1]=modprs;
+	/*Worst case bound*/
+	data[2]=vecprod(apply((l)->(l/(l-1)), primes(2*deg+1)))*2*deg;
+	return();
+}
+
 afuch_from_monodromy(X, monodromy)={
 	my();
 	

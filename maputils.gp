@@ -633,8 +633,12 @@ rand_monodromy0(rel,d)={
 }
 
 map_monodromy(G, d)={
-	
+	return();
+}
 
+\\rels[1]
+rand_orbmonodromy0(rels,d)={
+	return();
 }
 
 \\ faire representation
