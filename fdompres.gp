@@ -158,13 +158,24 @@ afuch_spair_from_monodromy()={
 	return();
 }
 
-\\ P^1(F_q)
-homography_action(eltsmodpr, q)={
-
-	return();
+P1reduce(elP1)={
+	my(x,y);
+	[el, ffone, ffzero]=elP1;
+	[x,y]=el;
+	if(y==ffzero,
+		return([ffone, ffzero]);
+	);
+	return([x*y^-1, ffone]);
 }
 
-/*Pas besoin*/
+\\ P^1(F_q)
+P1homography_action(g, elP1)={
+	my(x,y);
+	[x,y]=elP1[1];
+	return([g[1,1]*x+g[1,2]*y, g[2,1]*x+g[2,2]*y]);
+}
+
+\\ j is a vector 
 inttoff(j, ffg, v)={
 	my(v, ffel);
 	v=variable(ffg.pol);
@@ -172,6 +183,7 @@ inttoff(j, ffg, v)={
 	return(ffel);
 }
 
+\\ x is a t_FFELT
 fftoint(x)={
 	return(subst(x.pol, variable(x.pol), x.p));
 }
@@ -221,19 +233,30 @@ afuch_cong_get_monodromy(A, elts, modprs)={
 		s=vectorsmall(q+1);	
 		for(j=0, q,
 			\\data[1]==j 
-			\\convert j to finite field element
+			\\convert j to finite field element 
 			ffj=inttoff(data[1], gmodpr, modpr);
-			\\act with g
-			gffj=homography(gmodpr, [ffj, ffone]~);
+			elP1=[ffj, ffone];
+			\\act with g 
+			gelP1=homography(gmodpr, [[ffj, ffone],ffzero,ffone]);
+			if(P1isoo(gelP1),
+				s[j]=q+1;
+			,/*else*/
+				s[j]=fftoint(P1reduce(gelP1[1])[1]);
+			);
 			s[j]=fftoint(gffj);
-			\\increment j
+			\\increment j 
 			incrbasep(~data);
+		);
+		elP1=P1reduce([homography(gmodpr, [[ffone, ffzero], ffzero, ffone]), ffzero, ffone]);
+		if(P1isoo(gelP1),
+			s[q+1]=q+1;
+		,/*else*/
+			s[q+1]=elP1[1];
 		);
 		\\ FAIRE OO via [ffone, ffzero], implémenter P^1
 		monodromy[i]=s;
 	);
-	
-	return();
+	return(monodromy);
 };
 
 \\ Given an arithmetic fuchsian group associated to
