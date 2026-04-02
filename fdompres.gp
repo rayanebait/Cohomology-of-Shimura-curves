@@ -164,10 +164,84 @@ homography_action(eltsmodpr, q)={
 	return();
 }
 
+/*Pas besoin*/
+inttoff(j, ffg, v)={
+	my(v, ffel);
+	v=variable(ffg.pol);
+	ffel=subst(Pol(j, v), ffg);
+	return(ffel);
+}
+
+fftoint(x)={
+	return(subst(x.pol, variable(x.pol), x.p));
+}
+
+\\adding 1 in base p
+\\data=[digs, ~p, ~i]
+incrbasep(~data)={)={
+	if(data[1][data[3]]==data[2]-1,
+		data[1][data[3]]=0;
+		if(data[3]<#data[1],
+			data[3]=data[3]+1;
+			incrbasep(~data);
+		);
+	,/*else*/
+		data[1][data[3]]++;
+		data[3]=1;
+	);
+};
+
+afuch_cong_get_monodromy(A, elts, modprs)={
+	\\ [x,y] dans P^1 -> [ax+by, cx+dy]
+	\\ a chaque g dans elts -> permutation s(g) dans S_{q+1}
+	\\ agir avec g sur chaque elt de P^1 -> [a,1] ou [1, 0]
+	\\ g dans elts =(a b) (c d)
+	my(F, d, zero, one);
+	F=algcenter(A);
+	d=poldegree(F.pol)*4;
+	zero=vector(d)~;
+	one=vector(d, i, if(i==1, 1))~;
+
+	my(ffzero, ffone, ffg, v);
+	ffzero=algmodpr(A, zero, modpr);
+	ffone=algmodpr(A, one, modpr);
+	ffg=ffgen(ffone);
+	v=variable(ffg.pol);
+
+	my(g, gmodpr, s, q,f ffj, gffj, s, monodromy, data=vector(3));
+	f=poldegree(ffg.pol); \\residual degree
+	data[1]=vector(f); \\represent an element of Fq as tuple of elements of Fp
+	data[2]=p;
+	data[3]=1;
+	q=p^f;
+	monodromy=vector(#elts, i, vectorsmall(q+1));
+	for(i=1, #elts,
+		g=elts[i];
+		gmodpr=algmodpr(A, g, modpr);
+		s=vectorsmall(q+1);	
+		for(j=0, q,
+			\\data[1]==j 
+			\\convert j to finite field element
+			ffj=inttoff(data[1], gmodpr, modpr);
+			\\act with g
+			gffj=homography(gmodpr, [ffj, ffone]~);
+			s[j]=fftoint(gffj);
+			\\increment j
+			incrbasep(~data);
+		);
+		\\ FAIRE OO via [ffone, ffzero], implémenter P^1
+		monodromy[i]=s;
+	);
+	
+	return();
+};
+
 \\ Given an arithmetic fuchsian group associated to
 \\ an order O and a level N computes the monodromy
 \\ representation of the subgroup O(N) 
-afuch_cong(X, N)={
+\\ Assumes each prime of the level N in F splits A and the level
+\\ is square free in F.
+afuch_cong(X, N, {flag=0})={
 	my(A, F, dA, dF, deg);
 	A=afuchalg(X);
 	F=algcenter(A);
@@ -175,27 +249,18 @@ afuch_cong(X, N)={
 	dF=F.disc;
 	dA=algdisc(A);
 
-	prs=factor(N);
-	my(p,pow);
-	foreach(prs, tempppow, [p, pow]=tempppow;
-		if(gcd(dF, p)!=1 || gcd(dA, p),
-
-		);
-	); 
-
-	my(p);
-	forprime(tempp=3,,
-		if(gcd(dF, tempp)!=1 || gcd(dA, tempp)!=1, next);
-		p=tempp;
-		break
+	my(prs);
+	if(flag,
+		prs=apply((v)->(v[1]), Vec(factor(N)~));
+		,/*else*/
+		prs=apply((v)->(v[1]), Vec(idealfactor(F, N)~));
 	);
-	my(splitprs, modprs);
-	splitprs=idealprimedec(F,p);
-	modprs = \
-		vector(#splitprs, i, algmodprinit(A, splitprs[i]));
-	data[1]=modprs;
-	/*Worst case bound*/
-	data[2]=vecprod(apply((l)->(l/(l-1)), primes(2*deg+1)))*2*deg;
+	my(modprs);
+	modprs=vector(#prs, i, algmodprinit(A, prs[i]));
+		
+
+	xmodpr=algmodpr(A,x,modprs[i]);
+
 	return();
 }
 
