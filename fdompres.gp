@@ -165,21 +165,24 @@ P1reduce(elP1)={
 	if(y==ffzero,
 		return([ffone, ffzero]);
 	);
-	return([x*y^-1, ffone]);
+	return([[x*y^-1, ffone], ffone, ffzero]);
+}
+P1isoo(elP1)={
+	return(elP1[1][2]==elP1[3]);
 }
 
 \\ P^1(F_q)
 P1homography_action(g, elP1)={
 	my(x,y);
 	[x,y]=elP1[1];
-	return([g[1,1]*x+g[1,2]*y, g[2,1]*x+g[2,2]*y]);
+	return([[g[1,1]*x+g[1,2]*y, g[2,1]*x+g[2,2]*y], elP1[2], elP1[3]]);
 }
 
 \\ j is a vector 
 inttoff(j, ffg, v)={
 	my(v, ffel);
 	v=variable(ffg.pol);
-	ffel=subst(Pol(j, v), ffg);
+	ffel=subst(Pol(j, v), v, ffg);
 	return(ffel);
 }
 
@@ -190,7 +193,7 @@ fftoint(x)={
 
 \\adding 1 in base p
 \\data=[digs, ~p, ~i]
-incrbasep(~data)={)={
+incrbasep(~data)={
 	if(data[1][data[3]]==data[2]-1,
 		data[1][data[3]]=0;
 		if(data[3]<#data[1],
@@ -203,7 +206,7 @@ incrbasep(~data)={)={
 	);
 };
 
-afuch_cong_get_monodromy(A, elts, modprs)={
+afuch_cong_get_monodromy(A, elts, modpr)={
 	\\ [x,y] dans P^1 -> [ax+by, cx+dy]
 	\\ a chaque g dans elts -> permutation s(g) dans S_{q+1}
 	\\ agir avec g sur chaque elt de P^1 -> [a,1] ou [1, 0]
@@ -220,24 +223,25 @@ afuch_cong_get_monodromy(A, elts, modprs)={
 	ffg=ffgen(ffone);
 	v=variable(ffg.pol);
 
-	my(g, gmodpr, s, q,f ffj, gffj, s, monodromy, data=vector(3));
+	my(g, gmodpr, q,f ffj, gffj, s, monodromy, data=vector(3), P1oo);
 	f=poldegree(ffg.pol); \\residual degree
 	data[1]=vector(f); \\represent an element of Fq as tuple of elements of Fp
 	data[2]=p;
 	data[3]=1;
 	q=p^f;
 	monodromy=vector(#elts, i, vectorsmall(q+1));
+	P1oo=[[ffone, ffzero], ffone, ffzero];
 	for(i=1, #elts,
 		g=elts[i];
-		gmodpr=algmodpr(A, g, modpr);
+		gmodpr=algmodpr(A, g, modpr); 
 		s=vectorsmall(q+1);	
 		for(j=0, q,
 			\\data[1]==j 
 			\\convert j to finite field element 
 			ffj=inttoff(data[1], gmodpr, modpr);
-			elP1=[ffj, ffone];
+			elP1=[[ffj, ffone],ffzero, ffone];
 			\\act with g 
-			gelP1=homography(gmodpr, [[ffj, ffone],ffzero,ffone]);
+			gelP1=homography(gmodpr, elP1);
 			if(P1isoo(gelP1),
 				s[j]=q+1;
 			,/*else*/
@@ -247,11 +251,11 @@ afuch_cong_get_monodromy(A, elts, modprs)={
 			\\increment j 
 			incrbasep(~data);
 		);
-		elP1=P1reduce([homography(gmodpr, [[ffone, ffzero], ffzero, ffone]), ffzero, ffone]);
+		elP1=P1reduce(homography(gmodpr, P1oo));
 		if(P1isoo(gelP1),
 			s[q+1]=q+1;
 		,/*else*/
-			s[q+1]=elP1[1];
+			s[q+1]=elP1[1][1];
 		);
 		\\ FAIRE OO via [ffone, ffzero], implémenter P^1
 		monodromy[i]=s;
