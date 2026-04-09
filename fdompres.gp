@@ -160,6 +160,27 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
 		return([gens,rels]);
 }
+afuch_covering_presentation(X, monodromy, {type="oneword"}, {eval=0})={
+	my(G,h);
+	[G,h]=map_from_afuch(X);
+
+	my(Grev, slpspair, pointersspair);
+	[Grev, slpspair, pointersspair]=map_spair_from_monodromy(G);
+
+	[slp, pointers, rels, T, TfGrevdual]=\
+			map_topological_presentation(Grev, type);
+
+	\\Pas sur que ce soit lui qu'il faut renormaliser + peut être
+	\\slpcompose slpspair et slp
+	slp=slpnormalize(slp, h, #pointersspair);
+
+	my(rels);
+	rels=[rels];
+	rels=concat(rels, map_get_ellipticrels(X, map_dual(Grev), h, #pointers,TfGrevdual));
+	if(!eval, return([slp, pointers, rels]));
+
+	return([gens, rels]);
+}
 
 
 afuch_spair_from_monodromy(X, monodromy)={
@@ -167,12 +188,11 @@ afuch_spair_from_monodromy(X, monodromy)={
 }
 
 
-afuch_cong_get_monodromy(X, pr)={
+afuch_congruence_from_monodromy(X, pr)={
 	my(A, elts, modpr);
 	A=afuchalg(X);
 	elts=afuchelts(X);
-	modpr=algmodprinit(A, pr);
-
+	modpr=algmodprinit(A,pr);
 
 	\\ [x,y] dans P^1 -> [ax+by, cx+dy]
 	\\ a chaque g dans elts -> permutation s(g) dans S_{q+1}
@@ -200,6 +220,8 @@ afuch_cong_get_monodromy(X, pr)={
 	P1oo=[[ffone, ffzero], ffone, ffzero];
 	for(i=1, #elts,
 		g=elts[i];
+
+		\\gmodprs=vector(#modprs, u, algmodpr(A, g, modprs[u]));
 		gmodpr=algmodpr(A, g, modpr); 
 		s=vectorsmall(q+1);	
 		for(j=0, q,
@@ -232,16 +254,17 @@ afuch_cong_get_monodromy(X, pr)={
 
 \\ Given an arithmetic fuchsian group associated to
 \\ an order O and a level N computes the monodromy
-\\ representation of the subgroup O(N) 
+\\ representation of the subgroup O_0(N) 
 \\ Assumes each prime of the level N in F splits A and the level
 \\ is square free in F.
-afuch_cong(X, N, {flag=0})={
-	my(A, F, dA, dF, deg);
+afuch_congruence(X, N, {flag=0})={
+	my(A, F, deg, dA, dF, elts);
 	A=afuchalg(X);
 	F=algcenter(A);
 	deg=poldegree(F.pol);
 	dF=F.disc;
 	dA=algdisc(A);
+	elts=afuchelts(X);
 
 	my(prs);
 	if(flag,
@@ -251,15 +274,11 @@ afuch_cong(X, N, {flag=0})={
 	);
 	my(modprs);
 	modprs=vector(#prs, i, algmodprinit(A, prs[i]));
-		
-	xmodpr=algmodpr(A,x,modprs[i]);
-
-	return();
+	monodromy=afuch_congruence_get_monodromy(A, elts, modprs[1]);
+	return(monodromy);
 }
 
 afuch_from_monodromy(X, monodromy)={
-	my();
-	
 	return();
 }
 
