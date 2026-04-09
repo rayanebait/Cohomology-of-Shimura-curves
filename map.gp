@@ -1082,7 +1082,7 @@ map_from_monodromy(G, d, monodromy)={
 \\ and a covering orbifold Srev -> S coming from monodromy.
 \\ Computes a one face map Grevone -> Srev with orbifold
 \\ points at its vertices as well as a side pairing.
-map_monodromy_getonefacespair(G, d, monodromy)={
+map_monodromy_get_spair(G, d, monodromy)={
 	my(Gdual, Gdualrev, Gdualrevdual);
 	Gdual=map_dual(G);
 	Gdualrev=map_from_monodromy(Gdual, d, monodromy);

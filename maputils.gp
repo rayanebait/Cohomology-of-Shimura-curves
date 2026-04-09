@@ -29,7 +29,6 @@ rand_perm(n) =
   );
   return(g);
 }
-rand_cycs
 
 isperm(s)={
 	return(#Set(s)==#s);
@@ -654,3 +653,56 @@ rand_afuchpermrepr_fromR(R,s1)={
 }
 \\g=20; d=12; relg=map_genrel(g); Gg=map_genword(g); mono0=rand_monodromy0(relg, d); mono=map_genmonodromy(mono0, g,d); Grev=map_from_monodromy(Gg, d, mono); map_info(Grev)
 
+P1reduce(elP1)={
+	my(x,y);
+	[el, ffone, ffzero]=elP1;
+	[x,y]=el;
+	if(y==ffzero,
+		return([ffone, ffzero]);
+	);
+	return([[x*y^-1, ffone], ffone, ffzero]);
+}
+P1isoo(elP1)={
+	return(elP1[1][2]==elP1[3]);
+}
+
+\\ P^1(F_q)
+P1homography_action(g, elP1)={
+	my(x,y);
+	[x,y]=elP1[1];
+	return([[g[1,1]*x+g[1,2]*y, g[2,1]*x+g[2,2]*y], elP1[2], elP1[3]]);
+}
+
+\\ j is a vector 
+inttoff(j, ffg, v)={
+	my(v, ffel);
+	v=variable(ffg.pol);
+	ffel=subst(Pol(j, v), v, ffg);
+	return(ffel);
+}
+
+\\ x is a t_FFELT
+fftoint(x)={
+	return(subst(x.pol, variable(x.pol), x.p));
+}
+
+\\adding 1 in base p
+\\data=[digs, ~p, ~i]
+incrbasep(~data)={
+	my(f,p);
+	f=#data[1]+1;
+	p=data[2];
+	if(data[1][f-data[3]]==p-1,
+		data[1][f-data[3]]=0;
+		if(data[3]<f-1,
+			data[3]=data[3]+1;
+			incrbasep(~data);
+		,/*else*/
+			data[3]=1;
+		);
+	,/*else*/
+		data[1][f-data[3]]++;
+		data[3]=1;
+	);
+	return();
+}

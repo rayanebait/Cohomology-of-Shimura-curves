@@ -10,7 +10,15 @@ a Fuchsian group from a file. */
 
 
 
-
+algincenter(A,x)={
+	return(alginvol(A,x)==x);
+}
+algeqmodcenter(A,x,y)={
+	my(z);
+	z=alginv(A,y);
+	z=algmul(A,x,z);
+	return(algincenter(A,z));
+}
 
 /*Returns a map (or graph embedding) associated*/
 /*to the fundamental domain stored in X. In the format */
@@ -154,59 +162,18 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 }
 
 
-afuch_spair_from_monodromy()={
-	return();
+afuch_spair_from_monodromy(X, monodromy)={
+	return(G);
 }
 
-P1reduce(elP1)={
-	my(x,y);
-	[el, ffone, ffzero]=elP1;
-	[x,y]=el;
-	if(y==ffzero,
-		return([ffone, ffzero]);
-	);
-	return([[x*y^-1, ffone], ffone, ffzero]);
-}
-P1isoo(elP1)={
-	return(elP1[1][2]==elP1[3]);
-}
 
-\\ P^1(F_q)
-P1homography_action(g, elP1)={
-	my(x,y);
-	[x,y]=elP1[1];
-	return([[g[1,1]*x+g[1,2]*y, g[2,1]*x+g[2,2]*y], elP1[2], elP1[3]]);
-}
+afuch_cong_get_monodromy(X, pr)={
+	my(A, elts, modpr);
+	A=afuchalg(X);
+	elts=afuchelts(X);
+	modpr=algmodprinit(A, pr);
 
-\\ j is a vector 
-inttoff(j, ffg, v)={
-	my(v, ffel);
-	v=variable(ffg.pol);
-	ffel=subst(Pol(j, v), v, ffg);
-	return(ffel);
-}
 
-\\ x is a t_FFELT
-fftoint(x)={
-	return(subst(x.pol, variable(x.pol), x.p));
-}
-
-\\adding 1 in base p
-\\data=[digs, ~p, ~i]
-incrbasep(~data)={
-	if(data[1][data[3]]==data[2]-1,
-		data[1][data[3]]=0;
-		if(data[3]<#data[1],
-			data[3]=data[3]+1;
-			incrbasep(~data);
-		);
-	,/*else*/
-		data[1][data[3]]++;
-		data[3]=1;
-	);
-};
-
-afuch_cong_get_monodromy(A, elts, modpr)={
 	\\ [x,y] dans P^1 -> [ax+by, cx+dy]
 	\\ a chaque g dans elts -> permutation s(g) dans S_{q+1}
 	\\ agir avec g sur chaque elt de P^1 -> [a,1] ou [1, 0]
@@ -261,7 +228,7 @@ afuch_cong_get_monodromy(A, elts, modpr)={
 		monodromy[i]=s;
 	);
 	return(monodromy);
-};
+}
 
 \\ Given an arithmetic fuchsian group associated to
 \\ an order O and a level N computes the monodromy
@@ -285,7 +252,6 @@ afuch_cong(X, N, {flag=0})={
 	my(modprs);
 	modprs=vector(#prs, i, algmodprinit(A, prs[i]));
 		
-
 	xmodpr=algmodpr(A,x,modprs[i]);
 
 	return();
@@ -338,14 +304,3 @@ infoafuch(X)={
 	info(G);
 	return();
 }
-
-algincenter(A,x)={
-	return(alginvol(A,x)==x);
-}
-algeqmodcenter(A,x,y)={
-	my(z);
-	z=alginv(A,y);
-	z=algmul(A,x,z);
-	return(algincenter(A,z));
-}
-

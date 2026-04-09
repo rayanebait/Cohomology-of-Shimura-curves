@@ -51,6 +51,57 @@ test_cyc_lmtokk({iter=10^2})={
 	return();
 }
 
+test_inttoff({n=10^3})={
+	my(p, q, f, ffg);
+	p=nextprime(n);
+	f=floor(log(n));
+	q=p^f;
+	ffg=ffgen(q);
+	v=variable(ffg.pol);
+
+	for(i=1,n,
+		for(j=1, f,
+			u[j]=random(p);
+		);
+		if(Pol(u)!=inttoff(u, ffg, v).Pol, error("inttoff failed :", Pol(u), " ", inttoff(u,ffg,v)));
+	);
+	return();
+}
+test_ffintconv({n=2^5})={
+	my(p, q, f, ffg);
+	p=nextprime(n);
+	f=floor(log(n));
+	q=p^f;
+	ffg=ffgen(q);
+	v=variable(ffg.pol);
+
+	my(digs);
+	for(i=0, q-1,
+		digs=digits(i,p);
+		if(i!=fftoint(inttoff(digs, ffg, v)), error("ff to int and int to ff conversions failed"));
+	);
+	return();
+}
+test_incrbasep({p=nextprime(2^4+random(2^4))})={
+	my(q, data=vector(3),f);
+	f=floor(log(p))+1;
+	data[1]=vector(f); \\represent an element of Fq as tuple of elements of Fp
+	data[2]=p;
+	data[3]=1;
+	q=p^f;
+	for(i=0, q-1,
+		P=Pol(data[1]);
+		if(subst(P, variable(P), p)!=i,
+			error("test incrbasep failed.");
+
+		);
+		incrbasep(~data);
+	);
+	return();
+}
+
 test_rand_kcyc();
 test_as_prodoftwocycs();
 test_cyc_lmtokk();
+test_ffintconv();
+test_incrbasep();
