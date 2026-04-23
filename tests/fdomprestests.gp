@@ -220,7 +220,7 @@ afuchtest_comparerelation(X)={
 
 /**/
 /*TODO: Signature [4,[2,2,2,2,2,2,3],0]-> [4,[(2, 6), (3,1)],0]*/
-my(Xs, pol, F, A, pr, J, Or);
+my(X, Xs, pol, F, A, pr, J, Or);
 Xs=List();
 
 \\ An example with F=Q(z11)^+, D=(1) and level 32.
@@ -241,11 +241,18 @@ testing the oneword and onehandle presentations.
 It then computes various testing utilities.
  */
 
-\\pol=y^2-8;
-\\F=nfinit(pol);
-\\pr=idealprimedec(F,3)[1];
-\\A=alginit(F, [[pr], [0,1]]);
-\\listput(~Xs,afuchinit(A));
+pol=y^2-8;
+F=nfinit(pol);
+pr=idealprimedec(F,3)[1];
+A=alginit(F, [[pr], [0,1]]);
+X=afuchinit(A);
+listput(~Xs,X);
+
+pr=idealprimedec(F,7)[1];
+
+my(monodromy, G,h,d,Grev, slpspair, pointersspair);
+monodromy=afuch_cong_monodromy(X, pr);
+[G,h,d, Grev, slpspair, pointersspair]=afuchcov_spair(X, monodromy);
 
 
 /*Storing and testing*/

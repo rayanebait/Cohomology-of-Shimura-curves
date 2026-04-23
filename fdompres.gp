@@ -174,20 +174,28 @@ afuchcov_spair(X, monodromy)={
 \\i.e. an afuch X and a monodromy representation associated to the
 \\map and side pairing stored in X, returns a one face side pairing obtained directly from the
 \\monodromy for Y aswell as a "type" presentation for Y.
-afuchcov_presentation(X,monodromy, {type="oneword"}, {eval=0})={
+afuchcov_presentation(X,monodromy, {type="oneword"},{compose=0}, {eval=0})={
 	my(G,h,d,Grev,slpspair, pointersspair,n);
+	\\ slpspair maps generators generators associated to side pairing for G
+	\\ to generators associated to side pairing for Grev
 	[G,h,d, Grev, slpspair, pointersspair]=afuchcov_spair(X,monodromy);
 	n=#G[1];
 	my(slp, pointers,rels, T,TfGrevdual);
+	\\ slp maps generators associated to side pairing for Grev, 
+	\\ generating Gamma2, to generators of a presentation of the
+	\\ given type.
 	[slp, pointers, rels, T, TfGrevdual]=\
 			map_topological_presentation(Grev, type);
 
+	if(!compose,
+		return([slpspair, pointersspair, slp, pointers, rels]);
+	);
 
-	[slp, pointers]=slpcompose([#monodromy, ], [slp, slpspair], [pointers, pointersspair]);
+	[slp, pointers]=slpcompose([#monodromy, #monodromy], [slp, slpspair], [pointers, pointersspair]);
 	my(rels);
 	rels=[rels];
 	\\slpcompose slpspair et slp
-	rels=concat(rels, map_get_ellipticrels(X, map_dual(Grev), h, #pointers,TfGrevdual));
+	rels=concat(rels, map_get_ellipticrels(X, map_dual(Grev), h, #pointers, TfGrevdual));
 	if(!eval, return([slp, pointers, rels]));
 
 	return([gens, rels]);
@@ -195,7 +203,12 @@ afuchcov_presentation(X,monodromy, {type="oneword"}, {eval=0})={
 
 
 
-afuch_congruence_from_monodromy(X, pr)={
+\\ Given an arithmetic fuchsian group of the form O^x for O 
+\\ a maximal order in a quaternion algebra A and a prime pr in
+\\ F the center of A. Returns the monodromy representation of
+\\ O_0(pr) as a vector of permutations, one for each generator
+\\ e in elts where elts=afuchelts(X).
+afuch_cong_monodromy(X, pr)={
 	my(A, elts, modpr);
 	A=afuchalg(X);
 	elts=afuchelts(X);
@@ -212,8 +225,8 @@ afuch_congruence_from_monodromy(X, pr)={
 	one=vector(d, i, if(i==1, 1))~;
 
 	my(ffzero, ffone, ffg, v);
-	ffzero=algmodpr(A, zero, modpr);
-	ffone=algmodpr(A, one, modpr);
+	ffzero=algmodpr(A, zero, modpr)[1,1];
+	ffone=algmodpr(A, one, modpr)[1,1];
 	ffg=ffgen(ffone);
 	v=variable(ffg.pol);
 
@@ -262,7 +275,8 @@ afuch_congruence_from_monodromy(X, pr)={
 \\ Given an arithmetic fuchsian group associated to
 \\ an order O and a level N computes the monodromy
 \\ representation of the subgroup O_0(N) 
-\\ Assumes each prime of the level N in F splits A and the level
+\\ Currently assumes each prime of the level N in F
+\\ splits A and the level
 \\ is square free in F.
 afuch_congruence(X, N, {flag=0})={
 	my(A, F, deg, dA, dF, elts);
@@ -283,10 +297,6 @@ afuch_congruence(X, N, {flag=0})={
 	modprs=vector(#prs, i, algmodprinit(A, prs[i]));
 	monodromy=afuch_congruence_get_monodromy(A, elts, modprs[1]);
 	return(monodromy);
-}
-
-afuch_from_monodromy(X, monodromy)={
-	return();
 }
 
 tosig(v)={
