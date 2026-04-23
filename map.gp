@@ -511,7 +511,7 @@ map_connected_components(G, {CC=List()})={
 }
 
 /*Builds the map obtained by gluing the faces of G along T*/
-/*a tree in the underlying graph of G^* */
+/*a tree in the underlying graph of the dual graph G^*. */
 map_gluealongT(G, T, {type=1}, {withGone=0})={
 		/*Return if it already has one face that is T is empty*/
 		if(#T==0, 
@@ -534,11 +534,11 @@ map_gluealongT(G, T, {type=1}, {withGone=0})={
 		[s1,s2]=G;
 		n=#s1;
 
-		my(g, sone);
+		my(g, s1one, sone);
 		g=(2-(#permcycles(s1*s2)-n/2+#T+1))/2;
+		s1one=vectorsmall(n,i,i);
+		sone=vectorsmall(n,i,i);
 		if(g==0,
-			sone=vectorsmall(n,i,i);
-			s1one=vectorsmall(n,i,i);
 			if(withGone,
 				return([s1one,sone,1, [[],[]]]);
 			,/*else*/
@@ -554,10 +554,8 @@ map_gluealongT(G, T, {type=1}, {withGone=0})={
 			in_T[e[2]]=1;
 		); 
 		
+		my(sinv);
 		/*Build s1one and s2one*/
-		my(s1one, k, sinv);
-		s1one=vectorsmall(n,i,i);
-		sone=vectorsmall(n,i,i);
 		if(type,
 			sinv=s2^-1;
 		,/*else*/
@@ -1003,13 +1001,15 @@ map_topological_presentation(G, {type="oneword"})={
 	return([slp, pointers, rel, T, TfGdual]);
 }
 
-/*Returns a side pairing for the map G/T->S as described in framework.txt*/
-/*Here G should be tought as G^*->S for a map G-> S*/
+/*Returns a side pairing for the map ((G^*)/T)^*->S, that is, for the
+ map with underlying graph G-T in S, or also the gluing of the faces of
+G along T, as described in framework.txt*/
 map_quotientT(G, T, TvG)={
 	my(vG);
 	vG=map_vertex_index(G);
 
 	my(s0one, s1one, s2one, seed);
+	\\s2one fixes edges of G in T,
 	[s1one, s2one, seed]=map_gluealongT(G, T, 0);
 	s0one=(s2one^-1)*s1one;
 
@@ -1048,6 +1048,7 @@ map_quotientT(G, T, TvG)={
 	[slp, pointers]=slpcompose([n,n_one+f], [slp, slp_conjs],[pointers, pointers_conjs]);
 	return([slp, pointers, s1one, s2one, seed]);
 }
+
 map_quotient_spair(G)={
 	my(T, TvG);
 	[T, TvG]=map_getT(G, 0);
@@ -1058,8 +1059,7 @@ map_quotient_spair(G)={
 \\ The new edge set is Erev=E x {1,..., d}, we view it as 
 \\ {1,...,#E*d} with lexicographic ordering.
 \\ The covering vertex permutation s0rev is s0 x id_{1,...,d}
-\\ while s1rev is s1(_) x (monodromy(_)(s1(_))).
-\\ TODO: Le sidepairing devrait être calculé dans fdompres.
+\\ while s1rev is (i,j)->s1(i) x (monodromy(s1(i))(j)).
 map_from_monodromy(G, d, monodromy)={
 	my(s0, s1, s2, n);
 	[s1,s2]=G;
@@ -1078,13 +1078,17 @@ map_from_monodromy(G, d, monodromy)={
 	return([s1rev, s1rev*s0rev^-1]);
 }
 
-\\ Given a map G->S with orbifold points at vertices of G
-\\ and a covering orbifold Srev -> S coming from monodromy.
-\\ Computes a one face map Grevone -> Srev with orbifold
-\\ points at its vertices as well as a side pairing.
+\\ Given a map G->S with S=Gamma1\h with orbifold points at vertices of G
+\\ and a covering orbifold Srev -> S with Srev=Gamma2\h and Gamma2 a subgroup
+\\ Gamma1 coming from monodromy,
+\\ computes a one face map Grevone -> Srev with orbifold
+\\ points at its vertices as well as a side pairing for Gamma2.
 map_spair_from_monodromy(G, d, monodromy)={
 	my(Gdual, Gdualrev, Gdualrevdual);
+	\\Get single vertex map corresponding to unique polygon P
 	Gdual=map_dual(G);
+	\\Now has d vertices corresponding to conjugate polygons gP
+	\\ for gGamma2 in Gamma2\Gamma1 of size d. 
 	Gdualrev=map_from_monodromy(Gdual, d, monodromy);
 
 
@@ -1094,6 +1098,7 @@ map_spair_from_monodromy(G, d, monodromy)={
 	\\ at seed in clock-wise orientation (s0one). Then the i'th
 	\\ edge, that is e s.t index[e]=i is associated to slp[pointers[i]].
 	[slp, pointers, s1one, s2one, seed]=map_quotient_spair(Gdualrev);
+	s0one=s2one^-1*s1one;
 	index=map_indexcycle(s0one, s0one[seed]);
 
 	my(s0,s1,s2,g);

@@ -1,12 +1,15 @@
-An slp is a function from a set of generators of size n to another of size m.
+An slp is a procedure that takes a set of generators of size n 
+and outputs another of size m.
 
 A side pairing associates to any edge e of a map G-> S to a surface an automorphism
-g of the induced covering X-p^{-1}(G) -> S-G from the universal covering X->S.
+g of the induced covering X-p^{-1}(V(G)) -> S-V(G) from the universal covering X->S. The notion makes sense when G is the projection
+of the boundary of a fundamental domain for S in X.
 
 The image of a side pairing generates the automorphism group.
 
 Given a map G->S and the dual map G^*-> S-V(G) and a covering tree T in G^*,
-denote by G/T -> S the only map with underlying graph isomorphic to G^*/T and
+denote by G/T -> S the only map with underlying graph of the dual
+isomorphic to G^*/T and
 such that G/T-> S factors through G -> S. The graph G/T is the gluing of the faces
 of G-> S along T.
 
@@ -15,6 +18,20 @@ Normalizations :
 	At the beginning we start with a side pairing elts from afuchelts and an
 involution from afuchspair associated to elts. Then we build a map G->S
 with a new involution without fixed points s1 and a function h with 
-side pairing i -> elts(h(i)).
+side pairing i -> elts(h(i)). The afuch_presentation function
+returns an slp, pointers and relations rels that, given elts and
+h, can compute a set of generators verifying the relations in 
+rels.
 
-	In 
+afuchcov functions :
+	Let elts be a set of generators for an afuch and let 
+	monodromy be a vector with i'th entry a 
+	permutation s_i associated to elts[i] and such that the
+	s_i's verify the relations verified by elts, assume given
+   
+	the afuchcov
+	functions compute :
+		-(afuchcov_spair) a map Grev  side pairing one face fundamental domain
+
+
+	

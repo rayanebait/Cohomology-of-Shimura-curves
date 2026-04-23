@@ -160,32 +160,39 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
 		return([gens,rels]);
 }
-afuch_covering_presentation(X, monodromy, {type="oneword"}, {eval=0})={
-	my(G,h);
+
+afuchcov_spair(X, monodromy)={
+	my(G,h, d, Grev, slpspair, pointersspair);
 	[G,h]=map_from_afuch(X);
+	d=#monodromy[1];
+	[Grev, slpspair, pointersspair]=map_spair_from_monodromy(G, d, monodromy);
+	slpspair=slpnormalize(slpspair, h, #pointersspair);
+	return([G,h,d, Grev, slpspair, pointersspair]);
 
-	my(Grev, slpspair, pointersspair);
-	[Grev, slpspair, pointersspair]=map_spair_from_monodromy(G);
-
+}
+\\Given a covering representation of an arithmetic fuchsian group Y,
+\\i.e. an afuch X and a monodromy representation associated to the
+\\map and side pairing stored in X, returns a one face side pairing obtained directly from the
+\\monodromy for Y aswell as a "type" presentation for Y.
+afuchcov_presentation(X,monodromy, {type="oneword"}, {eval=0})={
+	my(G,h,d,Grev,slpspair, pointersspair,n);
+	[G,h,d, Grev, slpspair, pointersspair]=afuchcov_spair(X,monodromy);
+	n=#G[1];
+	my(slp, pointers,rels, T,TfGrevdual);
 	[slp, pointers, rels, T, TfGrevdual]=\
 			map_topological_presentation(Grev, type);
 
-	\\Pas sur que ce soit lui qu'il faut renormaliser + peut être
-	\\slpcompose slpspair et slp
-	slp=slpnormalize(slp, h, #pointersspair);
 
+	[slp, pointers]=slpcompose([#monodromy, ], [slp, slpspair], [pointers, pointersspair]);
 	my(rels);
 	rels=[rels];
+	\\slpcompose slpspair et slp
 	rels=concat(rels, map_get_ellipticrels(X, map_dual(Grev), h, #pointers,TfGrevdual));
 	if(!eval, return([slp, pointers, rels]));
 
 	return([gens, rels]);
 }
 
-
-afuch_spair_from_monodromy(X, monodromy)={
-	return(G);
-}
 
 
 afuch_congruence_from_monodromy(X, pr)={
