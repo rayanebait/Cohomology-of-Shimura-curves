@@ -208,7 +208,7 @@ afuchcov_presentation(X,monodromy, {type="oneword"},{compose=0}, {eval=0})={
 \\ F the center of A. Returns the monodromy representation of
 \\ O_0(pr) as a vector of permutations, one for each generator
 \\ e in elts where elts=afuchelts(X).
-afuch_cong_monodromy(X, pr)={
+afuch_monodromy_from_pr(X, pr)={
 	my(A, elts, modpr);
 	A=afuchalg(X);
 	elts=afuchelts(X);
@@ -224,14 +224,16 @@ afuch_cong_monodromy(X, pr)={
 	zero=vector(d)~;
 	one=vector(d, i, if(i==1, 1))~;
 
-	my(ffzero, ffone, ffg, v);
+	my(ffzero, ffone, ffg, ffmod, v);
 	ffzero=algmodpr(A, zero, modpr)[1,1];
 	ffone=algmodpr(A, one, modpr)[1,1];
 	ffg=ffgen(ffone);
-	v=variable(ffg.pol);
+	ffmod=ffone.mod;
+	v=variable(ffmod);
 
-	my(g, gmodpr, q,f ffj, gffj, s, monodromy, data=vector(3), P1oo);
-	f=poldegree(ffg.pol); \\residual degree
+	my(g, gmodpr, q,f ffj, gffj, s, monodromy, data=vector(3), P1oo, gj);
+	p=modpr[1][1];
+	f=poldegree(ffmod); \\residue degree
 	data[1]=vector(f); \\represent an element of Fq as tuple of elements of Fp
 	data[2]=p;
 	data[3]=1;
@@ -244,27 +246,29 @@ afuch_cong_monodromy(X, pr)={
 		\\gmodprs=vector(#modprs, u, algmodpr(A, g, modprs[u]));
 		gmodpr=algmodpr(A, g, modpr); 
 		s=vectorsmall(q+1);	
-		for(j=0, q,
+		for(j=0, q-1,
 			\\data[1]==j 
 			\\convert j to finite field element 
-			ffj=inttoff(data[1], gmodpr, modpr);
-			elP1=[[ffj, ffone],ffzero, ffone];
+			ffj=inttoff(data[1], ffg, modpr);
+			elP1=[[ffj, ffone],ffone, ffzero];
 			\\act with g 
-			gelP1=homography(gmodpr, elP1);
+			gelP1=P1homography_act(gmodpr, elP1);
 			if(P1isoo(gelP1),
-				s[j]=q+1;
+				\\ g.j
+				gj=q;
 			,/*else*/
-				s[j]=fftoint(P1reduce(gelP1[1])[1]);
+				\\ g.j
+				gj=fftoint(P1reduce(gelP1)[1][1]);
 			);
-			s[j]=fftoint(gffj);
+			s[j+1]=gj+1;
 			\\increment j 
 			incrbasep(~data);
 		);
-		elP1=P1reduce(homography(gmodpr, P1oo));
+		gelP1=P1reduce(P1homography_act(gmodpr, P1oo));
 		if(P1isoo(gelP1),
 			s[q+1]=q+1;
 		,/*else*/
-			s[q+1]=elP1[1][1];
+			s[q+1]=fftoint(gelP1[1][1])+1;
 		);
 		\\ FAIRE OO via [ffone, ffzero], implémenter P^1
 		monodromy[i]=s;

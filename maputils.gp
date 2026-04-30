@@ -658,16 +658,17 @@ P1reduce(elP1)={
 	[el, ffone, ffzero]=elP1;
 	[x,y]=el;
 	if(y==ffzero,
-		return([ffone, ffzero]);
+		return([[ffone, ffzero],ffone,ffzero]);
 	);
 	return([[x*y^-1, ffone], ffone, ffzero]);
 }
+
 P1isoo(elP1)={
 	return(elP1[1][2]==elP1[3]);
 }
 
 \\ P^1(F_q)
-P1homography_action(g, elP1)={
+P1homography_act(g, elP1)={
 	my(x,y);
 	[x,y]=elP1[1];
 	return([[g[1,1]*x+g[1,2]*y, g[2,1]*x+g[2,2]*y], elP1[2], elP1[3]]);

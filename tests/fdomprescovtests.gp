@@ -28,6 +28,6 @@ X=afuchinit(A);
 pr=idealprimedec(F, 7)[1];
 
 my(monodromy, G,h,d,Grev, slpspair, pointersspair);
-monodromy=afuch_cong_monodromy(X, pr);
+monodromy=afuch_monodromy_from_pr(X, pr);
 [G,h,d, Grev, slpspair, pointersspair]=afuchcov_spair(X, monodromy);
 

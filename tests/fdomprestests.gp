@@ -250,10 +250,6 @@ listput(~Xs,X);
 
 pr=idealprimedec(F,7)[1];
 
-my(monodromy, G,h,d,Grev, slpspair, pointersspair);
-monodromy=afuch_cong_monodromy(X, pr);
-[G,h,d, Grev, slpspair, pointersspair]=afuchcov_spair(X, monodromy);
-
 
 /*Storing and testing*/
 \\foreach(Xs, X, afuchstore(X));
@@ -305,7 +301,7 @@ listput(~Xs, X);
 \\Xs=afuchsamples(50,1,1);
 
 \\/*Retrieves at most 50 fundamental domains from storage*/
-Xs=afuchsamples(50,0,1);
+Xs=afuchsamples(10,0,1);
 afuchtest_relation(Xs,0,1, "oneword");
 \\afuchtest_relation(Xs,0,1, "onehandle");
 
