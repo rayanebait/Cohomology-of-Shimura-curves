@@ -1041,11 +1041,11 @@ map_quotientT(G, T, TvG)={
 			\\SLPS
 			[slpold, slpspaths], n,\
 			\\POINTERS
-			[pointersold, pointerspaths]\
+			[pointersold, pointersspaths]\
 		);
 
 	/*Slp and pointers of new side pairing*/
-	[slp, pointers]=slpcompose([n,n_one+f], [slp, slp_conjs],[pointers, pointers_conjs]);
+	[slp, pointers]=slpcompose([n,(n_one+2*f)/2], [slp, slp_conjs],[pointers, pointers_conjs]);
 	return([slp, pointers, s1one, s2one, seed]);
 }
 
@@ -1101,13 +1101,14 @@ map_spair_from_monodromy(G, d, monodromy)={
 	s0one=s2one^-1*s1one;
 	index=map_indexcycle(s0one, s0one[seed]);
 
-	my(s0,s1,s2,g);
+	my(Gnorm, s0,s1,s2,g);
 	\\ Here s1=g^-1.s1one.g and s2=g^-1.s2one.g so that
 	\\ the side pairing of [s1,s2] is obtained from
 	\\ that of [s1one, s2one] by letting e in s1 associate
 	\\ slp[pointers[i]] if i=index[g[e]]
-	[s1, s2, g]=perm_normalize_wrt([s1one,s2one],1,,1);
-	g=g^-1[1..#s1];
+	[Gnorm, g]=perm_normalize_wrt([s1one,s2one],1,,1);
+	[s1,s2]=Gnorm;
+	g=(g^-1)[1..#s1];
 
 	normalizer=vector(#s1, e, index[g[e]]);
 	slp=slpnormalize(slp, normalizer, #s1one);
