@@ -5,7 +5,8 @@ A side pairing associates to any edge e of a map G-> S to a surface an automorph
 g of the induced covering X-p^{-1}(V(G)) -> S-V(G) from the universal covering X->S. The notion makes sense when G is the projection
 of the boundary of a fundamental domain for S in X.
 
-The image of a side pairing generates the automorphism group.
+The image of a side pairing generates the automorphism group of 
+the covering X-p^{-1}(V(G)) -> S-V(G).
 
 Given a map G->S and the dual map G^*-> S-V(G) and a covering tree T in G^*,
 denote by G/T -> S the only map with underlying graph of the dual

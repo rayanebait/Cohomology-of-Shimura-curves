@@ -590,37 +590,39 @@ map_gluealongT(G, T, {type=1}, {withGone=0})={
 /*of G and lift shortest paths in T from vertex 1*/
 /*to each vertex. Then used to build the presentation*/
 /*of the fundamental group of the underlying graph of G*/
-/*associated to T the covering tree T.*/
+/*associated to the covering tree T.*/
 map_liftalongT(G, T, TvG)={
-	my(s1,s2, s, sinv, n, sc, f);
+	my(s1,s2, s, sinv, n, sc, v);
 	[s1,s2]=G;
 	s=(s2^-1)*s1;
 	sinv=s^-1;
 	n=#s1;
 	sc=permcycles(s);
-	f=#sc;
+	v=#sc;
 	vG=map_face_index([s1,s]);
 
 
    	my(seedlp, n_one);
-	n_one=n-2*(f-1);
+	n_one=n-2*(v-1);
 	
 	my(slpspaths, pointersspaths);
-	slpspaths=vector(f);
-	pointersspaths=vector(f);
+	slpspaths=vector(v);
+	pointersspaths=vector(v);
 	slpspaths[1]=[-1,0];
 	pointersspaths[1]=1;
 
 	my(last, lastvindex, lastvTindex, index, k, e);
 	k=1;
-	for(i=2, f,
+	for(i=2, v,
 		/*
 		   The shortest path from
 			the first node of T to the node 
 			of index i in the ordering of T.
 		*/
 		e=T[i-1][1];
+		/*In ordering of vG*/
 		lastvindex=vG[T[i-1][1]];
+		/*In ordering of T (dfs)*/
 		lastvTindex=TvG[lastvindex];
 
 		/*Recover index of last instruction in slp*/
@@ -681,7 +683,7 @@ map_liftalongTspecial(G, T, TfG, {type=1})={
 	slpsgammai=vector(f,u, makeslpgammai(u));
 
 
-   	my(seedlp, n_one);
+   	my(n_one);
 	n_one=n-2*(f-1);
 	
 	my(slpgis, pointersgi, approxtotlength=maxfacesize*n);
@@ -689,7 +691,8 @@ map_liftalongTspecial(G, T, TfG, {type=1})={
 	slpgis=vector(approxtotlength);
 	/*Used to read the slp : pointersgi[fTindex]*/
 	/*points to the index of the last edge of the path*/
-	/*associated to fTindex in slpgis.*/
+	/*associated to fTindex in slpgis. Where fTindex is 
+	 the index of a vertex f in the ordering of T.*/
 	pointersgi=vector(f);
 	slpgis[1]=[-1,0];
 	pointersgi[1]=1;
@@ -831,6 +834,8 @@ buildrel_and_pointers(pointers, seed, s, s1, index, seen)={
 	return([newpointers, rel]);
 }
 
+\\ Given a map Gone -> S with one vertex
+\\ 
 map_surface_presentation(Gone, seedslp, {type="oneword"})={
 	my(s1one, s2one,s2oneinv);
 	[s1one,s2one]=Gone;
@@ -968,7 +973,8 @@ map_topological_presentation_fromT(G, T, TfG, type)={
 	[s1one, s2one, seed]=map_gluealongT(G, T);
 	Gone=[s1one,s2one];
 	my(slpsgammai, slpgis, pointersgi);
-	[slpsgammai, slpgis, pointersgi]=map_liftalongTspecial(G,T, TfG);
+	[slpsgammai, slpgis, pointersgi]=\
+			map_liftalongTspecial(G,T, TfG);
 
 	my(surface_slp, surface_pointers,surface_rel,\
 			loopfaces_slp, loopfaces_pointers, face_rel);
@@ -979,7 +985,7 @@ map_topological_presentation_fromT(G, T, TfG, type)={
 
 	my(fullslp, pointers, rels);
 	\\ Concatenate without connecting
-	[fullslp,pointers]=slpconcat(\
+	[fullslp, pointers]=slpconcat(\
 			\\ SLPS
 			[surface_slp, loopfaces_slp], #G[1],\
 			\\ POINTERS
@@ -1001,16 +1007,16 @@ map_topological_presentation(G, {type="oneword"})={
 	return([slp, pointers, rel, T, TfGdual]);
 }
 
-/*Returns a side pairing for the map ((G^*)/T)^*->S, that is, for the
- map with underlying graph G-T in S, or also the gluing of the faces of
-G along T, as described in framework.txt*/
+/*Returns a side pairing for the map ((G^*)/T)^*->S, that is, for
+  the map with underlying graph G-T in S, or also the gluing of
+  the faces of G along T, as described in framework.txt*/
 map_quotientT(G, T, TvG)={
 	my(vG);
 	vG=map_vertex_index(G);
 
 	my(s0one, s1one, s2one, seed);
-	\\s2one fixes edges of G in T,
 	[s1one, s2one, seed]=map_gluealongT(G, T, 0);
+	\\s2one now fixes edges of G in T,
 	s0one=(s2one^-1)*s1one;
 
 	my(slpspaths, pointersspaths);
@@ -1018,12 +1024,12 @@ map_quotientT(G, T, TvG)={
 	[slpspaths, pointersspaths]=map_liftalongT(G, T, TvG);
 
 	my(slpold, pointersold);
-	/*Slp and pointers of old side pairing*/
+	\\ Build slp and pointers for old generators such that
+	\\ edge e is associated to slpold[pointersold[e]]
 	[slpold, pointersold]=map_surface_presentation([s1one, s0one], seed, "oneword");
 
 	my(slp_conjs, pointers_conjs, e);
 	e=seed;
-	/*Slp and pointers of new side pairing*/
 	slp_conjs=concat(\
 			\\SLPS
 			vector(n_one, u,\
@@ -1049,11 +1055,19 @@ map_quotientT(G, T, TvG)={
 	return([slp, pointers, s1one, s2one, seed]);
 }
 
+\\ Acts as if G is the dual of some map G' -> S. 
+\\ Computes a covering tree T in underlying graph of G, 
+\\ corresponding to a covering tree in the graph with vertices
+\\ faces of G'-> S and edges those e such that e and s1(e) lie
+\\ in different faces of G'-> S. Then computes a map G/T-> S
+\\ such that the dual has underlying graph G'-T, a simple loop.
+\\ Also computes a side pairing associated to G'-T -> S.
 map_quotient_spair(G)={
 	my(T, TvG);
 	[T, TvG]=map_getT(G, 0);
 	return(map_quotientT(G, T, TvG));
 }
+
 \\ Build a covering map coming from a monodromy
 \\ action.
 \\ The new edge set is Erev=E x {1,..., d}, we view it as 
@@ -1078,17 +1092,19 @@ map_from_monodromy(G, d, monodromy)={
 	return([s1rev, s1rev*s0rev^-1]);
 }
 
-\\ Given a map G->S with S=Gamma1\h with orbifold points at vertices of G
+\\ Given a connected map G->S with S=Gamma1\h with orbifold points at vertices of G
 \\ and a covering orbifold Srev -> S with Srev=Gamma2\h and Gamma2 a subgroup
 \\ Gamma1 coming from monodromy,
 \\ computes a one face map Grevone -> Srev with orbifold
 \\ points at its vertices as well as a side pairing for Gamma2.
 map_spair_from_monodromy(G, d, monodromy)={
 	my(Gdual, Gdualrev, Gdualrevdual);
-	\\Get single vertex map corresponding to unique polygon P
+	\\Get single vertex map corresponding to a polygon P
 	Gdual=map_dual(G);
-	\\Now has d vertices corresponding to conjugate polygons gP
-	\\ for gGamma2 in Gamma2\Gamma1 of size d. 
+
+	\\ Covering map has d vertices corresponding to conjugate 
+	\\ polygons gP for gGamma2 in Gamma2\Gamma1. Where
+	\\ d=# Gamma2\Gamma1
 	Gdualrev=map_from_monodromy(Gdual, d, monodromy);
 
 
@@ -1120,3 +1136,6 @@ map_spair_from_monodromy(G, d, monodromy)={
 
 	return([Grevone, slp, pointers]);
 }
+
+
+
