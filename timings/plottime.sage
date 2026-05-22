@@ -29,3 +29,10 @@ Pfdom = points(Lfdom, legend_label="fdom", color='blue')
 Poneword = points(Loneword, legend_label="oneword", color='green', marker="+", size=40, frame=True)
 
 (Pmagma + Pfdom + Poneword).save("time.png")
+
+var('a,b')
+model(x) = a+b*x
+print("magma", find_fit([[log(p[0]),log(p[1])] for p in Lmagma],model))
+print("fdom", find_fit([[log(p[0]),log(p[1])] for p in Lfdom],model))
+print("oneword", find_fit([[log(p[0]),log(p[1])] for p in Loneword],model))
+
