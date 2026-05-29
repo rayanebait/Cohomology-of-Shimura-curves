@@ -347,7 +347,7 @@ map_dfsinit(G, ~Phi, ~data, {type=1})={
 	a graph embedding G starting at edge seed=1.
 
 	Initialize my(data) as a reference with map_dfs(G, ~data)
-	to perform a dfs in Gdual and compute a covering tree T.
+	to perform a dfs in Gdual and compute a spanning tree T.
 	Phi has the form
 		[s1, s, sc, vG]=Phi;
 	data has the form
@@ -423,7 +423,7 @@ map_dfs(~Phi, ~data, {type=1})={
 	return();
 }
 
-\\Returns a covering tree in G
+\\Returns a spanning tree in G
 \\in the format of a vector of couple
 \\ of edges [e, s1(e)] such that 
 \\e and s1(e) lie in different vertices of G
@@ -586,11 +586,10 @@ map_gluealongT(G, T, {type=1}, {withGone=0})={
 		);
 }
 
-/*Act as if there are no punctures at vertices*/
-/*of G and lift shortest paths in T from vertex 1*/
+/* Builds slps for shortest paths in T from vertex 1*/
 /*to each vertex. Then used to build the presentation*/
 /*of the fundamental group of the underlying graph of G*/
-/*associated to the covering tree T.*/
+/*associated to a spanning tree T.*/
 map_liftalongT(G, T, TvG)={
 	my(s1,s2, s, sinv, n, sc, v);
 	[s1,s2]=G;
@@ -620,9 +619,7 @@ map_liftalongT(G, T, TvG)={
 			of index i in the ordering of T.
 		*/
 		e=T[i-1][1];
-		/*In ordering of vG*/
-		lastvindex=vG[T[i-1][1]];
-		/*In ordering of T (dfs)*/
+		lastvindex=vG[e];
 		lastvTindex=TvG[lastvindex];
 
 		/*Recover index of last instruction in slp*/
@@ -1007,9 +1004,10 @@ map_topological_presentation(G, {type="oneword"})={
 	return([slp, pointers, rel, T, TfGdual]);
 }
 
-/*Returns a side pairing for the map ((G^*)/T)^*->S, that is, for
-  the map with underlying graph G-T in S, or also the gluing of
-  the faces of G along T, as described in framework.txt*/
+/*Assuming G^* has many vertices, returns a side pairing for the map 
+  ((G^*)/T)^*->S, that is, for the
+ map with underlying graph G-T in S, or also the gluing of the faces of
+G along T, as described in framework.txt*/
 map_quotientT(G, T, TvG)={
 	my(vG);
 	vG=map_vertex_index(G);
@@ -1024,8 +1022,8 @@ map_quotientT(G, T, TvG)={
 	[slpspaths, pointersspaths]=map_liftalongT(G, T, TvG);
 
 	my(slpold, pointersold);
-	\\ Build slp and pointers for old generators such that
-	\\ edge e is associated to slpold[pointersold[e]]
+	/*Slp and pointers of old side pairing*/
+	/*NON faudra assumer qu'on a déjà un side pairing pour G*/
 	[slpold, pointersold]=map_surface_presentation([s1one, s0one], seed, "oneword");
 
 	my(slp_conjs, pointers_conjs, e);
@@ -1098,43 +1096,61 @@ map_from_monodromy(G, d, monodromy)={
 \\ computes a one face map Grevone -> Srev with orbifold
 \\ points at its vertices as well as a side pairing for Gamma2.
 map_spair_from_monodromy(G, d, monodromy)={
-	my(Gdual, Gdualrev, Gdualrevdual);
-	\\Get single vertex map corresponding to a polygon P
+	my(Gdual, Gdualrev);
+	\\Get single vertex map corresponding to unique polygon P
 	Gdual=map_dual(G);
+	\\Now has d vertices corresponding to conjugate polygons gP
+	\\ for gGamma2 in Gamma2\Gamma1 of size d. 
 
-	\\ Covering map has d vertices corresponding to conjugate 
-	\\ polygons gP for gGamma2 in Gamma2\Gamma1. Where
-	\\ d=# Gamma2\Gamma1
 	Gdualrev=map_from_monodromy(Gdual, d, monodromy);
 
+	my(s0rev, s1rev, s2rev,n);
+	n=#Gdual[2];
+	[s1rev,s2rev]=Gdualrev;
+	s0rev=s2rev^{-1}*s1rev;
 
-	my(s0one, s1one, s2one, index);
-	\\ To obtain the side pairing associated to s1one, order
-	\\ the edges in the support (the only cycle) of s0one starting
-	\\ at seed in clock-wise orientation (s0one). Then the i'th
-	\\ edge, that is e s.t index[e]=i is associated to slp[pointers[i]].
-	[slp, pointers, s1one, s2one, seed]=map_quotient_spair(Gdualrev);
-	s0one=s2one^-1*s1one;
-	index=map_indexcycle(s0one, s0one[seed]);
+	my(vG, T, TvG, slpspaths, pointersspath);
+	vG=map_face_index([s1rev,s0rev]);
+	\\ Spanning tree T in underlying graph of Gdualrev
+	[T,TvG]=map_getT(Gdualrev, 0);
 
-	my(Gnorm, s0,s1,s2,g);
-	\\ Here s1=g^-1.s1one.g and s2=g^-1.s2one.g so that
-	\\ the side pairing of [s1,s2] is obtained from
-	\\ that of [s1one, s2one] by letting e in s1 associate
-	\\ slp[pointers[i]] if i=index[g[e]]
-	[Gnorm, g]=perm_normalize_wrt([s1one,s2one],1,,1);
-	[s1,s2]=Gnorm;
-	g=(g^-1)[1..#s1];
 
-	normalizer=vector(#s1, e, index[g[e]]);
-	slp=slpnormalize(slp, normalizer, #s1one);
+	\\ slp from E(Gdual) to {alphai}={gi}\subset Gamma1.
+	\\Yields paths
+	\\ alphai=slpspaths[pointersspath[i]] such that if P is a fundamental
+	\\ polygon for Gamma1 yielding G with side pairing given by 
+	\\ elts as in framework.txt. Then if gi is the element of Gamma1
+	\\ associated to alphai using elts then gi.P is a fundamental polygon
+	\\ for Gamma1 with side pairing given by gi.elts.gi^{-1} and
+	\\ the property that the union U_i giP is a single connected 
+	\\ fundamental polygon for Gamma2.
+	[slpspaths, pointersspath]=map_liftalongT(Gdualrev, T, TvG);
 
-	my(Gdualrevone, Grevone);
-	Gdualrevone=[s1, s2];
-	s0=(s2^-1)*s1;
-	Grevone=[s1, s0];
+	my(slprev, pointersrev);
+	\\ slp from E(Gdual)U{alphai}
+	slprev=vector(3*d*n);
+	pointersrev=vectorsmall(3*d*n, e, 3*e);
+	for(i=1, d-1,
+		for(j=1, n,
+			e=i*n+j;
+			\\ Ici je me trompe c'est pas ça 
+			\\ je me balade dans G^* donc pas besoin de vG
+			\\ utile pour plus tard
+			\\slprev[3*(e-1)+1]=[n+vG[e], j];
+			\\slprev[3*(e-1)+2]=[n+vG[s1rev[e]],-1];
+			\\slprev[3*(e-1)+3]=[n+f+3*(e-1)+1, n+f+3*(e-1)+2];
 
-	return([Grevone, slp, pointers]);
+			\\alphak^{-1} for path alphak from 1 to vG[e]
+			slprev[3*(e-1)+1]=[n+vG[e], -1];
+			\\alphak^{-1}.e for e as seen in G^*, here written as j
+			slprev[3*(e-1)+2]=[n+f+3*(e-1)+1, j];
+			\\alphak^{-1}.e.alphak
+			slprev[3*(e-1)+3]=[n+f+3*(e-1)+2, n+vG[e]];
+			pointersrev[e]=3*e;
+		);
+	);
+	\\Reste à composer slprev et slpspaths pour obtenir le slp de Gdualred
+	return();
 }
 
 
