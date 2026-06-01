@@ -611,7 +611,7 @@ map_liftalongT(G, T, TvG)={
 	pointersspaths[1]=1;
 
 	my(last, lastvindex, lastvTindex, index, k, e);
-	k=1;
+	k=2;
 	for(i=2, v,
 		/*
 		   The shortest path from
@@ -1104,15 +1104,18 @@ map_spair_from_monodromy(G, d, monodromy)={
 
 	Gdualrev=map_from_monodromy(Gdual, d, monodromy);
 
-	my(s0rev, s1rev, s2rev,n);
-	n=#Gdual[2];
+	my(s0rev, s1rev, s2rev);
 	[s1rev,s2rev]=Gdualrev;
-	s0rev=s2rev^{-1}*s1rev;
+	s0rev=s2rev^-1*s1rev;
 
-	my(vG, T, TvG, slpspaths, pointersspath);
+	my(vG, T, TvG, slpspaths, pointersspath, n,f);
+	n=#Gdual[2];
 	vG=map_face_index([s1rev,s0rev]);
 	\\ Spanning tree T in underlying graph of Gdualrev
 	[T,TvG]=map_getT(Gdualrev, 0);
+	f=#T+1;
+
+	if(f!=d, error(""));
 
 
 	\\ slp from E(Gdual) to {alphai}={gi}\subset Gamma1.
@@ -1124,13 +1127,24 @@ map_spair_from_monodromy(G, d, monodromy)={
 	\\ for Gamma1 with side pairing given by gi.elts.gi^{-1} and
 	\\ the property that the union U_i giP is a single connected 
 	\\ fundamental polygon for Gamma2.
-	[slpspaths, pointersspath]=map_liftalongT(Gdualrev, T, TvG);
 
-	my(slprev, pointersrev);
-	\\ slp from E(Gdual)U{alphai}
+
+	\\TODO: Actuellement des chemins dans Gdualrev, devraient être des
+	\\ chemins dans Gdual ! Histoire de pas avoir un elts adapté
+	\\ gigantesque.
+	[slpspaths, pointersspath]=map_liftalongT(Gdualrev, T, TvG);
+	my(slptemp, pointerstemp);
+	\\ identity slp from E(Gdual) to E(Gdual)
+	slptemp=vector(n,i,[0,i]);
+	pointerstemp=vectorsmall(n,i,i);
+	\\ slp from E(Gdual) to E(Gdual) U {alphai}
+	[slpspaths, pointersspaths]=slpconcat([slptemp, slpspaths], n, [pointerstemp, pointersspath]);
+
+	my(slprev, pointersrev, e);
+	\\ slp from E(Gdual)U{alphai} to E(Gdualrev)
 	slprev=vector(3*d*n);
-	pointersrev=vectorsmall(3*d*n, e, 3*e);
-	for(i=1, d-1,
+	pointersrev=vectorsmall(d*n, e, 3*e);
+	for(i=0, d-1,
 		for(j=1, n,
 			e=i*n+j;
 			\\ Ici je me trompe c'est pas ça 
@@ -1141,7 +1155,7 @@ map_spair_from_monodromy(G, d, monodromy)={
 			\\slprev[3*(e-1)+3]=[n+f+3*(e-1)+1, n+f+3*(e-1)+2];
 
 			\\alphak^{-1} for path alphak from 1 to vG[e]
-			slprev[3*(e-1)+1]=[n+vG[e], -1];
+			slprev[3*(e-1)+1]=[-(n+vG[e]), -1];
 			\\alphak^{-1}.e for e as seen in G^*, here written as j
 			slprev[3*(e-1)+2]=[n+f+3*(e-1)+1, j];
 			\\alphak^{-1}.e.alphak
@@ -1150,9 +1164,9 @@ map_spair_from_monodromy(G, d, monodromy)={
 		);
 	);
 
-	\\ Side pairing from E(Gdualrev) to Gamma1
-	[slp,pointers]=\
-		slpcompose([n, n+f], [slpspaths, slprev], [pointersspath, pointersrev]);
+	my(slp, pointers);
+	\\ Side pairing from E(Gdual) to E(Gdualrev)
+	[slp,pointers]=slpcompose([n, n+f], [slpspaths, slprev], [pointersspaths, pointersrev]);
 
 
 	return([slp, pointers]);

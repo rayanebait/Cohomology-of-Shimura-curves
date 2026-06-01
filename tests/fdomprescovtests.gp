@@ -13,10 +13,12 @@ my(X, pol, F, A, pr, J, Or);
 /* 
 An example with F=Q(sqrt(8)), N_F/Q(D)=9 and level (1). Yields 
 a congruence arithmetic Fuchsian group Gamma0^D(1) with signature
-(1;3). The code then stores the fundamental domain before
-testing the oneword and onehandle presentations.
+(1;3).
 
-It then computes various testing utilities.
+Then inputing computing any prime pr in F, computes a side 
+pairing for the arithmetic Fuchsian group Gamma0^D(pr).
+
+
  */
 
 pol=y^2-8;
@@ -27,7 +29,9 @@ X=afuchinit(A);
 
 pr=idealprimedec(F, 7)[1];
 
-my(monodromy, G,h,d,Grev, slpspair, pointersspair);
+my(monodromy, G,h,d,Grev, slp, pointers);
 monodromy=afuch_monodromy_from_pr(X, pr);
-[G,h,d, Grev, slpspair, pointersspair]=afuchcov_spair(X, monodromy);
+[G, h, d, Grev, slp, pointers]=afuchcov_spair(X, monodromy);
+
+
 

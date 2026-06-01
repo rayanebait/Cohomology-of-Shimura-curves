@@ -161,12 +161,14 @@ afuch_presentation(X, {type="oneword"}, {eval=0})={
 		return([gens,rels]);
 }
 
+/*Returns h as slp is not normalized. I.e. it is an slp from*/
+/*E(G) to E(Grev) insteadof from elts to E(Grev)*/
 afuchcov_spair(X, monodromy)={
-	my(G,h, d, Grev, slpspair, pointersspair);
+	my(G,h, d, Grev, slp, pointers);
 	[G,h]=map_from_afuch(X);
 	d=#monodromy[1];
-	[Grev, slpspair, pointersspair]=map_spair_from_monodromy(G, d, monodromy);
-	slpspair=slpnormalize(slpspair, h, #h);
+	[Grev, slp, pointers]=map_spair_from_monodromy(G, d, monodromy);
+
 	return([G,h,d, Grev, slpspair, pointersspair]);
 }
 

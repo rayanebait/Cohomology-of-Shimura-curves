@@ -443,7 +443,8 @@ slpstovec(slps,n)={
 	return(concat(vecs));
 }
 
-/*h is a function from {1,...,n}->{1,..,m} */
+/*h is a function {1,...,n}->{1,..,m} */
+/*slp takes values in a family of size n*/
 /*returns an slp such that each old generator*/
 /*e of index i is replaced by a generator */
 /*of index h[i].*/
