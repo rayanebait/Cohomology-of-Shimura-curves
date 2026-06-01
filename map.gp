@@ -1093,7 +1093,7 @@ map_from_monodromy(G, d, monodromy)={
 \\ Given a connected map G->S with S=Gamma1\h with orbifold points at vertices of G
 \\ and a covering orbifold Srev -> S with Srev=Gamma2\h and Gamma2 a subgroup
 \\ Gamma1 coming from monodromy,
-\\ computes a one face map Grevone -> Srev with orbifold
+\\ computes a d vertex map Grevone -> Srev with orbifold
 \\ points at its vertices as well as a side pairing for Gamma2.
 map_spair_from_monodromy(G, d, monodromy)={
 	my(Gdual, Gdualrev);
@@ -1149,8 +1149,13 @@ map_spair_from_monodromy(G, d, monodromy)={
 			pointersrev[e]=3*e;
 		);
 	);
-	\\Reste à composer slprev et slpspaths pour obtenir le slp de Gdualred
-	return();
+
+	\\ Side pairing from E(Gdualrev) to Gamma1
+	[slp,pointers]=\
+		slpcompose([n, n+f], [slpspaths, slprev], [pointersspath, pointersrev]);
+
+
+	return([slp, pointers]);
 }
 
 
