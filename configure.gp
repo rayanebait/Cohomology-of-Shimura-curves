@@ -38,9 +38,9 @@ fileclose(n);
 
 /*Rewrite loadpackages.gp with correct file locations*/
 prefix=concat(["'fdomprespath=\"",fdomprespath,"\""]);
-suffix="\nread(concat(fdomprespath,\"/slp.gp\"))\nread(concat(fdomprespath,\"/maputils.gp\"))\nread(concat(fdomprespath,\"/map.gp\"))\nread(concat(fdomprespath,\"/fdompres.gp\"))'";
+suffix="\nread(concat(fdomprespath,\"/slp.gp\"))\nread(concat(fdomprespath,\"/maputils.gp\"))\nread(concat(fdomprespath,\"/map.gp\"))\nread(concat(fdomprespath,\"/mapcov.gp\"))\nread(concat(fdomprespath,\"/mappres.gp\"))\nread(concat(fdomprespath,\"/afuchutils.gp\"))\nread(concat(fdomprespath,\"/afuchpres.gp\"))\nread(concat(fdomprespath,\"/afuchcov.gp\"))'";
 
-suffixtests="\nread(concat(fdomprespath,\"/slp.gp\"))\nread(concat(fdomprespath,\"/maputils.gp\"))\nread(concat(fdomprespath,\"/map.gp\"))\nread(concat(fdomprespath,\"/fdompres.gp\"))\nread(concat(fdomprespath,\"/tests/slptests.gp\"))\nread(concat(fdomprespath,\"/tests/maptests.gp\"))\nread(concat(fdomprespath,\"/tests/fdomprestests.gp\"))\nread(concat(fdomprespath,\"/tests/fdomprescovtests.gp\"))'";
+suffixtests="\nread(concat(fdomprespath,\"/slp.gp\"))\nread(concat(fdomprespath,\"/maputils.gp\"))\nread(concat(fdomprespath,\"/map.gp\"))\nread(concat(fdomprespath,\"/mapcov.gp\"))\nread(concat(fdomprespath,\"/mappres.gp\"))\nread(concat(fdomprespath,\"/afuchutils.gp\"))\nread(concat(fdomprespath,\"/afuchpres.gp\"))\nread(concat(fdomprespath,\"/afuchcov.gp\"))\nread(concat(fdomprespath,\"/tests/slptests.gp\"))\nread(concat(fdomprespath,\"/tests/maptests.gp\"))\nread(concat(fdomprespath,\"/tests/afuchprestests.gp\"))\nread(concat(fdomprespath,\"/tests/afuchprescovtests.gp\"))'";
 
 rewrite_loadpackages_str=concat(prefix, suffix);
 rewrite_loadtests_str=concat([prefix, suffixtests]);

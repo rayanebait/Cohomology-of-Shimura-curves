@@ -1,18 +1,20 @@
 
-afuchcov_spair_test(X)={
-	my(A, F, pr, f, q, d, monodromy, G, h, Grev, slp, pointers);
+afuchcov_spair_test(X, {pmax=13})={
+	my(A, dA, F, pr, f, q, d, monodromy, G, h, Grev, slp, pointers);
 	A=afuchalg(X);
 	F=algcenter(A);
-
-	forprime(p=3, 30,
+	dA=algdisc(A);
+	forprime(p=3, pmax,
+		if(gcd(dA, p)!=1, next);
 		pr=idealprimedec(F, p)[1];
 		f=pr[4];
 		q=p^f;
 		d=q+1;
 
 		monodromy=afuch_monodromy_from_pr(X, pr);
-		[G,h, Grev, slp, pointers]=afuchcov_spair(X, monodromy);
+		[G,h,d, Grev, slp, pointers]=afuchcov_spair(X, monodromy);
 	);
+	return([G,h,d, Grev,slp, pointers]);
 }
 
 
@@ -48,7 +50,8 @@ pr=idealprimedec(F,3)[1];
 A=alginit(F, [[pr], [0,1]]);
 X=afuchinit(A);
 
-afuchcov_spair_test(X);
+my(G,h,d,Grev,slp,pointers);
+[G,h,d,Grev,slp,pointers]=afuchcov_spair_test(X);
 \\pr=idealprimedec(F, 7)[1];
 
 \\my(monodromy, G,h,d,Grev, slp, pointers);
