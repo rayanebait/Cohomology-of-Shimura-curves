@@ -1090,6 +1090,18 @@ map_from_monodromy(G, d, monodromy)={
 	return([s1rev, s1rev*s0rev^-1]);
 }
 
+map_proj(n, d)={
+	my(proj);
+	proj=vectorsmall(n*d);
+	for(i=0, d-1,
+		for(j=1, n,
+			proj[i*n+j]=j;
+		);
+	);
+	return(proj);
+}
+
+
 \\ Given a connected map G->S with S=Gamma1\h with orbifold points at vertices of G
 \\ and a covering orbifold Srev -> S with Srev=Gamma2\h and Gamma2 a subgroup
 \\ Gamma1 coming from monodromy,
@@ -1129,21 +1141,24 @@ map_spair_from_monodromy(G, d, monodromy)={
 	\\ fundamental polygon for Gamma2.
 
 
-	\\TODO: Actuellement des chemins dans Gdualrev, devraient être des
-	\\ chemins dans Gdual ! Histoire de pas avoir un elts adapté
-	\\ gigantesque.
+	\\ slp from E(Gdualrev) to paths {alphai}
 	[slpspaths, pointersspath]=map_liftalongT(Gdualrev, T, TvG);
+	my(proj);
+	proj=map_proj(n,d);
+	\\ slp from E(Gdual) to paths {proj(alphai)}
+	slpspaths=slpnormalize(slpspaths, proj, n);
+
 	my(slptemp, pointerstemp);
 	\\ identity slp from E(Gdual) to E(Gdual)
 	slptemp=vector(n,i,[0,i]);
-	pointerstemp=vectorsmall(n,i,i);
+	pointerstemp=vector(n,i,i);
 	\\ slp from E(Gdual) to E(Gdual) U {alphai}
 	[slpspaths, pointersspaths]=slpconcat([slptemp, slpspaths], n, [pointerstemp, pointersspath]);
 
 	my(slprev, pointersrev, e);
 	\\ slp from E(Gdual)U{alphai} to E(Gdualrev)
 	slprev=vector(3*d*n);
-	pointersrev=vectorsmall(d*n, e, 3*e);
+	pointersrev=vector(d*n, e, 3*e);
 	for(i=0, d-1,
 		for(j=1, n,
 			e=i*n+j;
@@ -1168,8 +1183,8 @@ map_spair_from_monodromy(G, d, monodromy)={
 	\\ Side pairing from E(Gdual) to E(Gdualrev)
 	[slp,pointers]=slpcompose([n, n+f], [slpspaths, slprev], [pointersspaths, pointersrev]);
 
-
-	return([slp, pointers]);
+	
+	return([[Gdualrev[1], Gdualrev[2]^-1*Gdualrev[1]],slp, pointers]);
 }
 
 

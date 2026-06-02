@@ -169,7 +169,7 @@ afuchcov_spair(X, monodromy)={
 	d=#monodromy[1];
 	[Grev, slp, pointers]=map_spair_from_monodromy(G, d, monodromy);
 
-	return([G,h,d, Grev, slpspair, pointersspair]);
+	return([G,h,d, Grev, slp, pointers]);
 }
 
 \\Given a covering representation of an arithmetic fuchsian group Y,
