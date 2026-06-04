@@ -12,6 +12,15 @@ afuchcov_raw_spair(X, monodromy)={
 	return([G,h,d, Grev, slp, pointers]);
 }
 
+afuchcov_spair(X, monodromy)={
+	my(G,h, d, Gq, slp, pointers);
+	[G,h]=map_from_afuch(X);
+	d=#monodromy[1];
+	[Gq, slp, pointers]=map_spair_from_monodromy(G, d, monodromy);
+
+	return([G,h,d, Gq, slp, pointers]);
+}
+
 \\Given a covering representation of an arithmetic fuchsian group Y,
 \\i.e. an afuch X and a monodromy representation associated to the
 \\map and side pairing stored in X, returns a one face side pairing obtained directly from the
