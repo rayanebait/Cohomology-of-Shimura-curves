@@ -14,7 +14,27 @@ afuchcov_spair_testdata(X, p)={
 	return([G,h,d, Grev,slp, pointers]);
 }
 
-afuchcov_spair_test(X,{pmax=13})={
+
+afuchcov_spair_bench(X,{pmax=100})={
+	my(A, dA, p);
+	A=afuchalg(X);
+	dA=algdisc(A);
+	forprime(pp=3, pmax,
+		if(gcd(dA, pp)!=1, next);
+		p=pp;
+		my(G,h,d,Grev,slp,pointers);
+		[G,h,d,Grev,slp,pointers]=afuchcov_spair_testdata(X, p);
+		slp=slpnormalize(slp, h, #elts);
+
+		
+		print("Computation of side pairing for covering of degree ", d, " : ok");
+	);
+	\\print("Nombre de non nuls : ", nbnonzero," et nombre de nuls : ", nbzero);
+	return();
+}
+
+
+afuchcov_spair_test(X,{pmax=23})={
 	my(A, dA, elts, p);
 	A=afuchalg(X);
 	dA=algdisc(A);
@@ -22,30 +42,50 @@ afuchcov_spair_test(X,{pmax=13})={
 	forprime(pp=3, pmax,
 		if(gcd(dA, pp)!=1, next);
 		p=pp;
-		break;
+		my(G,h,d,Grev,slp,pointers);
+		[G,h,d,Grev,slp,pointers]=afuchcov_spair_testdata(X, p);
+		slp=slpnormalize(slp, h, #elts);
+
+		my(gens, s2dual, s2dualc, rels,v, c,n);
+		s2dual=map_dual(G)[2];
+		n=#s2dual;
+		
+		s2dualc=permcycles(s2dual);
+		v=#s2dualc;
+		rels=vector(d*v);
+		for(i=1, d,
+			\\ Recall that Erev=Ex{1,...,d} and each cycle of s0 corresponding
+			\\ to a vertex of G is a relation for X, or an elliptic a word 
+			\\representing an elliptic element for X, if X is our
+			\\ fuchsian group.
+			\\ Let (e,i) be an edge of Grev above e in G. Then (e,i) maps to
+			\\ some gi.g_e.gi^-1 in X if e maps to g_e. Further gi depends only on i.
+			\\ In particular, the set of elements in Ex{i} verify the same relations
+			\\ as those in E.
+			for(j=1, v,
+				\\
+				c=s2dualc[j];
+				rels[j+(i-1)*v]=vectorsmall(#c, k, c[k]+(i-1)*n);
+			);
+		);
+		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
+		evrels=vector(#rels, i, algmulvec(A, gens, rels[i]));
+		
+		my(nbzero, nbnonzero);
+		foreach(evrels, ev,
+			   	if(algincenter(A, ev), nbzero++,nbnonzero++);
+		);
+		if(nbnonzero!=d,
+				print("Computation of side pairing for covering of degree ", d, " : failed");
+			,/*else*/
+				print("Computation of side pairing for covering of degree ", d, " : ok");
+		);
 	);
-	my(G,h,d,Grev,slp,pointers);
-	[G,h,d,Grev,slp,pointers]=afuchcov_spair_testdata(X, p);
-	slp=slpnormalize(slp, h, #elts);
 
-	my(gens, rels, s1rev, s2rev, s0rev);
-	[s1rev,s2rev]=Grev;
-	s0rev=s2rev^-1*s1rev;
-	\\ Pas encore s0rev, les relations sont les cycles de s0.
-	\\ Et les cycles de s0 là correspondent aux sommets de G.
-	\\ Donc aux faces de Gdual !
-	rels=permcycles(s1rev*s0rev*s1rev);
-	gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
-	evrels=vector(#rels, i, algmulvec(A, gens, rels[i]));
-
-	my(nbzero, nbnonzero);
-	foreach(evrels, ev,
-		   	if(algincenter(A, ev), nbzero++,nbnonzero++);
-	);
-
-	print("Nombre de non nuls : ", nbnonzero," et nombre de nuls : ", nbzero);
+	\\print("Nombre de non nuls : ", nbnonzero," et nombre de nuls : ", nbzero);
 	return();
 }
+
 /*TODO: Signature [4,[2,2,2,2,2,2,3],0]-> [4,[(2, 6), (3,1)],0]*/
 my(X, pol, F, A, pr, J, Or);
 
@@ -76,7 +116,8 @@ A=alginit(F, [[pr], [0,1]]);
 X=afuchinit(A);
 
 [G,h,d,Grev,slp,pointers]=afuchcov_spair_testdata(X, 7);
-afuchcov_spair_test(X, 7);
+afuchcov_spair_test(X);
+afuchcov_spair_bench(X);
 \\pr=idealprimedec(F, 7)[1];
 
 \\my(monodromy, G,h,d,Grev, slp, pointers);

@@ -41,7 +41,8 @@ map_proj(n, d)={
 \\ Gamma1 coming from monodromy,
 \\ computes a d vertex map Grevone -> Srev with orbifold
 \\ points at its vertices as well as a side pairing for Gamma2.
-map_spair_from_monodromy(G, d, monodromy)={
+map_raw_spair_from_monodromy(G, d, monodromy)={
+
 	my(Gdual, Gdualrev);
 	\\Get single vertex map corresponding to unique polygon P
 	Gdual=map_dual(G);
@@ -61,7 +62,7 @@ map_spair_from_monodromy(G, d, monodromy)={
 	[T,TvG]=map_getT(Gdualrev, 0);
 	f=#T+1;
 
-	if(f!=d, error(""));
+	\\if(f!=d, error(""));
 
 
 	\\ slp from E(Gdual) to {alphai}={gi}\subset Gamma1.
@@ -116,7 +117,25 @@ map_spair_from_monodromy(G, d, monodromy)={
 	my(slp, pointers);
 	\\ Side pairing from E(Gdual) to E(Gdualrev)
 	[slp,pointers]=slpcompose([n, n+f], [slpspaths, slprev], [pointersspaths, pointersrev]);
-	print(pointersspaths);
 
 	return([[Gdualrev[1], Gdualrev[2]^-1*Gdualrev[1]],slp, pointers]);
+}
+
+map_spair_from_monodromy(G, d, monodromy)={
+	my(Grev, slp, pointers, Gdualrev);
+	\\ Slp from E(G) to E(Grev), side pairing for E(Grev) in terms of 
+	\\ E(G)
+	[Grev, slp, pointers]=map_raw_spair_from_monodromy(G,d, monodromy);
+	Gdualrev=[Grev[1], Grev[1]*Grev[2]^-1];
+
+	my(slpq, pointersq, Gq, seed);
+	\\ Gq is the one vertex reduction of Gdualrev
+	\\ slp from E(Gdualrev) to E(Gq), side pairing for E(Gq) in terms of
+	\\ E(Gdualrev).
+	[slpq, pointersq, Gq, seed]=map_quotient_spair([Grev[1], Grev[1]*Grev[2]^-1]);
+
+	\\ slp from E(G) to E(Gq), also side pairing for Gq in terms of G
+	\\ seed is returned for relations computations in mappres
+	[slp, pointers]=slpcompose([n, d*n], [slp, slpq], [pointers, pointersq]);
+	return([slp, pointers, Gq, seed]);
 }

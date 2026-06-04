@@ -3,11 +3,11 @@
 
 /*Returns h as slp is not normalized. I.e. it is an slp from*/
 /*E(G) to E(Grev) insteadof from elts to E(Grev)*/
-afuchcov_spair(X, monodromy)={
+afuchcov_raw_spair(X, monodromy)={
 	my(G,h, d, Grev, slp, pointers);
 	[G,h]=map_from_afuch(X);
 	d=#monodromy[1];
-	[Grev, slp, pointers]=map_spair_from_monodromy(G, d, monodromy);
+	[Grev, slp, pointers]=map_raw_spair_from_monodromy(G, d, monodromy);
 
 	return([G,h,d, Grev, slp, pointers]);
 }
@@ -20,7 +20,7 @@ afuchcov_presentation(X,monodromy, {type="oneword"},{compose=0}, {eval=0})={
 	my(G,h,d,Grev,slpspair, pointersspair,n);
 	\\ slpspair maps generators generators associated to side pairing for G
 	\\ to generators associated to side pairing for Grev
-	[G,h,d, Grev, slpspair, pointersspair]=afuchcov_spair(X,monodromy);
+	[G,h,d, Grev, slpspair, pointersspair]=afuchcov_raw_spair(X,monodromy);
 	n=#G[1];
 	my(slp, pointers,rels, T,TfGrevdual);
 	\\ slp maps generators associated to side pairing for Grev, 

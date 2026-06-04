@@ -465,45 +465,54 @@ map_quotientT(G, T, TvG)={
 	my(vG);
 	vG=map_vertex_index(G);
 
-	my(s0one, s1one, s2one, seed);
+	my(s0one, s1one, s2one, seed, n, n_one, f);
 	[s1one, s2one, seed]=map_gluealongT(G, T, 0);
-	\\s2one now fixes edges of G in T,
+	\\s0one now fixes edges of G in T and has a single cycle
+	\\ of length n
 	s0one=(s2one^-1)*s1one;
+	n=#s0one;
+	f=#T+1;
+	n_one=(n-2*(f-1));
 
-	my(slpspaths, pointersspaths);
-	/*Slp and pointers of shortest paths*/
+	my(slpspaths, pointersspaths, slptemp, pointerstemp, e);
+	\\Slp from E(G) to paths {alphai}_i in G
+	\\ where alphai is a path from vertex of index 1, the only vertex containing
+	\\ e==1, to vertex i in the dfs ordering of T.
 	[slpspaths, pointersspaths]=map_liftalongT(G, T, TvG);
-
-	my(slpold, pointersold);
-	/*Slp and pointers of old side pairing*/
-	/*NON faudra assumer qu'on a déjà un side pairing pour G*/
-	[slpold, pointersold]=map_surface_presentation([s1one, s0one], seed, "oneword");
-
-	my(slp_conjs, pointers_conjs, e);
 	e=seed;
-	slp_conjs=concat(\
-			\\SLPS
-			vector(n_one, u,\
-			\\ c.e
-			e=s0one[e];
-			[[u, f+TvG[vG[e]]],\
-			\\ compute c^-1
-			[-u, -1],\
-			\\ (c.e).(c-1)
-			[(n_one+f+3*u)-2, (n_one+f+3*u)-1]])\
-		);
-	pointers_conjs=vector(n_one,u, 3*u);
+	\\identity slp from E(G) to E(G)
+	slptemp=vector(n, e, [0, e]);
+	pointerstemp=vector(n, i, i);
+
+	\\ Slp from E(G) to E(G) U {alphai}
+	[slpspaths, pointersspaths]=slpconcat([slptemp, slpspaths], n, [pointerstemp, pointersspaths]);
+
+	my(slpconjs, pointersconjs);
+	\\ Slp from E(G) U {alphai} to E(Gone)
+	slpconjs=vector(3*n_one);
+	pointersconjs=vector(n_one,u, 3*u);
+	e=seed;
+	for(i=1, n_one,
+		e=s0one[e];
+		\\ alphai.e
+		slpconjs[3*(i-1)+1]=[n+TvG[vG[e]], e];
+		\\ alphai^-1
+		slpconjs[3*(i-1)+2]=[-(n+TvG[vG[e]]), -1];
+		\\ alphai.e.alphai^-1
+		slpconjs[3*(i-1)+3]=[n+f+3*(i-1)+1, n+f+3*(i-1)+2];
+	);
+
 	my(slp, pointers);
-	[slp, pointers]=slpconcat(
+	[slp, pointers]=slpcompose([n, n+f],\
 			\\SLPS
-			[slpold, slpspaths], n,\
+			[slpspaths, slpconjs],
 			\\POINTERS
-			[pointersold, pointersspaths]\
+			[pointersspaths, pointersconjs]\
 		);
 
-	/*Slp and pointers of new side pairing*/
-	[slp, pointers]=slpcompose([n,(n_one+2*f)/2], [slp, slp_conjs],[pointers, pointers_conjs]);
-	return([slp, pointers, s1one, s2one, seed]);
+	my(Gone);
+	Gone=[s1one,s2one];
+	return([slp, pointers, Gone, seed]);
 }
 
 \\ Acts as if G is the dual of some map G' -> S. 
