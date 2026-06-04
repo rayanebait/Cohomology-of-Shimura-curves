@@ -486,3 +486,8 @@ slpreverse(slp, pointers)={
 
 	return();
 }
+
+veccompose(v1,v2)={
+	return(vector(#v1, i, v2[v1[i]]));
+}
+

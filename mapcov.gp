@@ -13,10 +13,10 @@ map_from_monodromy(G, d, monodromy)={
 	my(s0rev, s1rev, m=d*n);
 	s0rev=vectorsmall(m);
 	s1rev=vectorsmall(m);
-	for(j=1, d,
-		for(i=1, n,
-			s0rev[i+(j-1)*n]=s0[i]+(j-1)*n;
-			s1rev[i+(j-1)*n]=s1[i]+(monodromy[s1[i]][j]-1)*n;
+	for(i=1, d,
+		for(j=1, n,
+			s0rev[j+(i-1)*n]=s0[j]+(i-1)*n;
+			s1rev[j+(i-1)*n]=s1[j]+(monodromy[s1[j]][i]-1)*n;
 		);
 	);
 	return([s1rev, s1rev*s0rev^-1]);
@@ -26,9 +26,9 @@ map_from_monodromy(G, d, monodromy)={
 map_proj(n, d)={
 	my(proj);
 	proj=vectorsmall(n*d);
-	for(i=0, d-1,
+	for(i=1, d,
 		for(j=1, n,
-			proj[j+i*n]=j;
+			proj[j+(i-1)*n]=j;
 		);
 	);
 	return(proj);
@@ -92,10 +92,10 @@ map_spair_from_monodromy(G, d, monodromy)={
 	my(slprev, pointersrev, e);
 	\\ slp from E(Gdual)U{alphai} to E(Gdualrev)
 	slprev=vector(3*d*n);
-	pointersrev=vector(d*n, e, 3*e);
-	for(i=0, d-1,
+	pointersrev=vector(d*n, u, 3*u);
+	for(i=1, d,
 		for(j=1, n,
-			e=i*n+j;
+			e=j+(i-1)*n;
 			\\ Ici je me trompe c'est pas ça 
 			\\ je me balade dans G^* donc pas besoin de vG
 			\\ utile pour plus tard
@@ -104,19 +104,19 @@ map_spair_from_monodromy(G, d, monodromy)={
 			\\slprev[3*(e-1)+3]=[n+f+3*(e-1)+1, n+f+3*(e-1)+2];
 
 			\\alphak^{-1} for path alphak from 1 to vG[e]
-			slprev[3*(e-1)+1]=[-(n+vG[e]), -1];
+			\\here vG[e] is almost always i
+			slprev[3*(e-1)+1]=[-(n+TvG[vG[e]]), -1];
 			\\alphak^{-1}.e for e as seen in G^*, here written as j
 			slprev[3*(e-1)+2]=[n+f+3*(e-1)+1, j];
 			\\alphak^{-1}.e.alphak
-			slprev[3*(e-1)+3]=[n+f+3*(e-1)+2, n+vG[e]];
+			slprev[3*(e-1)+3]=[n+f+3*(e-1)+2, n+TvG[vG[e]]];
 			pointersrev[e]=3*e;
 		);
 	);
-
 	my(slp, pointers);
 	\\ Side pairing from E(Gdual) to E(Gdualrev)
 	[slp,pointers]=slpcompose([n, n+f], [slpspaths, slprev], [pointersspaths, pointersrev]);
+	print(pointersspaths);
 
-	
 	return([[Gdualrev[1], Gdualrev[2]^-1*Gdualrev[1]],slp, pointers]);
 }
