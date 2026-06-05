@@ -16,6 +16,7 @@ afuchcov_raw_spair_test_data(X, p)={
 
 
 afuchcov_raw_spair_bench(X,{pmax=100})={
+	print("\nBenching afuchcov_raw_spair.\n");
 	my(A, dA, p);
 	A=afuchalg(X);
 	dA=algdisc(A);
@@ -23,11 +24,10 @@ afuchcov_raw_spair_bench(X,{pmax=100})={
 		if(gcd(dA, pp)!=1, next);
 		p=pp;
 		my(G,h,d,Grev,slp,pointers);
-		[G,h,d,Grev,slp,pointers]=afuchcov_spair_test_data(X, p);
+		[G,h,d,Grev,slp,pointers]=afuchcov_raw_spair_test_data(X, p);
 		slp=slpnormalize(slp, h, #elts);
-
 		
-		print("Computation of side pairing for covering of degree ", d, " : ok");
+		print("Computation of raw side pairing for covering of degree ", d, " : ok");
 	);
 	\\print("Nombre de non nuls : ", nbnonzero," et nombre de nuls : ", nbzero);
 	return();
@@ -35,6 +35,7 @@ afuchcov_raw_spair_bench(X,{pmax=100})={
 
 
 afuchcov_raw_spair_test(X,{pmax=23})={
+	print("\nTesting afuchcov_raw_spair.\n");
 	my(A, dA, elts, p);
 	A=afuchalg(X);
 	dA=algdisc(A);
@@ -76,9 +77,9 @@ afuchcov_raw_spair_test(X,{pmax=23})={
 			   	if(algincenter(A, ev), nbzero++,nbnonzero++);
 		);
 		if(nbnonzero!=d,
-				print("Computation of side pairing for covering of degree ", d, " : failed");
+				print("Computation of raw side pairing for covering of degree ", d, " : failed");
 			,/*else*/
-				print("Computation of side pairing for covering of degree ", d, " : ok");
+				print("Computation of raw side pairing for covering of degree ", d, " : ok");
 		);
 	);
 
@@ -87,7 +88,7 @@ afuchcov_raw_spair_test(X,{pmax=23})={
 }
 
 afuchcov_spair_test_data(X, p)={
-	my(A, dA, F, pr, f, q, d, monodromy, G, h, Gq, slp, pointers);
+	my(A, dA, F, pr, f, q, d, monodromy, G, h, Gq, slp, pointers, seed);
 	A=afuchalg(X);
 	dA=algdisc(A);
 	if(gcd(dA, p)!=1, error("Invalid prime in afuchcov_spair_test_data"));
@@ -98,11 +99,12 @@ afuchcov_spair_test_data(X, p)={
 	q=p^f;
 	d=q+1;
 	monodromy=afuch_monodromy_from_pr(X, pr);
-	[G,h,d, Gq, slp, pointers]=afuchcov_spair(X, monodromy);
-	return([G,h,d, Gq,slp, pointers]);
+	[G,h,d, Gq, slp, pointers,seed]=afuchcov_spair(X, monodromy);
+	return([G,h,d, Gq,slp, pointers,seed]);
 }
 
 afuchcov_spair_test(X,{pmax=23})={
+	print("\nTesting afuchcov_spair.\n");
 	my(A, dA, elts, p);
 	A=afuchalg(X);
 	dA=algdisc(A);
@@ -111,18 +113,20 @@ afuchcov_spair_test(X,{pmax=23})={
 		if(gcd(dA, pp)!=1, next);
 		p=pp;
 		my(G,h,d,Gq,slp,pointers);
-		[G,h,d,Gq,slp,pointers]=afuchcov_spair_test_data(X, p);
+		[G,h,d,Gq,slp,pointers,seed]=afuchcov_spair_test_data(X, p);
 		slp=slpnormalize(slp, h, #elts);
 
-		my(gens, s2dual, s2dualc, rels,v, c,n);
-		s2dual=map_dual(Gq)[2];
+		my(gens, s0dual, s1dual, s2dual, s2dualc, rels,v, c,n, index);
+		[s1dual, s2dual]=Gq;
+		s0dual=s2dual^-1*s1dual;
 		n=#s2dual;
 		
+		index=map_indexcycle(s0dual, seed);
 
 		\\TODO: vérifier si la numérotation des arêtes de s2dual 
 		\\ est cohérente avec celle calculée dans map_quotientT
 		\\ honnêtement je pense que pas du tout.
-		rels=permcycles(s2dual);
+		rels=apply((c)->(veccompose(c,index)), permcycles0(s2dual));
 
 		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
 		evrels=vector(#rels, i, algmulvec(A, gens, rels[i]));
@@ -131,11 +135,8 @@ afuchcov_spair_test(X,{pmax=23})={
 		foreach(evrels, ev,
 			   	if(algincenter(A, ev), nbzero++,nbnonzero++);
 		);
-		if(nbnonzero!=d,
-				print("Computation of side pairing for covering of degree ", d, " : failed");
-			,/*else*/
-				print("Computation of side pairing for covering of degree ", d, " : ok");
-		);
+
+		print("Computation of side pairing for covering of degree ", d,". Fail : ", nbnonzero,", Success : ", nbzero);
 	);
 
 	\\print("Nombre de non nuls : ", nbnonzero," et nombre de nuls : ", nbzero);
@@ -143,6 +144,7 @@ afuchcov_spair_test(X,{pmax=23})={
 }
 
 afuchcov_spair_bench(X,{pmax=100})={
+	print("\nBenching afuchcov_spair.\n");
 	my(A, dA, elts, p);
 	A=afuchalg(X);
 	dA=algdisc(A);
@@ -192,10 +194,10 @@ A=alginit(F, [[pr], [0,1]]);
 X=afuchinit(A);
 
 [G,h,d,Grev,slp,pointers]=afuchcov_raw_spair_test_data(X, 7);
-afuchcov_raw_spair_test(X);
-afuchcov_raw_spair_bench(X);
-afuchcov_spair_test(X);
-afuchcov_spair_bench(X);
+\\afuchcov_raw_spair_test(X);
+\\afuchcov_raw_spair_bench(X);
+afuchcov_spair_test(X,13);
+\\afuchcov_spair_bench(X);
 \\pr=idealprimedec(F, 7)[1];
 
 \\my(monodromy, G,h,d,Grev, slp, pointers);

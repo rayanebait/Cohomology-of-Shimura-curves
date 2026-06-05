@@ -283,7 +283,7 @@ buildrel_and_pointers(pointers, seed, s, s1, index, seen)={
 	return([newpointers, rel]);
 }
 
-\\ Given a map Gone -> S with one vertex
+\\ Given a map Gone -> S with one vertex and one face
 \\ 
 map_surface_presentation(Gone, seedslp, {type="oneword"})={
 	my(s1one, s2one,s2oneinv);
@@ -465,21 +465,20 @@ map_quotientT(G, T, TvG)={
 	my(vG);
 	vG=map_vertex_index(G);
 
-	my(s0one, s1one, s2one, seed, n, n_one, f);
-	[s1one, s2one, seed]=map_gluealongT(G, T, 0);
+	my(s0q, s1q, s2q, seed, n, n_one, f);
+	[s1q, s2q, seed]=map_gluealongT(G, T, 0);
 	\\s0one now fixes edges of G in T and has a single cycle
 	\\ of length n
-	s0one=(s2one^-1)*s1one;
-	n=#s0one;
+	s0q=(s2q^-1)*s1q;
+	n=#s0q;
 	f=#T+1;
 	n_one=(n-2*(f-1));
 
-	my(slpspaths, pointersspaths, slptemp, pointerstemp, e);
+	my(slpspaths, pointersspaths, slptemp, pointerstemp);
 	\\Slp from E(G) to paths {alphai}_i in G
 	\\ where alphai is a path from vertex of index 1, the only vertex containing
 	\\ e==1, to vertex i in the dfs ordering of T.
 	[slpspaths, pointersspaths]=map_liftalongT(G, T, TvG);
-	e=seed;
 	\\identity slp from E(G) to E(G)
 	slptemp=vector(n, e, [0, e]);
 	pointerstemp=vector(n, i, i);
@@ -487,19 +486,19 @@ map_quotientT(G, T, TvG)={
 	\\ Slp from E(G) to E(G) U {alphai}
 	[slpspaths, pointersspaths]=slpconcat([slptemp, slpspaths], n, [pointerstemp, pointersspaths]);
 
-	my(slpconjs, pointersconjs);
+	my(slpconjs, pointersconjs, e);
 	\\ Slp from E(G) U {alphai} to E(Gone)
 	slpconjs=vector(3*n_one);
 	pointersconjs=vector(n_one,u, 3*u);
 	e=seed;
 	for(i=1, n_one,
-		e=s0one[e];
-		\\ alphai.e
-		slpconjs[3*(i-1)+1]=[n+TvG[vG[e]], e];
-		\\ alphai^-1
+		\\ alphai.e for i=TvG[vG[e]]
+		slpconjs[3*(i-1)+1]=[n+TvG[vG[s1q[e]]], e];
+		\\ alphaj^-1 for j=TvG[vG[s1q[e]]]
 		slpconjs[3*(i-1)+2]=[-(n+TvG[vG[e]]), -1];
-		\\ alphai.e.alphai^-1
+		\\ alphai.e.alphaj^-1
 		slpconjs[3*(i-1)+3]=[n+f+3*(i-1)+1, n+f+3*(i-1)+2];
+		e=s0q[e];
 	);
 
 	my(slp, pointers);
@@ -510,9 +509,9 @@ map_quotientT(G, T, TvG)={
 			[pointersspaths, pointersconjs]\
 		);
 
-	my(Gone);
-	Gone=[s1one,s2one];
-	return([slp, pointers, Gone, seed]);
+	my(Gq);
+	Gq=[s1q,s2q];
+	return([slp, pointers, Gq, seed]);
 }
 
 \\ Acts as if G is the dual of some map G' -> S. 
@@ -527,7 +526,7 @@ map_quotientT(G, T, TvG)={
 \\ When S=Gamma\h and G comes from a fundamental domain D with
 \\ many faces/vertices, edges of D are not necessarily
 \\ loops in S so that to compute a presentation of Gamma
-\\ we first need to reduce to one vertex/face.
+\\ we first need to reduce to one vertex.
 \\
 map_quotient_spair(G)={
 	my(T, TvG);

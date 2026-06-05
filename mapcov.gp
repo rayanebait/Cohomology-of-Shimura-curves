@@ -39,8 +39,8 @@ map_proj(n, d)={
 \\ Given a connected map G->S with S=Gamma1\h with orbifold points at vertices of G
 \\ and a covering orbifold Srev -> S with Srev=Gamma2\h and Gamma2 a subgroup
 \\ Gamma1 coming from monodromy,
-\\ computes a d vertex map Grevone -> Srev with orbifold
-\\ points at its vertices as well as a side pairing for Gamma2.
+\\ computes a d vertex map Gdualrev -> Srev with orbifold
+\\ points at its vertices as well as a side pairing with values in Gamma1
 map_raw_spair_from_monodromy(G, d, monodromy)={
 
 	my(Gdual, Gdualrev);
@@ -118,24 +118,25 @@ map_raw_spair_from_monodromy(G, d, monodromy)={
 	\\ Side pairing from E(Gdual) to E(Gdualrev)
 	[slp,pointers]=slpcompose([n, n+f], [slpspaths, slprev], [pointersspaths, pointersrev]);
 
-	return([[Gdualrev[1], Gdualrev[2]^-1*Gdualrev[1]],slp, pointers]);
+	return([Gdualrev, slp, pointers, T,TvG]);
 }
 
 map_spair_from_monodromy(G, d, monodromy)={
-	my(Grev, slp, pointers, Gdualrev);
-	\\ Slp from E(G) to E(Grev), side pairing for E(Grev) in terms of 
-	\\ E(G)
-	[Grev, slp, pointers]=map_raw_spair_from_monodromy(G,d, monodromy);
-	Gdualrev=[Grev[1], Grev[1]*Grev[2]^-1];
+	my(slprev, pointersrev, Gdualrev, n, T,TvG);
+	n=#G[1];
+	\\ Slp from E(Gdual) to E(Gdualrev), side pairing for E(Gdualrev) in terms of 
+	\\ E(Gdual)
+	[Gdualrev, slprev, pointersrev, T, TvG]=map_raw_spair_from_monodromy(G,d, monodromy);
 
 	my(slpq, pointersq, Gq, seed);
 	\\ Gq is the one vertex reduction of Gdualrev
 	\\ slp from E(Gdualrev) to E(Gq), side pairing for E(Gq) in terms of
 	\\ E(Gdualrev).
-	[slpq, pointersq, Gq, seed]=map_quotient_spair([Grev[1], Grev[1]*Grev[2]^-1]);
+	[slpq, pointersq, Gq, seed]=map_quotientT(Gdualrev, T, TvG);
 
+	my(slp,pointers);
 	\\ slp from E(G) to E(Gq), also side pairing for Gq in terms of G
 	\\ seed is returned for relations computations in mappres
-	[slp, pointers]=slpcompose([n, d*n], [slp, slpq], [pointers, pointersq]);
+	[slp, pointers]=slpcompose([n, d*n], [slprev, slpq], [pointersrev, pointersq]);
 	return([slp, pointers, Gq, seed]);
 }

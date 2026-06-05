@@ -349,7 +349,6 @@ perm_as_prodoftwocycs_small(s,{k})={
 	\\s is now of the form (1 2 ... k1)(k1+1 k1+2...k1+k2)(...)
 	c=rand_kcyc(n,k,0);
 	n=#s;
-	error("");
 	while(!iscyc(s*c,k),
 		c=rand_kcyc(n,k,0);
 	);

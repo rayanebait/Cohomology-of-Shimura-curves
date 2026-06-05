@@ -13,12 +13,12 @@ afuchcov_raw_spair(X, monodromy)={
 }
 
 afuchcov_spair(X, monodromy)={
-	my(G,h, d, Gq, slp, pointers);
+	my(G,h, d, Gq, slp, pointers, seed);
 	[G,h]=map_from_afuch(X);
 	d=#monodromy[1];
-	[Gq, slp, pointers]=map_spair_from_monodromy(G, d, monodromy);
+	[slp, pointers, Gq, seed]=map_spair_from_monodromy(G, d, monodromy);
 
-	return([G,h,d, Gq, slp, pointers]);
+	return([G,h,d, Gq, slp, pointers, seed]);
 }
 
 \\Given a covering representation of an arithmetic fuchsian group Y,
