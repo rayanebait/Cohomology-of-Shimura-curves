@@ -107,7 +107,8 @@ map_raw_spair_from_monodromy(G, d, monodromy)={
 			\\alphak^{-1} for path alphak from 1 to vG[e]
 			\\here vG[e] is almost always i
 			slprev[3*(e-1)+1]=[-(n+TvG[vG[e]]), -1];
-			\\alphak^{-1}.e for e as seen in G^*, here written as j
+			\\alphak^{-1}.e for e as seen in G^*, here e 
+			\\ is written as j (in G^*)
 			slprev[3*(e-1)+2]=[n+f+3*(e-1)+1, j];
 			\\alphak^{-1}.e.alphak
 			slprev[3*(e-1)+3]=[n+f+3*(e-1)+2, n+TvG[vG[e]]];
