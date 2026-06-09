@@ -109,17 +109,16 @@ afuchcov_spair_test(X,{pmax=23})={
 	A=afuchalg(X);
 	dA=algdisc(A);
 	elts=afuchelts(X);
-	forprime(pp=3, pmax,
+	forprime(pp=2, pmax,
 		if(gcd(dA, pp)!=1, next);
 		p=pp;
 		my(G,h,d,Gq,slp,pointers);
 		[G,h,d,Gq,slp,pointers,seed]=afuchcov_spair_test_data(X, p);
 		slp=slpnormalize(slp, h, #elts);
 
-		my(gens, s0dual, s1dual, s2dual, s2dualc, rels,v, c,n, index);
+		my(gens, s0dual, s1dual, s2dual, s2dualc, rels, c, index);
 		[s1dual, s2dual]=Gq;
 		s0dual=s2dual^-1*s1dual;
-		n=#s2dual;
 		
 		index=map_indexcycle(s0dual, seed);
 
@@ -187,16 +186,23 @@ pairing for the arithmetic Fuchsian group Gamma0^D(pr).
 
  */
 
-pol=y^2-8;
+\\pol=y^2 - 5 /*[2,[]]*/
+\\ab=[-3/2*y - 5/2, -2*y - 9];
+\\pol=y^2-8;
+
+pol=y^2 - 13 /*[1,[2]]*/
+ab=[-13, -3*y + 4];
+
 F=nfinit(pol);
-pr=idealprimedec(F,3)[1];
-A=alginit(F, [[pr], [0,1]]);
+A=alginit(F, ab);
+\\A=alginit(F, [[pr], [0,1]]);
+
 X=afuchinit(A);
 
-[G,h,d,Grev,slp,pointers]=afuchcov_raw_spair_test_data(X, 7);
+[G,h,d,Gq,slp,pointers]=afuchcov_spair_test_data(X, 3);
 \\afuchcov_raw_spair_test(X);
 \\afuchcov_raw_spair_bench(X);
-afuchcov_spair_test(X,13);
+afuchcov_spair_test(X,3);
 \\afuchcov_spair_bench(X);
 \\pr=idealprimedec(F, 7)[1];
 

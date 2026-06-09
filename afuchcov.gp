@@ -7,6 +7,7 @@ afuchcov_raw_spair(X, monodromy)={
 	my(G,h, d, Grev, slp, pointers);
 	[G,h]=map_from_afuch(X);
 	d=#monodromy[1];
+	monodromy=vector(#h, i, monodromy[h[i]]);
 	[Grev, slp, pointers]=map_raw_spair_from_monodromy(G, d, monodromy);
 
 	return([G,h,d, Grev, slp, pointers]);
@@ -16,6 +17,7 @@ afuchcov_spair(X, monodromy)={
 	my(G,h, d, Gq, slp, pointers, seed);
 	[G,h]=map_from_afuch(X);
 	d=#monodromy[1];
+	monodromy=vector(#h, i, monodromy[h[i]]);
 	[slp, pointers, Gq, seed]=map_spair_from_monodromy(G, d, monodromy);
 
 	return([G,h,d, Gq, slp, pointers, seed]);

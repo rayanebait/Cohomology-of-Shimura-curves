@@ -1,4 +1,4 @@
-afuchprespath="/home/imb/rbait/files/code/packages/pari/Cohomology-of-Shimura-curves"
+afuchprespath="/home/rys/files/code/packages/pari/Cohomology-of-Shimura-curves"
 read(concat(afuchprespath,"/slp.gp"))
 read(concat(afuchprespath,"/maputils.gp"))
 read(concat(afuchprespath,"/map.gp"))

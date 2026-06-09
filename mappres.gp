@@ -475,27 +475,41 @@ map_quotientT(G, T, TvG)={
 	n_one=(n-2*(f-1));
 
 	my(slpspaths, pointersspaths, slptemp, pointerstemp);
-	\\Slp from E(G) to paths {alphai}_i in G
-	\\ where alphai is a path from vertex of index 1, the only vertex containing
-	\\ e==1, to vertex i in the dfs ordering of T.
+	\\ Slp from E(G) to paths {alphai}_i in G
+	\\ where alphai is the shortest path in T from vertex of
+   	\\ index 1, the only vertex containing e==1, to vertex i in
+   	\\ the dfs ordering of T.
 	[slpspaths, pointersspaths]=map_liftalongT(G, T, TvG);
+
+	\\ Slp from {alphai} to {betai} where betai is a path
+	\\ from the vertex such that seed is incident to vertex i
+	slptemp=concat([[-TvG[vG[seed]],-1 ]], vector(f, i, [f+1, i]));
+	pointerstemp=vector(f,i,i+1);
+
+	\\ Slp from E(G) to {betai}_i
+	[slpspaths, pointersspaths]=slpcompose([n, f], [slpspaths, slptemp], [pointersspaths, pointerstemp]);
+
 	\\identity slp from E(G) to E(G)
-	slptemp=vector(n, e, [0, e]);
+	slptemp=vector(n, i, [0, i]);
 	pointerstemp=vector(n, i, i);
 
-	\\ Slp from E(G) to E(G) U {alphai}
+	\\ Slp from E(G) to E(G) U {betai} 
 	[slpspaths, pointersspaths]=slpconcat([slptemp, slpspaths], n, [pointerstemp, pointersspaths]);
 
+
+
+
 	my(slpconjs, pointersconjs, e);
-	\\ Slp from E(G) U {alphai} to E(Gone)
+	\\ Slp from E(G) U {alphai} to E(Gq)
 	slpconjs=vector(3*n_one);
 	pointersconjs=vector(n_one,u, 3*u);
+
 	e=seed;
 	for(i=1, n_one,
 		\\ alphai.e for i=TvG[vG[e]]
-		slpconjs[3*(i-1)+1]=[n+TvG[vG[s1q[e]]], e];
+		slpconjs[3*(i-1)+1]=[n+TvG[vG[e]], e];
 		\\ alphaj^-1 for j=TvG[vG[s1q[e]]]
-		slpconjs[3*(i-1)+2]=[-(n+TvG[vG[e]]), -1];
+		slpconjs[3*(i-1)+2]=[-(n+TvG[vG[s1q[e]]]), -1];
 		\\ alphai.e.alphaj^-1
 		slpconjs[3*(i-1)+3]=[n+f+3*(i-1)+1, n+f+3*(i-1)+2];
 		e=s0q[e];
