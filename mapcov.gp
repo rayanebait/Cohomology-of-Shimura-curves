@@ -57,7 +57,7 @@ map_raw_spair_from_monodromy(G, d, monodromy)={
 
 	my(vG, T, TvG, slpspaths, pointersspath, n,f);
 	n=#Gdual[2];
-	vG=map_face_index([s1rev,s0rev]);
+	vG=map_vertex_index([s1rev,s2rev]);
 	\\ Spanning tree T in underlying graph of Gdualrev
 	[T,TvG]=map_getT(Gdualrev, 0);
 	f=#T+1;
@@ -82,22 +82,23 @@ map_raw_spair_from_monodromy(G, d, monodromy)={
 	proj=map_proj(n,d);
 	\\ slp from E(Gdual) to paths {proj(alphai)}
 	slpspaths=slpnormalize(slpspaths, proj, n);
+	slpspaths=slpreverse(slpspaths);
 
 	my(slptemp, pointerstemp);
 	\\ identity slp from E(Gdual) to E(Gdual)
 	slptemp=vector(n,i,[0,i]);
 	pointerstemp=vector(n,i,i);
 	\\ slp from E(Gdual) to E(Gdual) U {alphai}
+	\\ slp from E(Gdual)U{alphai} to E(Gdualrev)
 	[slpspaths, pointersspaths]=slpconcat([slptemp, slpspaths], n, [pointerstemp, pointersspath]);
 
 	my(slprev, pointersrev, e);
-	\\ slp from E(Gdual)U{alphai} to E(Gdualrev)
 	slprev=vector(3*d*n);
 	pointersrev=vector(d*n, u, 3*u);
 	for(i=1, d,
 		for(j=1, n,
 			e=j+(i-1)*n;
-			\\ Ici je me trompe c'est pas ça 
+			\\TODO: Ici je me trompe c'est pas ça 
 			\\ je me balade dans G^* donc pas besoin de vG
 			\\ utile pour plus tard
 			\\slprev[3*(e-1)+1]=[n+vG[e], j];

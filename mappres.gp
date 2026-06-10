@@ -49,7 +49,7 @@ map_liftalongT(G, T, TvG)={
 	n=#s1;
 	sc=permcycles(s);
 	v=#sc;
-	vG=map_face_index([s1,s]);
+	vG=map_vertex_index([s1,s2]);
 
 
    	my(seedlp, n_one);
@@ -470,6 +470,7 @@ map_quotientT(G, T, TvG)={
 	\\s0one now fixes edges of G in T and has a single cycle
 	\\ of length n
 	s0q=(s2q^-1)*s1q;
+	seed=s0q[seed];
 	n=#s0q;
 	f=#T+1;
 	n_one=(n-2*(f-1));
@@ -500,22 +501,23 @@ map_quotientT(G, T, TvG)={
 
 
 	my(slpconjs, pointersconjs, e);
-	\\ Slp from E(G) U {alphai} to E(Gq)
+	\\ Slp from E(G) U {betai} to E(Gq)
 	slpconjs=vector(3*n_one);
 	pointersconjs=vector(n_one,u, 3*u);
 
 	e=seed;
 	for(i=1, n_one,
-		\\ alphai.e for i=TvG[vG[e]]
+		\\ betai.e for i=TvG[vG[e]]
 		slpconjs[3*(i-1)+1]=[n+TvG[vG[e]], e];
-		\\ alphaj^-1 for j=TvG[vG[s1q[e]]]
+		\\ betaj^-1 for j=TvG[vG[s1q[e]]]
 		slpconjs[3*(i-1)+2]=[-(n+TvG[vG[s1q[e]]]), -1];
-		\\ alphai.e.alphaj^-1
+		\\ betai.e.betaj^-1
 		slpconjs[3*(i-1)+3]=[n+f+3*(i-1)+1, n+f+3*(i-1)+2];
 		e=s0q[e];
 	);
 
 	my(slp, pointers);
+	\\slp from E(G) to E(Gq)
 	[slp, pointers]=slpcompose([n, n+f],\
 			\\SLPS
 			[slpspaths, slpconjs],

@@ -482,12 +482,21 @@ slpnormalize(slp, h, m)={
 	return(slp);
 }
 
-slpreverse(slp, pointers)={
-
-	return();
+slpreverse(slp)={
+	my(sl, i, j);
+	sl=vector(#slp);
+	for(k=1, #slp,
+		[i,j]=slp[k];
+		if(0<i,
+			sl[k]=[j,i];
+		,/*else*/
+			sl[k]=[i,j];
+		);
+	);
+	return(sl);
 }
 
 veccompose(v1,v2)={
-	return(vector(#v1, i, v2[v1[i]]));
+	return(vector(#v2, i, v1[v2[i]]));
 }
 

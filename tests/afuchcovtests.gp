@@ -2,7 +2,7 @@ afuchcov_raw_spair_test_data(X, p)={
 	my(A, dA, F, pr, f, q, d, monodromy, G, h, Grev, slp, pointers);
 	A=afuchalg(X);
 	dA=algdisc(A);
-	if(gcd(dA, p)!=1, error("Invalid prime in afuchcov_spair_test_data"));
+	if(gcd(dA, p)!=1, error("Invalid prime in afuchcov_raw_spair_test_data"));
 
 	F=algcenter(A);
 	pr=idealprimedec(F, p)[1];
@@ -69,6 +69,7 @@ afuchcov_raw_spair_test(X,{pmax=23})={
 				rels[j+(i-1)*v]=vectorsmall(#c, k, c[k]+(i-1)*n);
 			);
 		);
+		rels=select((c)->(#c!=1), rels);
 		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
 		evrels=vector(#rels, i, algmulvec(A, gens, rels[i]));
 		
@@ -76,7 +77,7 @@ afuchcov_raw_spair_test(X,{pmax=23})={
 		foreach(evrels, ev,
 			   	if(algincenter(A, ev), nbzero++,nbnonzero++);
 		);
-		if(nbnonzero!=d,
+		if(nbnonzero!=0,
 				print("Computation of raw side pairing for covering of degree ", d, " : failed");
 			,/*else*/
 				print("Computation of raw side pairing for covering of degree ", d, " : ok");
@@ -100,7 +101,10 @@ afuchcov_spair_test_data(X, p)={
 	d=q+1;
 	monodromy=afuch_monodromy_from_pr(X, pr);
 	[G,h,d, Gq, slp, pointers,seed]=afuchcov_spair(X, monodromy);
-	return([G,h,d, Gq,slp, pointers,seed]);
+	my(Gone);
+	Gone=perm_normalize_wrt(Gq, 1);
+	monodromy=vector(#h, i, monodromy[h[i]]);
+	return([G,h,d, Gq,slp, pointers,seed,monodromy, Gone]);
 }
 
 afuchcov_spair_test(X,{pmax=23})={
@@ -109,30 +113,32 @@ afuchcov_spair_test(X,{pmax=23})={
 	A=afuchalg(X);
 	dA=algdisc(A);
 	elts=afuchelts(X);
-	forprime(pp=2, pmax,
+	forprime(pp=3, pmax,
 		if(gcd(dA, pp)!=1, next);
 		p=pp;
 		my(G,h,d,Gq,slp,pointers);
 		[G,h,d,Gq,slp,pointers,seed]=afuchcov_spair_test_data(X, p);
 		slp=slpnormalize(slp, h, #elts);
 
-		my(gens, s0dual, s1dual, s2dual, s2dualc, rels, c, index);
-		[s1dual, s2dual]=Gq;
-		s0dual=s2dual^-1*s1dual;
+		my(gens, s0q, s1q, s2q, s2qc, rels, c, index);
+		[s1q, s2q]=Gq;
+		s0q=s2q^-1*s1q;
 		
-		index=map_indexcycle(s0dual, seed);
+		index=map_indexcycle(s0q, seed);
 
 		\\TODO: vérifier si la numérotation des arêtes de s2dual 
 		\\ est cohérente avec celle calculée dans map_quotientT
 		\\ honnêtement je pense que pas du tout.
-		rels=apply((c)->(veccompose(c,index)), permcycles0(s2dual));
+		rels=apply((c)->(veccompose(index, c)), permcycles0(s2q));
 
 		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
 		evrels=vector(#rels, i, algmulvec(A, gens, rels[i]));
 		
+		print(#permcycles0(s2q), " ", #permcycles(perm_normalize_wrt([s1q, s2q],1)[2]));
 		my(nbzero, nbnonzero);
-		foreach(evrels, ev,
-			   	if(algincenter(A, ev), nbzero++,nbnonzero++);
+		for(i=1, #evrels,
+				ev=evrels[i];
+			   	if(algincenter(A, ev), print(rels[i]);nbzero++,nbnonzero++);
 		);
 
 		print("Computation of side pairing for covering of degree ", d,". Fail : ", nbnonzero,", Success : ", nbzero);
@@ -185,26 +191,30 @@ pairing for the arithmetic Fuchsian group Gamma0^D(pr).
 
 
  */
+pol=y^2-8;
 
 \\pol=y^2 - 5 /*[2,[]]*/
 \\ab=[-3/2*y - 5/2, -2*y - 9];
-\\pol=y^2-8;
 
-pol=y^2 - 13 /*[1,[2]]*/
-ab=[-13, -3*y + 4];
+\\pol=y^2 - 13 /*[1,[2]]*/
+\\ab=[-13, -3*y + 4];
 
 F=nfinit(pol);
-A=alginit(F, ab);
-\\A=alginit(F, [[pr], [0,1]]);
+pr=idealprimedec(F, 7)[1];
+
+
+\\A=alginit(F, ab);
+A=alginit(F, [[pr], [0,1]]);
 
 X=afuchinit(A);
 
-[G,h,d,Gq,slp,pointers]=afuchcov_spair_test_data(X, 3);
-\\afuchcov_raw_spair_test(X);
-\\afuchcov_raw_spair_bench(X);
-afuchcov_spair_test(X,3);
+my(G,h,d,Gq,slp,pointers,monodromy,Gone);
+[G,h,d,Gq,slp,pointers, seed, monodromy,Gone]=afuchcov_spair_test_data(X, 5);
+\\afuchcov_raw_spair_test(X,10);
+\\afuchcov_raw_spair_bench(X,17);
+\\afuchcov_spair_bench(X,17);
+afuchcov_spair_test(X,7);
 \\afuchcov_spair_bench(X);
-\\pr=idealprimedec(F, 7)[1];
 
 \\my(monodromy, G,h,d,Grev, slp, pointers);
 \\monodromy=afuch_monodromy_from_pr(X, pr);
