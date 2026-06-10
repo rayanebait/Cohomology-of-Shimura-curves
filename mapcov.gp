@@ -89,10 +89,10 @@ map_raw_spair_from_monodromy(G, d, monodromy)={
 	slptemp=vector(n,i,[0,i]);
 	pointerstemp=vector(n,i,i);
 	\\ slp from E(Gdual) to E(Gdual) U {alphai}
-	\\ slp from E(Gdual)U{alphai} to E(Gdualrev)
 	[slpspaths, pointersspaths]=slpconcat([slptemp, slpspaths], n, [pointerstemp, pointersspath]);
 
 	my(slprev, pointersrev, e);
+	\\ slp from E(Gdual)U{alphai} to E(Gdualrev)
 	slprev=vector(3*d*n);
 	pointersrev=vector(d*n, u, 3*u);
 	for(i=1, d,
@@ -120,7 +120,7 @@ map_raw_spair_from_monodromy(G, d, monodromy)={
 	\\ Side pairing from E(Gdual) to E(Gdualrev)
 	[slp,pointers]=slpcompose([n, n+f], [slpspaths, slprev], [pointersspaths, pointersrev]);
 
-	return([Gdualrev, slp, pointers, T,TvG]);
+	return([Gdualrev, slp, pointers, T,TvG, slpspaths, pointersspaths]);
 }
 
 map_spair_from_monodromy(G, d, monodromy)={
@@ -128,7 +128,7 @@ map_spair_from_monodromy(G, d, monodromy)={
 	n=#G[1];
 	\\ Slp from E(Gdual) to E(Gdualrev), side pairing for E(Gdualrev) in terms of 
 	\\ E(Gdual)
-	[Gdualrev, slprev, pointersrev, T, TvG]=map_raw_spair_from_monodromy(G,d, monodromy);
+	[Gdualrev, slprev, pointersrev, T, TvG, slpspaths, pointersspaths]=map_raw_spair_from_monodromy(G,d, monodromy);
 
 	my(slpq, pointersq, Gq, seed);
 	\\ Gq is the one vertex reduction of Gdualrev

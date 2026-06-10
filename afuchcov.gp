@@ -17,8 +17,11 @@ afuchcov_spair(X, monodromy)={
 	my(G,h, d, Gq, slp, pointers, seed);
 	[G,h]=map_from_afuch(X);
 	d=#monodromy[1];
+	m=#monodromy;
 	monodromy=vector(#h, i, monodromy[h[i]]);
 	[slp, pointers, Gq, seed]=map_spair_from_monodromy(G, d, monodromy);
+	\\h is a map from E(G) to elts, slp is from elts to E(Gq)
+	slp=slpnormalize(slp, h, m);
 
 	return([G,h,d, Gq, slp, pointers, seed]);
 }
@@ -61,6 +64,7 @@ afuchcov_presentation(X,monodromy, {type="oneword"},{compose=0}, {eval=0})={
 \\ F the center of A. Returns the monodromy representation of
 \\ O_0(pr) as a vector of permutations, one for each generator
 \\ e in elts where elts=afuchelts(X).
+\\WARNING: not deterministic 
 afuch_monodromy_from_pr(X, pr)={
 	my(A, elts, modpr);
 	A=afuchalg(X);

@@ -7,7 +7,7 @@
 	evaluates the straight line program slp and outputs 
 	(out[p[i]])_{i=1,...,#p}. 
 */
-evalslp(grp_data, slpdata, {reverse=0}, {retout=0})={;
+evalslp(grp_data, slpdata)={;
 	my(grp, grp_mul, grp_pow, grp_gens, grp_unit);
 	[grp, grp_mul, grp_pow, grp_gens]=grp_data;
 	grp_unit=grp_pow(grp, grp_gens[1], 0);
@@ -28,16 +28,11 @@ evalslp(grp_data, slpdata, {reverse=0}, {retout=0})={;
 		,i==0,/*else if*/
 			out[k+n]=out[j];
 		,/*else*/
-			if(reverse,
-		    	out[k+n]=grp_mul(grp, out[j], out[i]);
-			,/*else*/
-		    	out[k+n]=grp_mul(grp, out[i], out[j]);
-			);	
+			out[k+n]=grp_mul(grp, out[i], out[j]);
 		);
 	);	
 	my(his);
 	his=vector(#pointers,i, out[pointers[i]+n]);
-	if(retout, return(out[(n+1)..#out]));
 	return(his);
 }
 

@@ -470,7 +470,6 @@ map_quotientT(G, T, TvG)={
 	\\s0one now fixes edges of G in T and has a single cycle
 	\\ of length n
 	s0q=(s2q^-1)*s1q;
-	seed=s0q[seed];
 	n=#s0q;
 	f=#T+1;
 	n_one=(n-2*(f-1));
@@ -497,12 +496,11 @@ map_quotientT(G, T, TvG)={
 	\\ Slp from E(G) to E(G) U {betai} 
 	[slpspaths, pointersspaths]=slpconcat([slptemp, slpspaths], n, [pointerstemp, pointersspaths]);
 
-
-
-
 	my(slpconjs, pointersconjs, e);
 	\\ Slp from E(G) U {betai} to E(Gq)
 	slpconjs=vector(3*n_one);
+
+	\\slp[pointersconjs[index[e]]] pairs s1[e] with e.
 	pointersconjs=vector(n_one,u, 3*u);
 
 	e=seed;

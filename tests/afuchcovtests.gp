@@ -1,15 +1,17 @@
 afuchcov_raw_spair_test_data(X, p)={
-	my(A, dA, F, pr, f, q, d, monodromy, G, h, Grev, slp, pointers);
+	my(A, dA); 
 	A=afuchalg(X);
 	dA=algdisc(A);
 	if(gcd(dA, p)!=1, error("Invalid prime in afuchcov_raw_spair_test_data"));
 
+	my(F, pr, f, q, d, monodromy);
 	F=algcenter(A);
 	pr=idealprimedec(F, p)[1];
 	f=pr[4];
 	q=p^f;
 	d=q+1;
 	monodromy=afuch_monodromy_from_pr(X, pr);
+	my(G, h, Grev, slp, pointers);
 	[G,h,d, Grev, slp, pointers]=afuchcov_raw_spair(X, monodromy);
 	return([G,h,d, Grev,slp, pointers]);
 }
@@ -25,7 +27,6 @@ afuchcov_raw_spair_bench(X,{pmax=100})={
 		p=pp;
 		my(G,h,d,Grev,slp,pointers);
 		[G,h,d,Grev,slp,pointers]=afuchcov_raw_spair_test_data(X, p);
-		slp=slpnormalize(slp, h, #elts);
 		
 		print("Computation of raw side pairing for covering of degree ", d, " : ok");
 	);
@@ -45,13 +46,13 @@ afuchcov_raw_spair_test(X,{pmax=23})={
 		p=pp;
 		my(G,h,d,Grev,slp,pointers);
 		[G,h,d,Grev,slp,pointers]=afuchcov_raw_spair_test_data(X, p);
-		slp=slpnormalize(slp, h, #elts);
 
-		my(gens, s2dual, s2dualc, rels,v, c,n);
+		my(s2dual, n, s2dualc);
 		s2dual=map_dual(G)[2];
 		n=#s2dual;
-		
 		s2dualc=permcycles(s2dual);
+
+		my(v, rels, c);
 		v=#s2dualc;
 		rels=vector(d*v);
 		for(i=1, d,
@@ -70,6 +71,8 @@ afuchcov_raw_spair_test(X,{pmax=23})={
 			);
 		);
 		rels=select((c)->(#c!=1), rels);
+
+		my(gens, evrels);
 		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
 		evrels=vector(#rels, i, algmulvec(A, gens, rels[i]));
 		
@@ -80,7 +83,7 @@ afuchcov_raw_spair_test(X,{pmax=23})={
 		if(nbnonzero!=0,
 				print("Computation of raw side pairing for covering of degree ", d, " : failed");
 			,/*else*/
-				print("Computation of raw side pairing for covering of degree ", d, " : ok");
+				print("Computation of raw side pairing for covering of degree ", d, " : success");
 		);
 	);
 
@@ -88,57 +91,65 @@ afuchcov_raw_spair_test(X,{pmax=23})={
 	return();
 }
 
+\\TODO: vérifier si la numérotation des arêtes de s2q 
+\\ est cohérente avec celle calculée dans map_quotientT
+\\ honnêtement je pense que pas du tout.
 afuchcov_spair_test_data(X, p)={
-	my(A, dA, F, pr, f, q, d, monodromy, G, h, Gq, slp, pointers, seed);
+	my(A, dA);
 	A=afuchalg(X);
 	dA=algdisc(A);
 	if(gcd(dA, p)!=1, error("Invalid prime in afuchcov_spair_test_data"));
-
+	my(F, pr, f, q, d, monodromy);
 	F=algcenter(A);
 	pr=idealprimedec(F, p)[1];
 	f=pr[4];
 	q=p^f;
 	d=q+1;
 	monodromy=afuch_monodromy_from_pr(X, pr);
+
+	my(G, h, Gq, slp, pointers, seed);
 	[G,h,d, Gq, slp, pointers,seed]=afuchcov_spair(X, monodromy);
 	my(Gone);
 	Gone=perm_normalize_wrt(Gq, 1);
 	monodromy=vector(#h, i, monodromy[h[i]]);
-	return([G,h,d, Gq,slp, pointers,seed,monodromy, Gone]);
+
+	my(s0q, s1q, s2q, index, allrels, rels);
+	[s1q, s2q]=Gq;
+	s0q=s2q^-1*s1q;
+		
+	index=map_indexcycle(s0q, seed);
+	allrels=select((c)->(c[1]!=0), apply((c)->(veccompose(index, c)), permcycles(s2q)));
+	rels=apply((c)->(veccompose(index, c)), permcycles0(s2q));
+	
+	\\print(#permcycles0(s2q), " ", #permcycles(perm_normalize_wrt([s1q, s2q],1)[2]));
+
+	return([G,h,d, Gq,slp, pointers,seed, rels, allrels, index, monodromy, Gone]);
 }
 
-afuchcov_spair_test(X,{pmax=23})={
+afuchcov_spair_test(X,{pmin=3}, {pmax=53})={
 	print("\nTesting afuchcov_spair.\n");
-	my(A, dA, elts, p);
+	my(A, F,dA, elts, p);
 	A=afuchalg(X);
+	F=algcenter(A);
 	dA=algdisc(A);
 	elts=afuchelts(X);
-	forprime(pp=3, pmax,
+	forprime(pp=pmin, pmax,
 		if(gcd(dA, pp)!=1, next);
+		if(#idealprimedec(F,pp)!=poldegree(F.pol), next);
 		p=pp;
-		my(G,h,d,Gq,slp,pointers);
-		[G,h,d,Gq,slp,pointers,seed]=afuchcov_spair_test_data(X, p);
-		slp=slpnormalize(slp, h, #elts);
-
-		my(gens, s0q, s1q, s2q, s2qc, rels, c, index);
-		[s1q, s2q]=Gq;
-		s0q=s2q^-1*s1q;
-		
-		index=map_indexcycle(s0q, seed);
-
-		\\TODO: vérifier si la numérotation des arêtes de s2dual 
-		\\ est cohérente avec celle calculée dans map_quotientT
-		\\ honnêtement je pense que pas du tout.
-		rels=apply((c)->(veccompose(index, c)), permcycles0(s2q));
+		my(G,h,d,Gq,slp,pointers, seed, rels, allrels);
+		[G,h,d,Gq,slp,pointers,seed, rels, allrels]=afuchcov_spair_test_data(X, p);
 
 		gens=evalslp([A,algmul,algpow,elts], [slp,pointers]);
 		evrels=vector(#rels, i, algmulvec(A, gens, rels[i]));
 		
-		print(#permcycles0(s2q), " ", #permcycles(perm_normalize_wrt([s1q, s2q],1)[2]));
 		my(nbzero, nbnonzero);
 		for(i=1, #evrels,
 				ev=evrels[i];
-			   	if(algincenter(A, ev), print(rels[i]);nbzero++,nbnonzero++);
+			   	if(algincenter(A, ev), 
+					if(#rels[i]>2, print(i, " ", rels[i]););
+					nbzero++,
+					nbnonzero++);
 		);
 
 		print("Computation of side pairing for covering of degree ", d,". Fail : ", nbnonzero,", Success : ", nbzero);
@@ -150,16 +161,15 @@ afuchcov_spair_test(X,{pmax=23})={
 
 afuchcov_spair_bench(X,{pmax=100})={
 	print("\nBenching afuchcov_spair.\n");
-	my(A, dA, elts, p);
+	my(A, dA, elts);
 	A=afuchalg(X);
 	dA=algdisc(A);
 	elts=afuchelts(X);
 	forprime(pp=3, pmax,
 		if(gcd(dA, pp)!=1, next);
+		my(G,h,d,Gq,slp,pointers, p);
 		p=pp;
-		my(G,h,d,Gq,slp,pointers);
 		[G,h,d,Gq,slp,pointers]=afuchcov_spair_test_data(X, p);
-		slp=slpnormalize(slp, h, #elts);
 
 		print("Computation of side pairing for covering of degree ", d, " : ok");
 	);
@@ -170,7 +180,7 @@ afuchcov_spair_bench(X,{pmax=100})={
 
 
 /*TODO: Signature [4,[2,2,2,2,2,2,3],0]-> [4,[(2, 6), (3,1)],0]*/
-my(X, pol, F, A, pr, J, Or);
+my(X, pol, F, A, pr, J, Or, ab);
 
 \\ An example with F=Q(z11)^+, D=(1) and level 32.
 \\pol=y^5+y^4-4*y^3-3*y^2+3*y+1;
@@ -200,7 +210,7 @@ pol=y^2-8;
 \\ab=[-13, -3*y + 4];
 
 F=nfinit(pol);
-pr=idealprimedec(F, 7)[1];
+\\pr=idealprimedec(F, 7)[1];[1, [3]]
 
 
 \\A=alginit(F, ab);
@@ -208,12 +218,19 @@ A=alginit(F, [[pr], [0,1]]);
 
 X=afuchinit(A);
 
-my(G,h,d,Gq,slp,pointers,monodromy,Gone);
-[G,h,d,Gq,slp,pointers, seed, monodromy,Gone]=afuchcov_spair_test_data(X, 5);
-\\afuchcov_raw_spair_test(X,10);
+my(G,h,d,Gq,slp,pointers, rels, allrels, index, monodromy,Gone, elts, gens);
+[G,h,d,Gq,slp,pointers, seed, rels, allrels, index, monodromy,Gone]=afuchcov_spair_test_data(X, 17);
+elts=afuchelts(X);
+
+\\ Let e be an edge of Gq, that is e is in the support of s0q, assume the support
+\\ of s0q is ordered from seed using its only cycle, with ordering index. Then
+\\ gens[index[e]] pairs s1q[e] to e.
+\\ 
+gens=evalslp([A, algmul, algpow, elts], [slp,pointers]);
+\\afuchcov_raw_spair_test(X,40);
 \\afuchcov_raw_spair_bench(X,17);
 \\afuchcov_spair_bench(X,17);
-afuchcov_spair_test(X,7);
+afuchcov_spair_test(X,2, 100);
 \\afuchcov_spair_bench(X);
 
 \\my(monodromy, G,h,d,Grev, slp, pointers);
