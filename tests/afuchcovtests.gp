@@ -230,8 +230,18 @@ gens=evalslp([A, algmul, algpow, elts], [slp,pointers]);
 \\afuchcov_raw_spair_test(X,40);
 \\afuchcov_raw_spair_bench(X,17);
 \\afuchcov_spair_bench(X,17);
-afuchcov_spair_test(X,2, 100);
+afuchcov_spair_test(X,2, 5);
 \\afuchcov_spair_bench(X);
+
+
+
+my(fandapath, storagepath);
+fandapath=externstr("find /home -wholename */*Cohomology-of-Shimura-curves/storage/fieldsandalgebras/fieldsandalgebras")[1];
+storagepath=externstr("find /home -wholename */*Cohomology-of-Shimura-curves/storage/fdom")[1];
+
+my(sig);
+sig=[3, []];
+X=afuchfromfile(sig, storagepath);
 
 \\my(monodromy, G,h,d,Grev, slp, pointers);
 \\monodromy=afuch_monodromy_from_pr(X, pr);
