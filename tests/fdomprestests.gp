@@ -218,11 +218,11 @@ Xs=List();
 \\ An example with F=Q(z11)^+, D=(1) and level 32.
 pol=y^5+y^4-4*y^3-3*y^2+3*y+1;
 F=nfinit(pol);
-A=alginit(F,[2, [[],[]],[0, 1/2,1/2,1/2,1/2]]);
-pr=idealprimedec(F,2)[1];
+\\A=alginit(F,[2, [[],[]],[0, 1/2,1/2,1/2,1/2]]);
+\\pr=idealprimedec(F,2)[1];
 \\J=idealpow(F, pr, 2);
-Or=algeichlerbasis(A, pr);
-listput(~Xs, afuchinit(A, Or));
+\\Or=algeichlerbasis(A, pr);
+\\listput(~Xs, afuchinit(A));
 
 /* 
 An example with F=Q(sqrt(8)), N_F/Q(D)=9 and level (1). Yields 
